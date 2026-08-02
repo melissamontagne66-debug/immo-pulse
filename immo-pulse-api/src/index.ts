@@ -31,17 +31,27 @@ function json(data: any, status = 200, cors: Record<string, string> = {}): Respo
 }
 
 // --- Password hashing ---
-async function hashPassword(password: string): Promise<string> {
+async function hashPasswordWithSalt(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
-  const data = encoder.encode(password + 'immo-pulse-salt-v1');
+  const data = encoder.encode(password + salt);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
   const hashArray = Array.from(new Uint8Array(hashBuffer));
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
-  const computed = await hashPassword(password);
-  return computed === hash;
+const CURRENT_SALT = 'immo-pulse-salt-v1';
+const LEGACY_SALT = 'immo-pulse-salt';
+
+async function hashPassword(password: string): Promise<string> {
+  return hashPasswordWithSalt(password, CURRENT_SALT);
+}
+
+async function verifyPassword(password: string, hash: string): Promise<{ valid: boolean; needsRehash: boolean }> {
+  const currentHash = await hashPasswordWithSalt(password, CURRENT_SALT);
+  if (currentHash === hash) return { valid: true, needsRehash: false };
+  const legacyHash = await hashPasswordWithSalt(password, LEGACY_SALT);
+  if (legacyHash === hash) return { valid: true, needsRehash: true };
+  return { valid: false, needsRehash: false };
 }
 
 // --- JWT with real HMAC-SHA256 ---
@@ -151,8 +161,13 @@ export default {
         const user = await env.DB.prepare('SELECT * FROM users WHERE email = ?').bind(email.toLowerCase().trim()).first();
         if (!user) return json({ error: 'Email ou mot de passe incorrect.' }, 401, cors);
 
-        const valid = await verifyPassword(password, user.password_hash as string);
+        const { valid, needsRehash } = await verifyPassword(password, user.password_hash as string);
         if (!valid) return json({ error: 'Email ou mot de passe incorrect.' }, 401, cors);
+
+        if (needsRehash) {
+          const newHash = await hashPassword(password);
+          await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(newHash, user.id).run();
+        }
 
         const token = await createJWT(user.id as string, user.email as string, env);
         return json({
