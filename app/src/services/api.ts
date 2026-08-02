@@ -3,9 +3,7 @@
 // Connecte le frontend à l'API Cloudflare
 // ============================================
 
-// REMPLACE CETTE URL par l'URL de ton API (reçue après wrangler deploy)
-// Ex: const API_URL = 'https://immo-pulse-api.ton-compte.workers.dev';
-const API_URL = 'https://immo-pulse-api.ton-compte.workers.dev';
+const API_URL = 'https://immo-pulse-api.melissa-montagne66.workers.dev';
 
 const IS_PLACEHOLDER = API_URL.includes('ton-compte');
 const FETCH_TIMEOUT = 5000; // 5 secondes max
