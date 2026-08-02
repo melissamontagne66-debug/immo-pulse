@@ -150,7 +150,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
         {/* Info */}
         <p className="text-center text-xs text-gray-400 mt-6">
           Tes données sont synchronisées sur le cloud.<br />
-          Tu peux y accéder depuis n\'importe quel appareil.
+          Tu peux y accéder depuis n'importe quel appareil.
         </p>
       </div>
     </div>
