@@ -1,0 +1,485 @@
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
+import type { UserProfile } from '@/types/profile';
+import { defaultProfile, calculateTargetsFromCA6Months } from '@/types/profile';
+import { getCityPrice, getSuggestedPriceText } from '@/data/cityPrices';
+import {
+  User, MapPin, ArrowRight, Sparkles, TrendingUp, Euro, Home,
+  Lightbulb, Check, PlayCircle, Calendar, GraduationCap, HeartHandshake
+} from 'lucide-react';
+
+interface OnboardingWizardProps {
+  onComplete: (profile: UserProfile) => void;
+}
+
+type Step = 'language' | 'identity' | 'expérience' | 'sector' | 'goals' | 'confirm';
+
+export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
+  const [step, setStep] = useState<Step>('language');
+  const [profile, setProfile] = useState<UserProfile>({
+    ...defaultProfile,
+    startDate: new Date().toISOString().split('T')[0],
+  });
+
+  const update = (field: keyof UserProfile, value: any) => {
+    setProfile(prêv => ({ ...prêv, [field]: value }));
+  };
+
+  const isStepValid = () => {
+    switch (step) {
+      case 'language': return !!profile.language;
+      case 'identity': return profile.firstName.trim() && profile.lastName.trim() && profile.city.trim();
+      case 'expérience': return !!profile.expérienceLevel;
+      case 'sector': return profile.averagePrice > 0;
+      case 'goals': return profile.ca6MonthsTarget > 0;
+      case 'confirm': return true;
+    }
+  };
+
+  const nextStep = () => {
+    if (step === 'language') setStep('identity');
+    else if (step === 'identity') setStep('expérience');
+    else if (step === 'expérience') setStep('sector');
+    else if (step === 'sector') setStep('goals');
+    else if (step === 'goals') setStep('confirm');
+    else {
+      const COMMISSION = 5;
+      const targets = calculateTargetsFromCA6Months(
+        profile.ca6MonthsTarget,
+        COMMISSION,
+        profile.averagePrice,
+        profile.expérienceLevel,
+        1
+      );
+      const finalProfile: UserProfile = {
+        ...profile,
+        commissionsPct: COMMISSION,
+        currentMonthGoal: {
+          ...profile.currentMonthGoal,
+          ...targets,
+          caTarget: Math.round(profile.ca6MonthsTarget * (profile.expérienceLevel === 'débutant' ? 0.10 : 0.16)),
+          commissionsPct: COMMISSION,
+          averagePrice: profile.averagePrice,
+        },
+      };
+      onComplete(finalProfile);
+    }
+  };
+
+  const prêvStep = () => {
+    if (step === 'identity') setStep('language');
+    else if (step === 'expérience') setStep('identity');
+    else if (step === 'sector') setStep('expérience');
+    else if (step === 'goals') setStep('sector');
+    else if (step === 'confirm') setStep('goals');
+  };
+
+  const stepLabels: Record<Step, { title: string; subtitle: string }> = {
+    language: { title: profile.language === 'es' ? '¿Qué idioma prefieres?' : 'Quelle langue souhaites-tu ?', subtitle: profile.language === 'es' ? 'Puedes cambiarlo más tarde' : 'Tu pourras le changer plus tard' },
+    identity: { title: profile.language === 'es' ? '¿Quién eres?' : 'Qui es-tu ?', subtitle: profile.language === 'es' ? 'Empecemos por conocernos' : 'Commençons par apprendre à se connaître' },
+    expérience: { title: profile.language === 'es' ? 'Tu trayectoria' : 'Ton parcours', subtitle: profile.language === 'es' ? 'Para personalizar tu acompañamiento' : 'Pour personnaliser ton accompagnement' },
+    sector: { title: profile.language === 'es' ? 'Tu sector' : 'Ton secteur', subtitle: profile.language === 'es' ? '¿Dónde vas a ejercer?' : 'Où vas-tu exercer ?' },
+    goals: { title: profile.language === 'es' ? 'Tus objetivos para los próximos 6 meses' : 'Tes objectifs sur les 6 prochains mois', subtitle: profile.language === 'es' ? 'Un objetivo que te guíe, no una presión' : 'Un cap qui te guide, pas une pression' },
+    confirm: { title: profile.language === 'es' ? '¡Vamos allá!' : "C'est parti !", subtitle: profile.language === 'es' ? 'Aquí están tus objetivos de hoy' : 'Voilà tes objectifs du jour' },
+  };
+
+  const isEs = profile.language === 'es';
+
+  const expérienceOptions = [
+    { id: 'débutant' as const, label: isEs ? 'Empiezo' : 'Je débute', icon: '🌱', desc: isEs ? 'Primeros pasos en inmobiliaria' : 'Premiers pas dans l\'immobilier' },
+    { id: 'quelques-semaines' as const, label: isEs ? 'Unas semanas' : 'Quelques semaines', icon: '🌿', desc: isEs ? 'He empezado a aprender' : 'J\'ai commencé à apprendre' },
+    { id: 'quelques-mois' as const, label: isEs ? 'Unos meses' : 'Quelques mois', icon: '🌳', desc: isEs ? 'Ya tengo experiencia' : 'J\'ai déjà de l\'expérience' },
+    { id: 'confirmé' as const, label: isEs ? 'Confirmado' : 'Confirmé', icon: '🏆', desc: isEs ? 'Quiero optimizar mis resultados' : 'Je veux optimiser mes résultats' },
+  ];
+
+  const sectorOptions = [
+    { id: 'centre-ville', label: isEs ? 'Centro-ciudad' : 'Centre-ville' },
+    { id: 'peripherie', label: isEs ? 'Periferia' : 'Périphérie' },
+    { id: 'rural', label: 'Rural' },
+    { id: 'luxe', label: isEs ? 'Lujo / Premium' : 'Luxe / Premium' },
+  ];
+
+  return (
+    <div className="min-h-scréén bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-lg">
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
+            <Sparkles className="w-8 h-8 text-white" />
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
+          <p className="text-gray-500 mt-1">{profile.language === 'es' ? 'Tu acompañamiento personalizado' : 'Ton accompagnement personnalisé'}</p>
+        </div>
+
+        <div className="flex gap-2 mb-6">
+          {(['identity', 'expérience', 'sector', 'goals', 'confirm'] as Step[]).map((s, i) => (
+            <div key={s} className={`flex-1 h-2 rounded-full ${(['identity', 'expérience', 'sector', 'goals', 'confirm'].indexOf(step) >= i ? 'bg-red-500' : 'bg-gray-200')}`} />
+          ))}
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+          <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4">
+            <h2 className="text-lg font-bold text-white">{stepLabels[step].title}</h2>
+            <p className="text-red-100 text-sm">{stepLabels[step].subtitle}</p>
+          </div>
+
+          <div className="p-6">
+            {/* STEP 0: LANGUAGE */}
+            {step === 'language' && (
+              <div className="space-y-4">
+                <Label className="text-center block text-lg font-medium text-gray-800 mb-4">
+                  {profile.language === 'es' ? '¿Qué idioma prefieres usar?' : 'Quelle langue souhaites-tu utiliser ?'}
+                </Label>
+                <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto">
+                  <button
+                    onClick={() => update('language', 'fr')}
+                    className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      profile.language === 'fr'
+                        ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
+                        : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-3xl mb-2 block">🇫🇷</span>
+                    <span className="font-semibold">Français</span>
+                  </button>
+                  <button
+                    onClick={() => update('language', 'es')}
+                    className={`p-4 rounded-xl border-2 text-center transition-all ${
+                      profile.language === 'es'
+                        ? 'border-red-500 bg-red-50 text-red-700 shadow-md'
+                        : 'border-gray-200 hover:border-red-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="text-3xl mb-2 block">🇪🇸</span>
+                    <span className="font-semibold">Español</span>
+                  </button>
+                </div>
+                <p className="text-center text-xs text-gray-500 mt-4">
+                  {profile.language === 'es'
+                    ? 'Puedes cambiar el idioma más tarde desde el panel de control.'
+                    : 'Tu pourras changer la langue plus tard depuis le tableau de bord.'}
+                </p>
+              </div>
+            )}
+
+            {/* STEP 1: IDENTITY */}
+            {step === 'identity' && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /> {profile.language === 'es' ? 'Nombre' : 'Prénom'}</Label>
+                  <Input value={profile.firstName} onChange={e => update('firstName', e.target.value)} placeholder={profile.language === 'es' ? 'Tu nombre' : 'Ton prénom'} className="mt-1" />
+                </div>
+                <div>
+                  <Label>{profile.language === 'es' ? 'Apellido' : 'Nom'}</Label>
+                  <Input value={profile.lastName} onChange={e => update('lastName', e.target.value)} placeholder={profile.language === 'es' ? 'Tu apellido' : 'Ton nom'} className="mt-1" />
+                </div>
+                <div>
+                  <Label className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> {profile.language === 'es' ? 'Ciudad de actividad' : "Ville d'activité"}</Label>
+                  <Input value={profile.city} onChange={e => update('city', e.target.value)} placeholder={profile.language === 'es' ? 'Ej: Madrid, Barcelona...' : 'Ex: Lyon, Bordeaux...'} className="mt-1" />
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: EXPERIENCE */}
+            {step === 'expérience' && (
+              <div className="space-y-5">
+                <div>
+                  <Label className="flex items-center gap-2 mb-3"><Calendar className="w-4 h-4 text-gray-400" /> {isEs ? '¿Desde cuándo empezaste?' : 'Depuis combien de temps tu as commencé ?'}</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {expérienceOptions.map(opt => (
+                      <button
+                        key={opt.id}
+                        onClick={() => update('expérienceLevel', opt.id)}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${
+                          profile.expérienceLevel === opt.id
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        <span className="text-lg block mb-1">{opt.icon}</span>
+                        {opt.label}
+                        <span className="block text-xs font-normal mt-0.5 text-gray-400">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-3"><PlayCircle className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has visto todos los vídeos de la red?' : 'As-tu vu toutes les vidéos du réseau ?'}</Label>
+                  <div className="flex gap-2">
+                    {[
+                      { val: true, label: isEs ? 'Sí, todos' : 'Oui, toutes', color: 'green' },
+                      { val: false, label: isEs ? 'Aún no' : 'Pas encore', color: 'gray' },
+                    ].map(opt => (
+                      <button
+                        key={String(opt.val)}
+                        onClick={() => update('watchedNetworkVideos', opt.val)}
+                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${
+                          profile.watchedNetworkVideos === opt.val
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {/* Message si vidéos non vues */}
+                  {profile.watchedNetworkVideos === false && (
+                    <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                      <p className="text-sm text-blue-800">
+                        {isEs ? (
+                          <><strong>¡Estos vídeos son tus aliados para empezar con serenidad!</strong> Te dan las bases jurídicas y legales esenciales para ir al terreno con confianza y tener el derecho de registrar tus primeros mandatos. Un paso clave que te hará operativo más rápidamente.</>
+                        ) : (
+                          <><strong>Ces vidéos sont tes alliées pour démarrer sereinement !</strong> Elles te donnent les bases juridiques et légales essentielles pour aller sur le terrain en confiance et avoir le droit de rentrer tes premiers mandats. Une étape clé qui te rendra opérationnel plus rapidement.</>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-3"><GraduationCap className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has seguido las formaciones de terreno?' : 'As-tu suivi les formations terrain ?'}</Label>
+                  <div className="flex gap-2">
+                    {[
+                      { val: true, label: isEs ? 'Sí' : 'Oui' },
+                      { val: false, label: isEs ? 'Aún no' : 'Pas encore' },
+                    ].map(opt => (
+                      <button
+                        key={String(opt.val)}
+                        onClick={() => update('watchedTerrainVideos', opt.val)}
+                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${
+                          profile.watchedTerrainVideos === opt.val
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {profile.watchedTerrainVideos === false && (
+                    <div className="mt-3 bg-green-50 rounded-lg p-3 border border-green-200">
+                      <p className="text-sm text-green-800">
+                        {isEs ? (
+                          <><strong>¡Buena noticia, vas a ganar un tiempo precioso!</strong> Estas formaciones de terreno te revelan el método y las estrategias de los asesores performantes para ser eficaz desde tus primeros pasos. Un verdadero acelerador para conseguir rápidamente tus primeros mandatos y ventas.</>
+                        ) : (
+                          <><strong>Bonne nouvelle, tu vas gagner un temps précieux !</strong> Ces formations terrain te révèlent la méthode et les stratégies des conseillers performants pour être efficace dès tes premiers pas. Un vrai accélérateur pour décrocher rapidement tes premiers mandats et ventes.</>
+                        )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-3"><HeartHandshake className="w-4 h-4 text-gray-400" /> {isEs ? '¿Tienes una persona con quien colaborar (padrino, mentor, compañero)?' : 'As-tu une personne avec qui collaborer (parrain, mentor, partenaire) ?'}</Label>
+                  <div className="flex gap-2">
+                    {[
+                      { val: true, label: isEs ? 'Sí' : 'Oui' },
+                      { val: false, label: isEs ? 'Aún no' : 'Pas encore' },
+                    ].map(opt => (
+                      <button
+                        key={String(opt.val)}
+                        onClick={() => update('hasMentor', opt.val)}
+                        className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${
+                          profile.hasMentor === opt.val
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {profile.expérienceLevel === 'débutant' && (
+                  <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+                    <p className="text-sm text-green-800">
+                      {isEs ? (
+                        <>💚 <strong>¡Sin estrés!</strong> Si empiezas, tu primer mes está dedicado a aprender el método y tomar tus referencias. Tu objetivo de CA es un faro que te ayuda a visualizar tu futuro éxito — no una presión para mañana. Vamos despacio pero seguro.</>
+                      ) : (
+                        <>💚 <strong>Pas de stress !</strong> Si tu débutes, ton premier mois est consacré à apprendre la méthode et prendre tes repères. Ton objectif de CA est un cap qui t'aide à visualiser ton futur succès — pas une pression pour demain. On y va doucement mais sûrement.</>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* STEP 3: SECTOR */}
+            {step === 'sector' && (
+              <div className="space-y-4">
+                <div>
+                  <Label className="flex items-center gap-2"><Home className="w-4 h-4 text-gray-400" /> {isEs ? 'Tipo de sector' : 'Type de secteur'}</Label>
+                  <div className="grid grid-cols-2 gap-2 mt-2">
+                    {sectorOptions.map(sector => (
+                      <button
+                        key={sector.id}
+                        onClick={() => {
+                          update('sectorType', sector.id);
+                          if (profile.city.trim()) {
+                            const suggested = getCityPrice(profile.city, sector.id as any);
+                            const avgSize = 75;
+                            update('averagePrice', Math.round(suggested * avgSize / 10000) * 10000);
+                          }
+                        }}
+                        className={`p-3 rounded-lg border text-sm font-medium transition-all ${
+                          profile.sectorType === sector.id
+                            ? 'border-red-500 bg-red-50 text-red-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {sector.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {profile.city.trim() && profile.sectorType && (
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <div className="flex items-start gap-2">
+                      <Lightbulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-sm font-medium text-blue-800">{isEs ? 'Estimación para' : 'Estimation pour'} {profile.city}</p>
+                        <p className="text-sm text-blue-700 mt-1">{getSuggestedPriceText(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france', isEs ? 'es' : 'fr')}</p>
+                        <button
+                          onClick={() => {
+                            const suggested = getCityPrice(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france');
+                            const avgSize = 75;
+                            update('averagePrice', Math.round(suggested * avgSize / 10000) * 10000);
+                          }}
+                          className="mt-2 flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          <Check className="w-3 h-3" /> {isEs ? 'Usar esta estimación' : 'Utiliser cette estimation'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <Label className="flex items-center gap-2"><Euro className="w-4 h-4 text-gray-400" /> {isEs ? 'Precio medio de tus bienes (€)' : 'Prix moyen de tes biens (€)'}</Label>
+                  <Input type="number" value={profile.averagePrice || ''} onChange={e => update('averagePrice', Number(e.target.value))} placeholder="Ex: 250000" className="mt-1" />
+                  <p className="text-xs text-gray-400 mt-1.5">{isEs ? 'Puedes quedarte con la estimación de arriba o ajustar según tu experiencia.' : "Tu peux garder l'estimation ci-dessus ou ajuster selon ton expérience."}</p>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: GOALS */}
+            {step === 'goals' && (
+              <div className="space-y-6">
+                <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+                  <p className="text-sm text-amber-800">
+                    💡 <strong>{isEs ? 'Pequeño recordatorio bienintencionado:' : 'Petit rappel bienveillant :'}</strong>{' '}
+                    {profile.expérienceLevel === 'débutant'
+                      ? (isEs ? "Empiezas, es normal no saber exactamente hacia dónde vas. Este CA para los próximos 6 meses es una dirección, no una obligación. Tu primer mes es para aprender — los resultados vendrán naturalmente después." : "Tu débutes, c'est normal de ne pas savoir exactement où tu vas. Ce CA sur les 6 prochains mois est une direction, pas une obligation. Ton premier mois est pour apprendre — les résultats viendront naturellement ensuite.")
+                      : (isEs ? "Este CA para los próximos 6 meses es un faro que te guía. Sin presión, ajustamos juntos cada mes según tus resultados." : "Ce CA sur les 6 prochains mois est un cap qui te guide. Pas de pression, on ajuste ensemble chaque mois selon tes résultats.")}
+                  </p>
+                </div>
+
+                {/* Message Mois 2 affiché seulement si débutant/progression ET vidéos non vues */}
+                {(profile.expérienceLevel === 'débutant' || profile.expérienceLevel === 'quelques-semaines') && !profile.watchedNetworkVideos && (
+                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+                    <p className="text-sm text-blue-800">
+                      📅 <strong>{isEs ? '¿Cuándo uso Immo Pulse?' : "Quand est-ce que j'utilise Immo Pulse ?"}</strong><br />
+                      {isEs
+                        ? <>Esta herramienta te acompaña a partir del <strong>Mes 2 de tu integración</strong>, para apoyarte en el terreno. El Mes 1, es para seguir las formaciones de la red y aprender el método. ¡A partir del Mes 2, pasamos a la acción con Immo Pulse!</>
+                        : <>Cet outil t'accompagne à partir du <strong>Mois 2 de ton intégration</strong>, pour te soutenir sur le terrain. Le Mois 1, c'est pour suivre les formations du réseau et apprendre la méthode. À partir du Mois 2, on passe à l'action avec Immo Pulse !</>}
+                    </p>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-red-500" /> {isEs ? 'CA objetivo (€)' : 'CA visé (€)'}</Label>
+                    <span className="text-lg font-bold text-red-600">{profile.ca6MonthsTarget.toLocaleString()}€</span>
+                  </div>
+                  <Slider value={[profile.ca6MonthsTarget]} onValueChange={v => update('ca6MonthsTarget', v[0])} min={30000} max={300000} step={5000} />
+                  <div className="flex justify-between text-xs text-gray-400 mt-1"><span>30k€</span><span>150k€</span><span>300k€</span></div>
+                </div>
+
+
+              </div>
+            )}
+
+            {/* STEP 5: CONFIRM */}
+            {step === 'confirm' && (
+              <div className="space-y-4">
+                <div className="text-center mb-4">
+                  <p className="text-gray-700">
+                    {profile.expérienceLevel === 'débutant' ? (
+                      <>
+                        {isEs ? <>Perfecto <strong>{profile.firstName}</strong>! Tus objetivos están calibrados para un principiante — despacio pero seguro. Cada día cuenta.</> : <>Parfait <strong>{profile.firstName}</strong> ! Tes objectifs sont calibrés pour un débutant — doucement mais sûrement. Chaque jour compte.</>}
+                      </>
+                    ) : (
+                      <>
+                        {isEs ? <>Perfecto <strong>{profile.firstName}</strong>! Aquí están tus objetivos del día para empezar tu progresión.</> : <>Parfait <strong>{profile.firstName}</strong> ! Voilà tes objectifs du jour pour commencer ta progression.</>}
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                {(() => {
+                  const t = calculateTargetsFromCA6Months(profile.ca6MonthsTarget, 5, profile.averagePrice, profile.expérienceLevel, 1);
+                  const dailyCalls = Math.max(10, Math.ceil(t.appelsTarget / 22));
+                  const dailyR1 = Math.max(1, Math.ceil(t.rdvR1Target / 22));
+                  const dailyR2 = Math.max(0, Math.ceil(t.rdvR2Target / 22));
+                  return (
+                    <>
+                      <div className="bg-red-50 rounded-xl p-4 text-center border border-red-200">
+                        <p className="text-xs text-red-600 font-medium uppercase tracking-wide">{isEs ? 'TUS OBJETIVOS HOY' : 'TES OBJECTIFS AUJOURD\'HUI'}</p>
+                        <div className="grid grid-cols-3 gap-3 mt-3">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-red-700">{dailyCalls}</p>
+                            <p className="text-xs text-red-600">{isEs ? 'conversaciones/día' : 'conversations/jour'}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-red-700">{dailyR1}</p>
+                            <p className="text-xs text-red-600">R1/{isEs ? 'día' : 'jour'}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-red-700">{dailyR2}</p>
+                            <p className="text-xs text-red-600">R2/{isEs ? 'día' : 'jour'}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="bg-blue-50 rounded-xl p-4 text-center">
+                          <p className="text-2xl font-bold text-blue-700">{t.ventesTarget}</p>
+                          <p className="text-xs text-blue-600">{isEs ? 'venta(s) este mes' : 'vente(s) ce mois'}</p>
+                        </div>
+                        <div className="bg-purple-50 rounded-xl p-4 text-center">
+                          <p className="text-2xl font-bold text-purple-700">{t.mandatsTarget}</p>
+                          <p className="text-xs text-purple-600">{isEs ? 'mandato(s) este mes' : 'mandat(s) ce mois'}</p>
+                        </div>
+                      </div>
+                    </>
+                  );
+                })()}
+
+                <p className="text-xs text-gray-500 text-center">
+                  {profile.expérienceLevel === 'débutant'
+                    ? (isEs ? 'Empezamos despacio — tu objetivo principal este mes es asimilar bien el método. ¡Los resultados seguirán naturalmente!' : 'On commence doucement — ton objectif principal ce mois-ci est de bien assimiler la méthode. Les résultats suivront naturellement !')
+                    : (isEs ? 'Estos objetivos se reajustarán cada mes según tus resultados.' : 'Ces objectifs seront réajustés chaque mois selon tes résultats.')}
+                </p>
+              </div>
+            )}
+
+            <div className="flex gap-3 mt-6">
+              {step !== 'identity' && (
+                <Button variant="outline" onClick={prêvStep} className="flex-1">{isEs ? 'Atrás' : 'Retour'}</Button>
+              )}
+              <Button onClick={nextStep} disabled={!isStepValid()} className="flex-1 bg-red-600 hover:bg-red-700">
+                {step === 'confirm' ? (<>{isEs ? '¡Vamos allá!' : "C'est parti !"} <Sparkles className="w-4 h-4 ml-2" /></>) : (<>{isEs ? 'Continuar' : 'Continuer'} <ArrowRight className="w-4 h-4 ml-2" /></>)}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
