@@ -7,13 +7,13 @@ compatibility_date = "2024-01-01"
 binding = "DB"
 database_name = "immo-pulse-db"
 # REMPLACE "TON-ID-ICI" par l'ID que tu recevras à l'étape 3
-database_id = "TON-ID-ICI"
+database_id = "6585b01a-aff5-4c3c-8db5-07287122b266"
 
 # Variables d'environnement
 [vars]
 # REMPLACE par l'URL de ton frontend (ex: "https://immo-pulse.pages.dev")
 # Mets "*" seulement pour le développement local
-FRONTEND_URL = "*"
+FRONTEND_URL = "https://immo-pulse.pages.dev"
 
 # Secrets à configurer avec: wrangler secret put JWT_SECRET
 # JWT_SECRET = "ton-secret-très-long-et-aléatoire-minimum-32-caractères"
