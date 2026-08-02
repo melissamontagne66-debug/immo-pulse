@@ -1,0 +1,20 @@
+-- ============================================
+-- SEED : Instructions de création des comptes
+-- ============================================
+--
+-- NE PAS exécuter ce fichier directement pour les utilisateurs.
+-- Chaque conseiller crée son propre compte via le frontend :
+--   1. Ouvrir l'application
+--   2. Cliquer sur "Pas encore de compte ? S'inscrire"
+--   3. Remplir le formulaire
+--   4. Le mot de passe est hashé automatiquement côté serveur
+--
+-- Pour un admin qui veut pré-créer des comptes, utiliser le
+-- endpoint /api/auth/register depuis un script ou curl :
+--
+-- curl -X POST https://TON-API.workers.dev/api/auth/register \
+--   -H "Content-Type: application/json" \
+--   -d '{"email":"nom@email.com","password":"MOT_DE_PASSE_FORT","firstName":"Prénom","lastName":"Nom"}'
+--
+-- Les mots de passe doivent faire minimum 6 caractères.
+-- Interdit : 123456, password, azerty, etc.
