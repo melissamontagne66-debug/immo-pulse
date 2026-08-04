@@ -160,7 +160,7 @@ function App() {
   const isSyncing = useRef(false);
 
   useEffect(() => {
-    if (!isCloudEnabled() || !currentUser) return;
+    if (!isCloudEnabled() || !currentUser || !hasProfile) return;
     if (isSyncing.current) return;
 
     const syncData = async () => {
@@ -181,7 +181,7 @@ function App() {
 
     const timeout = setTimeout(syncData, 3000);
     return () => clearTimeout(timeout);
-  }, [progress.dailyResults, progress.completedDays, profile, visits, currentUser]);
+  }, [progress.dailyResults, progress.completedDays, profile, visits, currentUser, hasProfile]);
   // ===== FIN SAUVEGARDE CLOUD =====
 
   // Scroll to top when tab changes
