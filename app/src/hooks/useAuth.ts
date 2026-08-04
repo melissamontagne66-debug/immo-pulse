@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
-import { apiLogin, logoutCloud, isApiConfigured } from '@/services/api';
+import { apiLogin, apiRegister, logoutCloud, isApiConfigured } from '@/services/api';
 
 const SESSION_KEY = 'iad-coach-session';
 const LOCAL_USERS_KEY = 'immo-pulse-local-users';
@@ -171,7 +171,35 @@ export function useAuth() {
       return { success: false, error: 'Le mot de passe doit faire au moins 6 caractères.' };
     }
 
-    // Save locally
+    // Create the account on the backend so it's reachable from any device/session
+    if (isApiConfigured()) {
+      try {
+        const data = await apiRegister(normalizedEmail, password, firstName.trim(), lastName.trim(), experienceLevel, startDate);
+        if (data.token) {
+          setIsOfflineMode(false);
+          const user: UserInfo = {
+            id: data.user?.id || normalizedEmail,
+            email: data.user?.email || normalizedEmail,
+            firstName: data.user?.firstName || firstName.trim(),
+            lastName: data.user?.lastName || lastName.trim(),
+            experienceLevel: data.user?.experienceLevel,
+            startDate: data.user?.startDate,
+          };
+          setCurrentUser(user);
+          saveSession(user);
+          setIsLoading(false);
+          setTimeout(() => { window.location.reload(); }, 100);
+          return { success: true };
+        }
+        setIsLoading(false);
+        return { success: false, error: data.error || 'Impossible de créer le compte.' };
+      } catch {
+        setIsLoading(false);
+        return { success: false, error: 'Impossible de contacter le serveur. Vérifie ta connexion et réessaie.' };
+      }
+    }
+
+    // Offline fallback: save locally only (no API configured)
     saveLocalUser(normalizedEmail, {
       email: normalizedEmail,
       passwordHash: simpleHash(password),
