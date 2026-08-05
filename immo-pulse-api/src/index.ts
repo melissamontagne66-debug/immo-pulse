@@ -13,8 +13,9 @@ export interface Env {
 function corsHeaders(env: Env, request: Request): Record<string, string> {
   const origin = request.headers.get('Origin') || '';
   const allowedOrigin = env.FRONTEND_URL || '*';
-  // Si l'origine est dans la whitelist ou si FRONTEND_URL est '*'
-  const finalOrigin = (allowedOrigin === '*' || allowedOrigin === origin) ? (origin || allowedOrigin) : allowedOrigin;
+  const allowedOrigins = allowedOrigin.split(',').map((entry) => entry.trim()).filter(Boolean);
+  const isAllowed = allowedOrigins.includes('*') || allowedOrigins.includes(origin);
+  const finalOrigin = isAllowed ? (origin || allowedOrigins[0] || '*') : (allowedOrigins[0] || '*');
   return {
     'Access-Control-Allow-Origin': finalOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -41,6 +42,17 @@ async function hashPasswordWithSalt(password: string, salt: string): Promise<str
 
 const CURRENT_SALT = 'immo-pulse-salt-v1';
 const LEGACY_SALT = 'immo-pulse-salt';
+const RESET_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
+
+function normalizeEmail(email: string): string {
+  return email.toLowerCase().trim();
+}
+
+function generateResetToken(): string {
+  const array = new Uint8Array(16);
+  crypto.getRandomValues(array);
+  return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 async function hashPassword(password: string): Promise<string> {
   return hashPasswordWithSalt(password, CURRENT_SALT);
@@ -153,7 +165,31 @@ export default {
         return json({ success: true, token, user: { id, email: email.toLowerCase().trim(), firstName, lastName, experienceLevel, startDate } }, 200, cors);
       }
 
-      // ===== AUTH: Login =====
+// ===== AUTH: Forgot password =====
+      if (path === '/api/auth/forgot-password' && request.method === 'POST') {
+        const body = await request.json() as any;
+        const email = normalizeEmail(body.email || '');
+        if (!email) {
+          return json({ error: 'Email requis.' }, 400, cors);
+        }
+
+        const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+        if (!user) {
+          // Response should not reveal whether the email exists
+          return json({ success: true, message: 'Si ce compte existe, un lien de réinitialisation a été envoyé.' }, 200, cors);
+        }
+
+        const token = generateResetToken();
+        const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_SECONDS * 1000).toISOString();
+
+        await env.DB.prepare(
+          'INSERT INTO password_resets (id, user_id, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
+        ).bind(crypto.randomUUID(), user.id, token, expiresAt).run();
+
+        return json({ success: true, message: 'Si ce compte existe, un lien de réinitialisation a été envoyé.', resetToken: token }, 200, cors);
+      }
+
+        // ===== AUTH: Login =====
       if (path === '/api/auth/login' && request.method === 'POST') {
         const body = await request.json() as any;
         const { email, password } = body;
@@ -184,19 +220,59 @@ export default {
         }, 200, cors);
       }
 
+      // ===== AUTH: Reset password =====
+      if (path === '/api/auth/reset-password' && request.method === 'POST') {
+        const body = await request.json() as any;
+        const email = normalizeEmail(body.email || '');
+        const token = body.token || '';
+        const password = body.password || '';
+
+        if (!email || !token || !password || password.length < 6) {
+          return json({ error: 'Email, code et mot de passe (6 caractères min) requis.' }, 400, cors);
+        }
+
+        const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+        if (!user) {
+          return json({ error: 'Informations de réinitialisation invalides.' }, 400, cors);
+        }
+
+        const reset = await env.DB.prepare(
+          'SELECT * FROM password_resets WHERE user_id = ? AND token = ? AND used = 0'
+        ).bind(user.id, token).first();
+
+        if (!reset) {
+          return json({ error: 'Code de réinitialisation invalide ou expiré.' }, 400, cors);
+        }
+
+        const expiresAt = new Date(reset.expires_at as string);
+        if (expiresAt.getTime() < Date.now()) {
+          return json({ error: 'Ce code a expiré.' }, 400, cors);
+        }
+
+        const passwordHash = await hashPassword(password);
+        await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(passwordHash, user.id).run();
+        await env.DB.prepare('UPDATE password_resets SET used = 1 WHERE id = ?').bind(reset.id).run();
+
+        return json({ success: true, message: 'Mot de passe réinitialisé avec succès.' }, 200, cors);
+      }
+
       // ===== SYNC: POST (save) =====
       if (path === '/api/sync' && request.method === 'POST') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
 
         const body = await request.json() as any;
-        const { profile, dailyResults, completedDays } = body;
+        const { profile, progress, dailyResults, completedDays } = body;
 
-        // Save profile as JSON
-        if (profile) {
+        // Save profile/progress as JSON in the same row.
+        if (profile || progress) {
+          const existingRow = await env.DB.prepare('SELECT data, progress FROM profiles WHERE user_id = ?').bind(userId).first();
+          const savedProfile = profile ? JSON.stringify(profile) : (existingRow?.data ?? JSON.stringify({}));
+          const savedProgress = progress ? JSON.stringify(progress) : (existingRow?.progress ?? JSON.stringify({}));
+
           await env.DB.prepare(
-            'INSERT OR REPLACE INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime("now"))'
-          ).bind(userId, JSON.stringify(profile)).run();
+            'INSERT OR REPLACE INTO profiles (user_id, data, progress, updated_at) VALUES (?, ?, ?, datetime("now"))'
+          ).bind(userId, savedProfile, savedProgress).run();
         }
 
         // Save daily results
@@ -233,9 +309,10 @@ export default {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
 
-        // Profile
-        const profileRow = await env.DB.prepare('SELECT data FROM profiles WHERE user_id = ?').bind(userId).first();
+        // Profile + progress
+        const profileRow = await env.DB.prepare('SELECT data, progress FROM profiles WHERE user_id = ?').bind(userId).first();
         const profile = profileRow ? JSON.parse(profileRow.data as string) : null;
+        const progressData = profileRow && profileRow.progress ? JSON.parse(profileRow.progress as string) : null;
 
         // Daily results
         const resultsRows = await env.DB.prepare(
@@ -283,7 +360,17 @@ export default {
           generatedMessage: r.generated_message,
         }));
 
-        return json({ success: true, profile, dailyResults, completedDays, visits }, 200, cors);
+        return json({ success: true, profile, progress: progressData || {
+          dailyResults,
+          completedDays,
+          currentDay: 1,
+          nextDayPlans: [],
+          streak: 0,
+          totalCalls: dailyResults.reduce((s: number, r: any) => s + r.calls_made, 0),
+          totalRdv: dailyResults.reduce((s: number, r: any) => s + r.rdv_r1_done + r.rdv_r2_done, 0),
+          totalMandats: dailyResults.reduce((s: number, r: any) => s + r.mandats_signed, 0),
+          totalVisites: dailyResults.reduce((s: number, r: any) => s + r.visites_done, 0),
+        }, completedDays, visits }, 200, cors);
       }
 
       // ===== VISITS: POST =====

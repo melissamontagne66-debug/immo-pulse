@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
-import { cn } from '@/lib/utils';
+import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
 import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck } from 'lucide-react';
 
@@ -98,7 +98,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
             className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 mt-1.5 underline"
           >
             <Target className="w-3 h-3" />
-            CA visé : {profile.currentMonthGoal.caTarget.toLocaleString()}€
+            CA visé : {formatEuro(profile.currentMonthGoal.caTarget)}
           </button>
         </div>
 

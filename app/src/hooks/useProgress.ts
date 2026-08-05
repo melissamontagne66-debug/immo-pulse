@@ -43,11 +43,13 @@ export function useProgress(userKey: string) {
   const loadedKey = useRef(userKey);
 
   // React to userKey changes
-  if (userKey !== loadedKey.current) {
-    loadedKey.current = userKey;
-    const stored = loadProgress(userKey);
-    setProgress(stored);
-  }
+  useEffect(() => {
+    if (userKey !== loadedKey.current) {
+      loadedKey.current = userKey;
+      const stored = loadProgress(userKey);
+      setProgress(stored);
+    }
+  }, [userKey]);
 
   useEffect(() => {
     saveProgress(loadedKey.current, progress);
@@ -57,7 +59,6 @@ export function useProgress(userKey: string) {
   const loadFromCloud = useCallback((cloudProgress: any | null) => {
     if (!cloudProgress) return;
     setProgress(prev => {
-      // Cloud data wins: merge with defaults, then overlay local, then overlay cloud
       const merged = { ...defaultProgress, ...prev, ...cloudProgress };
       saveProgress(loadedKey.current, merged);
       return merged;

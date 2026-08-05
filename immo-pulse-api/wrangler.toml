@@ -11,9 +11,9 @@ database_id = "6585b01a-aff5-4c3c-8db5-07287122b266"
 
 # Variables d'environnement
 [vars]
-# REMPLACE par l'URL de ton frontend (ex: "https://immo-pulse.pages.dev")
-# Mets "*" seulement pour le développement local
-FRONTEND_URL = "https://immo-pulse.pages.dev"
+# REMPLACE par les URLs de ton frontend.
+# Ici on autorise local + prod pour tester le cloud dans les deux environnements.
+FRONTEND_URL = "http://127.0.0.1:4173,http://localhost:4173,https://immo-pulse.pages.dev"
 
 # Secrets à configurer avec: wrangler secret put JWT_SECRET
 # JWT_SECRET = "ton-secret-très-long-et-aléatoire-minimum-32-caractères"

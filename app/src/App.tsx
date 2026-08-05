@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 // Immo Pulse - App de coaching immobilier
 import { LoginScreen } from '@/components/LoginScreen';
 import { Layout } from '@/components/Layout';
@@ -37,6 +37,7 @@ function App() {
   const [showGoalSetter, setShowGoalSetter] = useState(false);
   const [modalView, setModalView] = useState<ModalView>('none');
   const [showFirstTimeOnboarding, setShowFirstTimeOnboarding] = useState(false);
+  const [pendingRedirectToReport, setPendingRedirectToReport] = useState(false);
 
   // Écouter les demandes de navigation entre onglets (ex: depuis le bilan)
   useEffect(() => {
@@ -81,6 +82,12 @@ function App() {
   const { messages, isTyping, sendMessage, clearChat } = useChat(userKey);
   const { profile, hasProfile, setProfile, updateProfile, dailyTargets, loadFromCloud: loadProfileFromCloud } = useProfile(userKey);
 
+  useEffect(() => {
+    if (hasProfile && showFirstTimeOnboarding) {
+      setShowFirstTimeOnboarding(false);
+    }
+  }, [hasProfile, showFirstTimeOnboarding]);
+
   // ===== CHARGEMENT CLOUD =====
   const hasLoadedCloud = useRef(false);
   const previousUser = useRef<string | null>(null);
@@ -113,24 +120,28 @@ function App() {
         hasLoadedCloud.current = true;
 
         // Inject cloud data into hooks
-        if (data.profile) {
+          if (data.profile) {
           loadProfileFromCloud(data.profile);
         }
-        if (data.dailyResults && data.dailyResults.length > 0) {
-          loadProgressFromCloud({
-            dailyResults: data.dailyResults,
-            completedDays: data.completedDays || [],
-          });
-        }
-        if (data.completedDays && data.completedDays.length > 0) {
-          loadProgressFromCloud({ completedDays: data.completedDays });
+        if (data.progress) {
+          loadProgressFromCloud(data.progress);
+        } else {
+          if (data.dailyResults && data.dailyResults.length > 0) {
+            loadProgressFromCloud({
+              dailyResults: data.dailyResults,
+              completedDays: data.completedDays || [],
+            });
+          }
+          if (data.completedDays && data.completedDays.length > 0) {
+            loadProgressFromCloud({ completedDays: data.completedDays });
+          }
         }
         if (data.visits && data.visits.length > 0) {
           loadVisitsFromCloud(data.visits);
         }
 
         // Migration: if cloud is empty but local has data → push to cloud
-        const hasLocalData = progress.dailyResults.length > 0 || visits.length > 0 || hasProfile;
+        const hasLocalData = progress.dailyResults.length > 0 || visits.length > 0 || hasProfile || progress.currentDay > 1 || progress.nextDayPlans.length > 0;
         const cloudEmpty = (!data.dailyResults || data.dailyResults.length === 0)
           && (!data.visits || data.visits.length === 0)
           && !data.profile;
@@ -139,8 +150,7 @@ function App() {
           toast.info('Synchronisation de tes données vers le cloud...', { duration: 3000 });
           await apiSyncSave({
             profile,
-            dailyResults: progress.dailyResults,
-            completedDays: progress.completedDays,
+            progress,
             visits,
           });
           toast.success('Données synchronisées !', { duration: 3000 });
@@ -159,43 +169,29 @@ function App() {
   // ===== SAUVEGARDE CLOUD =====
   const isSyncing = useRef(false);
 
-  const flushSync = useCallback(async () => {
-    if (!isCloudEnabled() || !currentUser || !hasProfile) return;
-    if (isSyncing.current) return;
-    isSyncing.current = true;
-    try {
-      await apiSyncSave({
-        profile,
-        dailyResults: progress.dailyResults,
-        completedDays: progress.completedDays,
-        visits,
-      });
-    } catch {
-      // Silencieux — si le réseau est down, les données restent en localStorage
-    } finally {
-      isSyncing.current = false;
-    }
-  }, [profile, progress.dailyResults, progress.completedDays, visits, currentUser, hasProfile]);
-
   useEffect(() => {
-    if (!isCloudEnabled() || !currentUser || !hasProfile) return;
+    if (!isCloudEnabled() || !currentUser) return;
     if (isSyncing.current) return;
 
-    // Court délai : juste de quoi coalescer des changements simultanés (ex: addDailyResults +
-    // setCurrentDay dans handleSaveCheckup). Ces changements sont ponctuels (clic sur un bouton),
-    // jamais continus (pas de frappe clavier), donc pas besoin d'un long debounce — et un délai
-    // court réduit la fenêtre pendant laquelle une fermeture d'onglet ferait perdre la sync.
-    const timeout = setTimeout(() => { flushSync(); }, 500);
-    return () => clearTimeout(timeout);
-  }, [progress.dailyResults, progress.completedDays, profile, visits, currentUser, hasProfile, flushSync]);
-  // ===== FIN SAUVEGARDE CLOUD =====
+    const syncData = async () => {
+      isSyncing.current = true;
+      try {
+        await apiSyncSave({
+          profile,
+          progress,
+          visits,
+        });
+      } catch {
+        // Silencieux — si le réseau est down, les données restent en localStorage
+      } finally {
+        isSyncing.current = false;
+      }
+    };
 
-  // Flush pending changes before logging out, so a fast logout can't cancel
-  // an unsaved debounced sync and silently drop data that was never sent to D1.
-  const handleLogout = useCallback(async () => {
-    await flushSync();
-    logout();
-  }, [flushSync, logout]);
+    const timeout = setTimeout(syncData, 3000);
+    return () => clearTimeout(timeout);
+  }, [progress, profile, visits, currentUser]);
+  // ===== FIN SAUVEGARDE CLOUD =====
 
   // Scroll to top when tab changes
   useLayoutEffect(() => {
@@ -212,21 +208,21 @@ function App() {
     );
   }
 
-  const [pendingRedirectToReport, setPendingRedirectToReport] = useState(false);
+  if (isCloudEnabled() && !hasLoadedCloud.current) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 text-center max-w-md">
+          <h2 className="text-xl font-semibold text-gray-900">Chargement de ton compte...</h2>
+          <p className="text-sm text-gray-500 mt-3">Reste connecté, on récupère tes dernières données et ton dernier bilan.</p>
+        </div>
+      </div>
+    );
+  }
 
-  const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number }) => {
-    addDailyResults(results as DailyResults);
-
-    // Check if visits were done today but no visit report exists for today
-    const todayStr = new Date().toISOString().split('T')[0];
-    const hasVisitsToday = results.visitesDone > 0;
-    const hasVisitReportToday = visits.some(v => v.date === todayStr);
-    const needsRedirectToReport = hasVisitsToday && !hasVisitReportToday;
-    setPendingRedirectToReport(needsRedirectToReport);
-
-    // Auto-advance to next day
-    const nextDay = progress.currentDay + 1;
-    setCurrentDay(nextDay);
+  const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
+    addDailyResults(results);
+    setModalView('none');
+    toast.success('Bilan enregistré !');
   };
 
   const handleCloseCheckup = () => {
@@ -373,7 +369,7 @@ function App() {
         streak={progress.streak}
         profile={profile}
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
-        onLogout={handleLogout}
+        onLogout={logout}
         onOpenCheckup={() => setModalView('checkup')}
         userEmail={currentUser?.email}
         hasNotification={true}
@@ -395,6 +391,7 @@ function App() {
             </div>
             <div className="p-6 max-h-[70vh] overflow-y-auto">
               <DailyCheckup
+                userKey={userKey}
                 profile={profile}
                 currentDay={progress.currentDay}
                 completedDays={progress.completedDays}

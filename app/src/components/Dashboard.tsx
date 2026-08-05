@@ -6,6 +6,7 @@ import { getMonthlyMandatTarget } from '@/types/profile';
 import type { UserProgress, DailyResults } from '@/types';
 import type { WeekPlan } from '@/types';
 import { Flame, Target, AlertTriangle, ArrowRight, Sunrise } from 'lucide-react';
+import { formatEuro } from '@/lib/utils';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
 
 interface DashboardProps {
@@ -71,7 +72,7 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
             className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
           >
             <Target className="w-4 h-4" />
-            CA : {(profile.currentMonthGoal.caTarget / 1000).toFixed(0)}k€
+            CA : {formatEuro(profile.currentMonthGoal.caTarget)}
           </button>
           <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg">
             <Flame className="w-5 h-5" />

@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { VisitReport, VisitStats, VisitStatus } from '@/types';
 
 const STORAGE_PREFIX = 'immo-pulse-visits';
@@ -54,11 +54,13 @@ export function useVisits(userKey: string) {
   const loadedKey = useRef(userKey);
 
   // React to userKey changes
-  if (userKey !== loadedKey.current) {
-    loadedKey.current = userKey;
-    const stored = loadVisits(userKey);
-    setVisits(stored);
-  }
+  useEffect(() => {
+    if (userKey !== loadedKey.current) {
+      loadedKey.current = userKey;
+      const stored = loadVisits(userKey);
+      setVisits(stored);
+    }
+  }, [userKey]);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
   const loadFromCloud = useCallback((cloudVisits: any[] | null) => {

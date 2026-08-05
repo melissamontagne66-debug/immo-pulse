@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import type { UserProfile, MonthlyGoal } from '@/types/profile';
 import { defaultProfile, calculateTargetsFromCA6Months, getDailyTargets } from '@/types/profile';
 
@@ -25,11 +25,13 @@ export function useProfile(userKey: string) {
   const loadedKey = useRef(userKey);
 
   // React to userKey changes
-  if (userKey !== loadedKey.current) {
-    loadedKey.current = userKey;
-    const stored = loadProfile(userKey);
-    setProfileState(stored);
-  }
+  useEffect(() => {
+    if (userKey !== loadedKey.current) {
+      loadedKey.current = userKey;
+      const stored = loadProfile(userKey);
+      setProfileState(stored);
+    }
+  }, [userKey]);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
   const loadFromCloud = useCallback((cloudProfile: any | null) => {

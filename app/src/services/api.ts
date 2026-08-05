@@ -81,12 +81,35 @@ export async function apiLogin(email: string, password: string) {
   return data;
 }
 
+export async function apiForgotPassword(email: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/auth/forgot-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email }),
+  });
+  return await res.json();
+}
+
+export async function apiResetPassword(email: string, token: string, password: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/auth/reset-password`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, token, password }),
+  });
+  return await res.json();
+}
+
 // --- SYNC ---
 
 export async function apiSyncSave(payload: {
   profile: any;
-  dailyResults: any[];
-  completedDays: string[];
+  progress: any;
   visits: any[];
 }) {
   if (IS_PLACEHOLDER) {

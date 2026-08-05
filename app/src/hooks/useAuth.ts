@@ -220,6 +220,7 @@ export function useAuth() {
     setCurrentUser(user);
     saveSession(user);
     setIsLoading(false);
+    setTimeout(() => { window.location.reload(); }, 100);
     return { success: true };
   }, []);
 

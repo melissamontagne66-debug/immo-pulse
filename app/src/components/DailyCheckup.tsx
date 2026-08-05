@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,7 +13,47 @@ import {
   Database, ClipboardCheck, Lightbulb
 } from 'lucide-react';
 
+const CHECKUP_DRAFT_PREFIX = 'iad-coach-checkup-draft';
+
+interface CheckupDraft {
+  step: number;
+  actionVerifications: Record<string, boolean | null>;
+  hadVisitsToday: boolean | null;
+  results: any;
+  nextDayTasks: string[];
+}
+
+function getDraftKey(userKey: string, day: number) {
+  return `${CHECKUP_DRAFT_PREFIX}-${userKey}-${day}`;
+}
+
+function loadDraft(userKey: string, day: number): CheckupDraft | null {
+  try {
+    const stored = localStorage.getItem(getDraftKey(userKey, day));
+    return stored ? JSON.parse(stored) : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveDraft(userKey: string, day: number, draft: CheckupDraft) {
+  try {
+    localStorage.setItem(getDraftKey(userKey, day), JSON.stringify(draft));
+  } catch {
+    // ignore
+  }
+}
+
+function clearDraft(userKey: string, day: number) {
+  try {
+    localStorage.removeItem(getDraftKey(userKey, day));
+  } catch {
+    // ignore
+  }
+}
+
 interface DailyCheckupProps {
+  userKey: string;
   profile: UserProfile;
   currentDay: number;
   completedDays: string[];
@@ -45,18 +85,20 @@ function getDailyActionIds(day: number, isEs: boolean = false) {
   ];
 }
 
-export function DailyCheckup({ profile, currentDay, completedDays, onSave, onClose, onUpdateProfile }: DailyCheckupProps) {
+export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSave, onClose, onUpdateProfile }: DailyCheckupProps) {
+  const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
+
   // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning, 3 = success
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState<number>(() => draft?.step ?? 0);
 
   // Action verification state
   const isEs = profile.language === 'es';
   const dailyActions = getDailyActionIds(currentDay, isEs);
   const uncompletedActions = dailyActions.filter(a => !completedDays.includes(a.id));
-  const [actionVerifications, setActionVerifications] = useState<Record<string, boolean | null>>({});
+  const [actionVerifications, setActionVerifications] = useState<Record<string, boolean | null>>(() => draft?.actionVerifications ?? {});
   
   // Special state for visit returns: ask if there were visits today
-  const [hadVisitsToday, setHadVisitsToday] = useState<boolean | null>(null);
+  const [hadVisitsToday, setHadVisitsToday] = useState<boolean | null>(() => draft?.hadVisitsToday ?? null);
 
   // Main checkup results
   // Scroll en haut à chaque changement de step
@@ -64,7 +106,7 @@ export function DailyCheckup({ profile, currentDay, completedDays, onSave, onClo
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  const [results, setResults] = useState({
+  const [results, setResults] = useState(() => draft?.results ?? {
     date: new Date().toISOString().split('T')[0],
     callsMade: 0,
     contactsApproached: 0,
@@ -86,14 +128,25 @@ export function DailyCheckup({ profile, currentDay, completedDays, onSave, onClo
   });
 
   // Next day planning state
-  const [nextDayTasks, setNextDayTasks] = useState<string[]>([]);
+  const [nextDayTasks, setNextDayTasks] = useState<string[]>(() => draft?.nextDayTasks ?? []);
+
+  // Persist draft while the user is filling the checkup
+  useEffect(() => {
+    saveDraft(userKey, currentDay, {
+      step,
+      actionVerifications,
+      hadVisitsToday,
+      results,
+      nextDayTasks,
+    });
+  }, [userKey, currentDay, step, actionVerifications, hadVisitsToday, results, nextDayTasks]);
 
   // Check if we should ask about network vidéos (first 6 months + not yet watched)
   const monthsSinceStart = getMonthsSinceStart(profile.startDate);
   const shouldAskVideos = monthsSinceStart < 6 && !profile.watchedNetworkVideos;
 
   const update = (field: keyof typeof results, value: any) => {
-    setResults(prev => ({ ...prev, [field]: value }));
+    setResults((prev: typeof results) => ({ ...prev, [field]: value }));
   };
 
   const verifyAction = (actionId: string, done: boolean) => {
@@ -114,6 +167,7 @@ export function DailyCheckup({ profile, currentDay, completedDays, onSave, onClo
       onUpdateProfile({ watchedNetworkVideos: true });
     }
     onSave(results as any);
+    clearDraft(userKey, currentDay);
 
     // Prepare next day tasks based on what was reported
     const reportedTasks: string[] = [];

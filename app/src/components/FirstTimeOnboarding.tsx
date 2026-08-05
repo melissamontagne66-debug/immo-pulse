@@ -27,7 +27,7 @@ const steps = [
     color: 'text-green-600',
     bg: 'bg-green-50',
     title: 'Ton coach personnel',
-    description: 'Le Le Coach Immo est là pour toi 24h/24. Pose-lui n\'importe quelle question sur la prospection, les RDV, la négociation...',
+    description: 'Le Coach Immo t’aide à structurer ta prospection et tes RDV. Pose-lui une question pour obtenir des conseils concrets.',
   },
   {
     icon: HomeIcon,
