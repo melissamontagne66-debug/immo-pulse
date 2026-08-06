@@ -7,6 +7,8 @@ export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   FRONTEND_URL: string;
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string;
 }
 
 // --- CORS ---
@@ -42,16 +44,48 @@ async function hashPasswordWithSalt(password: string, salt: string): Promise<str
 
 const CURRENT_SALT = 'immo-pulse-salt-v1';
 const LEGACY_SALT = 'immo-pulse-salt';
-const RESET_TOKEN_TTL_SECONDS = 15 * 60; // 15 minutes
+const RESET_TOKEN_TTL_SECONDS = 60 * 60; // 1 heure
 
 function normalizeEmail(email: string): string {
   return email.toLowerCase().trim();
 }
 
 function generateResetToken(): string {
-  const array = new Uint8Array(16);
-  crypto.getRandomValues(array);
-  return Array.from(array).map(b => b.toString(16).padStart(2, '0')).join('');
+  return crypto.randomUUID();
+}
+
+function getFrontendUrl(env: Env, origin?: string): string {
+  const allowedOrigins = (env.FRONTEND_URL || '').split(',').map((item) => item.trim()).filter(Boolean);
+  if (origin && allowedOrigins.includes(origin)) {
+    return origin.replace(/\/$/, '');
+  }
+  return allowedOrigins[0] || 'https://immo-pulse.pages.dev';
+}
+
+async function sendResetEmail(email: string, token: string, frontendUrl: string, env: Env): Promise<void> {
+  if (!env.RESEND_API_KEY) return;
+  const from = env.RESEND_FROM_EMAIL?.trim() || 'no-reply@immo-pulse.pages.dev';
+  const resetLink = `${frontendUrl.replace(/\/$/, '')}?reset=${encodeURIComponent(token)}`;
+
+  await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+    },
+    body: JSON.stringify({
+      from,
+      to: [email],
+      subject: 'Réinitialisation de ton mot de passe Immo Pulse',
+      html: `
+        <p>Bonjour,</p>
+        <p>Tu as demandé à réinitialiser ton mot de passe pour Immo Pulse.</p>
+        <p>Clique sur ce lien pour définir un nouveau mot de passe :</p>
+        <p><a href="${resetLink}">${resetLink}</a></p>
+        <p>Si tu n'as pas demandé cette réinitialisation, ignore ce message.</p>
+      `.trim(),
+    }),
+  });
 }
 
 async function hashPassword(password: string): Promise<string> {
@@ -175,21 +209,27 @@ export default {
 
         const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
         if (!user) {
-          // Response should not reveal whether the email exists
-          return json({ success: true, message: 'Si ce compte existe, un lien de réinitialisation a été envoyé.' }, 200, cors);
+          return json({ success: true, message: 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.' }, 200, cors);
         }
 
         const token = generateResetToken();
         const expiresAt = new Date(Date.now() + RESET_TOKEN_TTL_SECONDS * 1000).toISOString();
+        const frontendUrl = getFrontendUrl(env, request.headers.get('Origin') || undefined);
 
         await env.DB.prepare(
-          'INSERT INTO password_resets (id, user_id, token, expires_at, used) VALUES (?, ?, ?, ?, 0)'
-        ).bind(crypto.randomUUID(), user.id, token, expiresAt).run();
+          'INSERT INTO password_resets (id, token, user_id, expires_at, used) VALUES (?, ?, ?, ?, 0)'
+        ).bind(crypto.randomUUID(), token, user.id, expiresAt).run();
 
-        return json({ success: true, message: 'Si ce compte existe, un lien de réinitialisation a été envoyé.', resetToken: token }, 200, cors);
+        try {
+          await sendResetEmail(email, token, frontendUrl, env);
+        } catch {
+          // Continue anyway to avoid exposing internal errors.
+        }
+
+        return json({ success: true, message: 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.' }, 200, cors);
       }
 
-        // ===== AUTH: Login =====
+      // ===== AUTH: Login =====
       if (path === '/api/auth/login' && request.method === 'POST') {
         const body = await request.json() as any;
         const { email, password } = body;
@@ -223,37 +263,32 @@ export default {
       // ===== AUTH: Reset password =====
       if (path === '/api/auth/reset-password' && request.method === 'POST') {
         const body = await request.json() as any;
-        const email = normalizeEmail(body.email || '');
         const token = body.token || '';
-        const password = body.password || '';
+        const password = body.newPassword || body.password || '';
 
-        if (!email || !token || !password || password.length < 6) {
-          return json({ error: 'Email, code et mot de passe (6 caractères min) requis.' }, 400, cors);
-        }
-
-        const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
-        if (!user) {
-          return json({ error: 'Informations de réinitialisation invalides.' }, 400, cors);
+        if (!token || !password || password.length < 6) {
+          return json({ error: 'Ce lien a expiré ou a déjà été utilisé. Redemande un lien.' }, 400, cors);
         }
 
         const reset = await env.DB.prepare(
-          'SELECT * FROM password_resets WHERE user_id = ? AND token = ? AND used = 0'
-        ).bind(user.id, token).first();
+          'SELECT * FROM password_resets WHERE token = ? AND used = 0'
+        ).bind(token).first();
 
         if (!reset) {
-          return json({ error: 'Code de réinitialisation invalide ou expiré.' }, 400, cors);
+          return json({ error: 'Ce lien a expiré ou a déjà été utilisé. Redemande un lien.' }, 400, cors);
         }
 
         const expiresAt = new Date(reset.expires_at as string);
         if (expiresAt.getTime() < Date.now()) {
-          return json({ error: 'Ce code a expiré.' }, 400, cors);
+          await env.DB.prepare('UPDATE password_resets SET used = 1 WHERE token = ?').bind(token).run();
+          return json({ error: 'Ce lien a expiré ou a déjà été utilisé. Redemande un lien.' }, 400, cors);
         }
 
         const passwordHash = await hashPassword(password);
-        await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(passwordHash, user.id).run();
-        await env.DB.prepare('UPDATE password_resets SET used = 1 WHERE id = ?').bind(reset.id).run();
+        await env.DB.prepare('UPDATE users SET password_hash = ? WHERE id = ?').bind(passwordHash, reset.user_id).run();
+        await env.DB.prepare('UPDATE password_resets SET used = 1 WHERE token = ?').bind(token).run();
 
-        return json({ success: true, message: 'Mot de passe réinitialisé avec succès.' }, 200, cors);
+        return json({ success: true }, 200, cors);
       }
 
       // ===== SYNC: POST (save) =====

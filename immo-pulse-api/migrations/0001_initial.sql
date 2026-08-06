@@ -23,6 +23,17 @@ CREATE TABLE IF NOT EXISTS profiles (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Table des demandes de réinitialisation de mot de passe
+CREATE TABLE IF NOT EXISTS password_resets (
+  id TEXT PRIMARY KEY,
+  token TEXT NOT NULL,
+  user_id TEXT NOT NULL,
+  expires_at TEXT NOT NULL,
+  used INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Table des résultats quotidiens
 CREATE TABLE IF NOT EXISTS daily_results (
   id TEXT PRIMARY KEY,

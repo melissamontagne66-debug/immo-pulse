@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -74,6 +74,15 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     }
   };
 
+  useEffect(() => {
+    const token = new URL(window.location.href).searchParams.get('reset')?.trim() || '';
+    if (token.length > 0) {
+      clearMessages();
+      setResetToken(token);
+      setMode('reset');
+    }
+  }, []);
+
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
     clearMessages();
@@ -89,11 +98,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     try {
       const data = await apiForgotPassword(resetEmail.trim());
       setLoading(false);
-      setInfo(data.message || 'Si ce compte existe, un lien de réinitialisation a été envoyé.');
-      if (data.resetToken) {
-        setResetToken(data.resetToken);
-        setMode('reset');
-      }
+      setInfo(data.message || 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.');
     } catch {
       setLoading(false);
       setError('Impossible de demander la réinitialisation pour le moment.');
@@ -103,11 +108,11 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
   const handleResetPassword = async (e: FormEvent) => {
     e.preventDefault();
     clearMessages();
-    if (!isValidEmail(resetEmail)) {
-      setError('Renseigne un email valide.');
+    if (!resetToken.trim()) {
+      setError('Le lien de réinitialisation est invalide.');
       return;
     }
-    if (!resetToken.trim() || !newPassword.trim() || !confirmPassword.trim()) {
+    if (!newPassword.trim() || !confirmPassword.trim()) {
       setError('Renseigne tous les champs.');
       return;
     }
@@ -125,7 +130,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     }
     setLoading(true);
     try {
-      const data = await apiResetPassword(resetEmail.trim(), resetToken.trim(), newPassword);
+      const data = await apiResetPassword(resetToken.trim(), newPassword);
       setLoading(false);
       if (data.success) {
         setInfo('Ton mot de passe a été réinitialisé. Tu peux te connecter maintenant.');
@@ -134,6 +139,9 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
         setResetToken('');
         setNewPassword('');
         setConfirmPassword('');
+        const url = new URL(window.location.href);
+        url.searchParams.delete('reset');
+        window.history.replaceState({}, '', url.toString());
       } else {
         setError(data.error || 'La réinitialisation a échoué.');
       }
@@ -192,7 +200,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           )}
 
           {mode === 'login' && (
-            <form onSubmit={handleLogin} className="space-y-4">
+            <form onSubmit={handleLogin} className="space-y-4" noValidate>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700">
                   <Mail className="w-4 h-4 text-gray-400" /> Email
@@ -217,7 +225,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           )}
 
           {mode === 'register' && (
-            <form onSubmit={handleRegister} className="space-y-4">
+            <form onSubmit={handleRegister} className="space-y-4" noValidate>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label className="text-gray-700">Prénom</Label>
@@ -243,7 +251,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           )}
 
           {mode === 'forgot' && (
-            <form onSubmit={handleForgotPassword} className="space-y-4">
+            <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
                 <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="ton@email.com" className="mt-1" required />
@@ -260,22 +268,20 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           )}
 
           {mode === 'reset' && (
-            <form onSubmit={handleResetPassword} className="space-y-4">
-              <div>
-                <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
-                <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="ton@email.com" className="mt-1" required />
-              </div>
-              <div>
-                <Label className="flex items-center gap-2 text-gray-700"><Key className="w-4 h-4 text-gray-400" /> Code de réinitialisation</Label>
-                <Input value={resetToken} onChange={e => setResetToken(e.target.value)} placeholder="Code reçu par email" className="mt-1" required />
-              </div>
+            <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
+              {!resetToken && (
+                <div>
+                  <Label className="flex items-center gap-2 text-gray-700"><Key className="w-4 h-4 text-gray-400" /> Code de réinitialisation</Label>
+                  <Input value={resetToken} onChange={e => setResetToken(e.target.value)} placeholder="Code reçu par email" className="mt-1" />
+                </div>
+              )}
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> Nouveau mot de passe</Label>
-                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="6 caractères minimum" className="mt-1" required />
+                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="6 caractères minimum" className="mt-1" />
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> Confirmer le mot de passe</Label>
-                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirme ton mot de passe" className="mt-1" required />
+                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirme ton mot de passe" className="mt-1" />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
                 {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
