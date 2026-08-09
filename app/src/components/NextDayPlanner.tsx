@@ -220,7 +220,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
             {skippedActions.length > 0 && (
               <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
                 <p className="text-xs text-amber-700">
-                  💡 Tu as reporté {skippedActions.length} action(s). N'hésite pas à en parler avec la personne avec qui tu collaborer (parrain, mentor, partenaire) pour débloquér la situation.
+                  💡 Tu as reporté {skippedActions.length} {skippedActions.length > 1 ? 'actions' : 'action'}. N'hésite pas à en parler avec la personne avec qui tu collabores (parrain, mentor, partenaire) pour débloquer la situation.
                 </p>
               </div>
             )}

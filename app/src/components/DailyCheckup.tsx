@@ -57,8 +57,11 @@ interface DailyCheckupProps {
   profile: UserProfile;
   currentDay: number;
   completedDays: string[];
+  dailyResults: DailyResults[];
   onSave: (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => void;
   onClose?: () => void;
+  onRequestClose?: () => void;
+  onDirtyChange?: (dirty: boolean) => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
 }
 
@@ -70,35 +73,70 @@ function getMonthsSinceStart(startDate: string): number {
   return Math.max(0, months);
 }
 
-// List of daily actions to verify
-function getDailyActionIds(day: number, isEs: boolean = false) {
+// List of daily actions to verify.
+// ⚠️ Cette logique recopie fidèlement la génération de `dailyTasks` dans
+// DailyActions.tsx (mêmes ids, mêmes conditions) — une source de données
+// unique entre les deux écrans arrive dans une MOD ultérieure.
+function getDailyActions(day: number, profile: UserProfile, dailyResults: DailyResults[], isEs: boolean = false) {
+  // Conditions identiques à DailyActions.tsx
+  const hasMandats = dailyResults.some(r => r.mandatsSigned > 0);
+  const firstMandatResult = dailyResults.find(r => r.mandatsSigned > 0);
+  const daysSinceLastMandat = firstMandatResult
+    ? Math.floor((new Date().getTime() - new Date(firstMandatResult.date).getTime()) / (1000 * 60 * 60 * 24))
+    : 999;
+  const showRetours = hasMandats; // Retours uniquement si mandat enregistré
+  const showMandatProactif = hasMandats && daysSinceLastMandat <= 7;
+  const showInterCabinets = hasMandats && day % 7 === 3; // Jours 3, 10, 17...
+  const isFirstMonth = getMonthsSinceStart(profile.startDate) < 1 && !profile.primoListeCalled;
+
   return [
-    { id: `action-jour-${day}`, label: isEs ? 'Acción de prospección' : 'Action de prospection', icon: '🚪' },
+    { id: `prospection-jour-${day}`, label: isEs ? 'Acción de prospección' : 'Action de prospection', icon: '🚪' },
     { id: `admin-jour-${day}`, label: isEs ? 'Tareas administrativas' : 'Tâches administratives', icon: '📋' },
     { id: `r1-jour-${day}`, label: isEs ? 'Hacer tus R1' : 'Effectuer tes R1', icon: '📅' },
     { id: `r2-jour-${day}`, label: isEs ? 'Hacer tus R2' : 'Effectuer tes R2', icon: '✍️' },
-    { id: `retours-jour-${day}`, label: isEs ? 'Hacer los retornos de visitas' : 'Faire les retours de visites', icon: '📞' },
+    ...(showRetours ? [{ id: `retours-jour-${day}`, label: isEs ? 'Hacer los retornos de visitas' : 'Faire les retours de visites', icon: '📞' }] : []),
     { id: `défi-jour-${day}`, label: isEs ? 'Reto del día' : 'Défi du jour', icon: '🏆' },
     { id: `apporteurs-jour-${day}`, label: isEs ? 'Registrar colaboradores' : 'Enregistrer tes apporteurs', icon: '🤝' },
     { id: `plateformes-jour-${day}`, label: isEs ? 'Contactar bienes en plataformas' : 'Contacter les nouveaux biens sur les plateformes', icon: '💻' },
-    { id: `daily-crm-update`, label: isEs ? 'Actualizar el CRM' : 'Mettre à jour le CRM', icon: '🗄️' },
+    ...(isFirstMonth ? [{ id: `primo-jour-${day}`, label: isEs ? 'Llamar a tu lista primo' : 'Appeler ta primo liste', icon: '❤️' }] : []),
+    ...(showMandatProactif ? [{ id: `mandat-proactif-jour-${day}`, label: isEs ? 'Acciones proactivas sobre tu nuevo mandato' : 'Actions proactives sur ton nouveau mandat', icon: '🚀' }] : []),
+    ...(showInterCabinets ? [{ id: `inter-cabinets-jour-${day}`, label: isEs ? 'Inter-agencias' : 'Inter-cabinets', icon: '🔄' }] : []),
+    ...(day <= 14 ? [{ id: `gmb-jour-${day}`, label: 'Google My Business', icon: '🌐' }] : []),
+    { id: `social-jour-${day}`, label: isEs ? 'Contenido redes sociales' : 'Réseaux sociaux — Idée du jour', icon: '📱' },
+    { id: 'daily-crm-update', label: isEs ? 'Actualizar el CRM' : 'Mettre à jour le CRM', icon: '🗄️' },
   ];
 }
 
-export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSave, onClose, onUpdateProfile }: DailyCheckupProps) {
+export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
 
   // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning, 3 = success
   const [step, setStep] = useState<number>(() => draft?.step ?? 0);
 
-  // Action verification state
+  // Action verification state — la vérification porte sur la liste COMPLÈTE
+  // des actions du jour (la même que l'écran « Aujourd'hui »).
   const isEs = profile.language === 'es';
-  const dailyActions = getDailyActionIds(currentDay, isEs);
-  const uncompletedActions = dailyActions.filter(a => !completedDays.includes(a.id));
-  const [actionVerifications, setActionVerifications] = useState<Record<string, boolean | null>>(() => draft?.actionVerifications ?? {});
+  const dailyActions = getDailyActions(currentDay, profile, dailyResults, isEs);
+  const [actionVerifications, setActionVerifications] = useState<Record<string, boolean | null>>(() => {
+    // Pré-cochage : les actions déjà cochées dans « Aujourd'hui » sont pré-marquées Faite (modifiable)
+    const preChecked: Record<string, boolean> = {};
+    dailyActions.forEach(a => {
+      if (completedDays.includes(a.id)) preChecked[a.id] = true;
+    });
+    // Le brouillon reprend la main, mais ses valeurs null (non répondu) n'écrasent pas le pré-cochage
+    const fromDraft = { ...(draft?.actionVerifications ?? {}) };
+    Object.keys(fromDraft).forEach(k => {
+      if (fromDraft[k] == null) delete fromDraft[k];
+    });
+    return { ...preChecked, ...fromDraft };
+  });
   
   // Special state for visit returns: ask if there were visits today
   const [hadVisitsToday, setHadVisitsToday] = useState<boolean | null>(() => draft?.hadVisitsToday ?? null);
+
+  // Saisie en cours : devient vrai dès la première interaction utilisateur
+  // (sert à la confirmation avant fermeture dans App.tsx)
+  const [hasInteracted, setHasInteracted] = useState(false);
 
   // Main checkup results
   // Scroll en haut à chaque changement de step
@@ -146,14 +184,28 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
   const shouldAskVideos = monthsSinceStart < 6 && !profile.watchedNetworkVideos;
 
   const update = (field: keyof typeof results, value: any) => {
+    setHasInteracted(true);
     setResults((prev: typeof results) => ({ ...prev, [field]: value }));
   };
 
+  // Marquer « Faite » / « Pas faite » pose un statut ; re-cliquer sur le statut
+  // déjà actif bascule vers l'autre état (toggle, jamais de blocage).
   const verifyAction = (actionId: string, done: boolean) => {
-    setActionVerifications(prev => ({ ...prev, [actionId]: done }));
+    setHasInteracted(true);
+    setActionVerifications(prev => ({ ...prev, [actionId]: prev[actionId] === done ? !done : done }));
   };
 
-  const allActionsVerified = uncompletedActions.length === 0 || uncompletedActions.every(a => actionVerifications[a.id] !== undefined);
+  // Compteur dérivé : statut non défini (undefined/null) = non répondu.
+  // Tient compte du pré-cochage des actions déjà cochées dans « Aujourd'hui ».
+  const actionsRestantes = dailyActions.filter(a => actionVerifications[a.id] == null).length;
+  const allActionsVerified = actionsRestantes === 0;
+
+  // Signale à App.tsx si une saisie est en cours (confirmation avant fermeture).
+  // Au step 2 le bilan est enregistré : fermer ne perd plus rien.
+  const isDirty = hasInteracted && step !== 2;
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const handleProceedToCheckup = () => {
     // If user says action was done but wasn't checked, we could auto-check it here
@@ -171,7 +223,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
 
     // Prepare next day tasks based on what was reported
     const reportedTasks: string[] = [];
-    uncompletedActions.forEach(a => {
+    dailyActions.forEach(a => {
       const isRetoursAction = a.id === `retours-jour-${currentDay}`;
       if (actionVerifications[a.id] === false) {
         // Retours de visite : reporter seulement si des visites ont eu lieu
@@ -201,9 +253,9 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
     { id: 'autre', label: 'Autre horaire', desc: 'Terrain hors créneaux' },
   ];
 
-  // Step 0: Action Verification
-  if (step === 0 && uncompletedActions.length > 0) {
-    const verifiedCount = uncompletedActions.filter(a => actionVerifications[a.id] !== undefined).length;
+  // Step 0: Action Verification — porte sur la liste complète des actions du jour
+  if (step === 0) {
+    const verifiedCount = dailyActions.length - actionsRestantes;
     return (
       <div className="space-y-5">
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
@@ -211,13 +263,16 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
             <strong>Vérification des actions — Jour {currentDay}</strong>
           </p>
           <p className="text-xs text-amber-600 mt-1">
-            Avant de faire ton bilan, vérifions les actions du jour. {uncompletedActions.length} action{uncompletedActions.length > 1 ? 's' : ''} n'{uncompletedActions.length > 1 ? 'ont' : 'a'} pas été cochée{uncompletedActions.length > 1 ? 's' : ''}.
+            Avant de faire ton bilan, vérifions les actions du jour. Celles déjà cochées dans « Aujourd'hui » sont pré-marquées ✅ — tu peux modifier chaque réponse.
+          </p>
+          <p className="text-xs font-semibold text-amber-700 mt-2">
+            {verifiedCount}/{dailyActions.length} action{dailyActions.length > 1 ? 's' : ''} vérifiée{verifiedCount > 1 ? 's' : ''}
           </p>
         </div>
 
         <div className="space-y-3">
-          {uncompletedActions.map((action, idx) => {
-            const status = actionVerifications[action.id];
+          {dailyActions.map((action, idx) => {
+            const status = actionVerifications[action.id] == null ? undefined : actionVerifications[action.id];
             const isRetoursAction = action.id === `retours-jour-${currentDay}`;
             
             // Special handling for visit returns
@@ -229,7 +284,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
                       <span className="text-lg">{action.icon}</span>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">{action.label}</p>
-                        <p className="text-xs text-gray-500">Action {idx + 1} sur {uncompletedActions.length}</p>
+                        <p className="text-xs text-gray-500">Action {idx + 1} sur {dailyActions.length}</p>
                       </div>
                     </div>
                     
@@ -238,7 +293,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
                         <p className="text-sm text-gray-700 mb-2">As-tu eu des visites aujourd'hui ?</p>
                         <div className="flex gap-2">
                           <button
-                            onClick={() => setHadVisitsToday(true)}
+                            onClick={() => {
+                              setHasInteracted(true);
+                              setHadVisitsToday(true);
+                            }}
                             className="px-3 py-1.5 rounded-lg text-xs font-medium bg-gray-100 text-gray-600 hover:bg-pink-100"
                           >
                             Oui, j'ai eu des visites
@@ -292,7 +350,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
                     <span className="text-lg">{action.icon}</span>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">{action.label}</p>
-                      <p className="text-xs text-gray-500">Action {idx + 1} sur {uncompletedActions.length}</p>
+                      <p className="text-xs text-gray-500">Action {idx + 1} sur {dailyActions.length}</p>
                     </div>
                     <div className="flex gap-2">
                       <button
@@ -316,7 +374,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
                   {status === false && (
                     <p className="text-xs text-orange-700 mt-2 bg-orange-100 rounded-lg p-2">
                       {isRetoursAction 
-                        ? "Pas de visite aujourd'hui ? Pas de souci, on va s'en occuper juste après alors." 
+                        ? "Pas de visite aujourd'hui ? Pas de souci : elle sera reportée en priorité demain." 
                         : "Pas de souci ! Cette action sera reportée en priorité demain."}
                     </p>
                   )}
@@ -326,34 +384,37 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
           })}
         </div>
 
-        <Button
-          onClick={handleProceedToCheckup}
-          disabled={!allActionsVerified}
-          className="w-full bg-red-600 hover:bg-red-700 py-3 text-base disabled:opacity-50"
-        >
-          <ArrowRight className="w-4 h-4 mr-2" />
-          {allActionsVerified ? 'Passer au bilan' : `Vérifie les ${uncompletedActions.length - verifiedCount} action${uncompletedActions.length - verifiedCount > 1 ? 's' : ''} restante${uncompletedActions.length - verifiedCount > 1 ? 's' : ''}`}
-        </Button>
+        {/* Bouton de validation explicite, fixe en bas du modal (visible sans scroll) */}
+        <div className="sticky bottom-0 -mx-1 px-1 pt-3 pb-1 bg-gradient-to-t from-white via-white to-transparent">
+          <Button
+            onClick={handleProceedToCheckup}
+            disabled={!allActionsVerified}
+            className="w-full bg-red-600 hover:bg-red-700 py-3 text-base disabled:opacity-50 shadow-lg"
+          >
+            <ArrowRight className="w-4 h-4 mr-2" />
+            {allActionsVerified ? 'Continuer vers mon bilan →' : `Vérifie les ${actionsRestantes} action${actionsRestantes > 1 ? 's' : ''} restante${actionsRestantes > 1 ? 's' : ''}`}
+          </Button>
+        </div>
       </div>
     );
   }
 
   // Step 1: Main Checkup Form
-  if (step === 1 || (step === 0 && uncompletedActions.length === 0)) {
+  if (step === 1) {
     return (
       <div className="space-y-6">
         {/* Header row with close button */}
         {onClose && (
           <div className="flex items-center justify-between">
             <p className="text-xs text-gray-400">Prends 3 minutes pour faire le point</p>
-            <button onClick={onClose} className="text-gray-400 hover:text-red-500 text-sm">✕ Fermer</button>
+            <button onClick={onRequestClose ?? onClose} className="text-gray-400 hover:text-red-500 text-sm">✕ Fermer</button>
           </div>
         )}
 
         {/* Welcome message */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <p className="text-sm text-amber-800">
-            <strong>Bilan de ta journée</strong> — C'est ce que font les tops performers chaque soir. Tes réponses sont enregistrées sur ton compte et consultables à tout moment.
+            <strong>Bilan de ta journée</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
           </p>
         </div>
 
@@ -410,7 +471,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
               {results.watchedNetworkVideosToday === false && (
                 <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
                   <p className="text-sm text-blue-800">
-                    <strong>Chaque petite étape compte !</strong> Les vidéos du réseau te donnent les bases juridiques et légales pour aller sur le terrain l'esprit tranquille. Dès que tu les auras vues, tu pourras rentrer tes premiers mandats en toute confiance. Tu es sur la bonne voie !
+                    <strong>Chaque petite étape compte !</strong> Ces vidéos te préparent à signer tes premiers mandats : regarde-les en priorité. Et avant toute signature, vérifie que tu as bien reçu ton attestation d'habilitation de la part de ton réseau (loi Hoguet) : sans elle, tu ne peux pas signer de mandat. C'est elle qui te protège, toi et tes clients. Tu es sur la bonne voie !
                   </p>
                 </div>
               )}
@@ -529,6 +590,15 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, onSa
             </CardContent></Card>
           ))}
         </div>
+
+        {/* Avertissement légal — enregistrement d'un mandat */}
+        {results.mandatsSigned > 0 && (
+          <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <p className="text-sm text-amber-800">
+              ⚖️ Avant de signer, vérifie que tu as reçu ton attestation d'habilitation (loi Hoguet) et que tu as vu les vidéos de formation du réseau. En cas de doute, parles-en à ton manager.
+            </p>
+          </div>
+        )}
 
         {/* Wins */}
         <div>

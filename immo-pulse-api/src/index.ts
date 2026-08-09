@@ -7,6 +7,9 @@ export interface Env {
   DB: D1Database;
   JWT_SECRET: string;
   FRONTEND_URL: string;
+  MAILGUN_API_KEY?: string;
+  MAILGUN_DOMAIN?: string;
+  MAILGUN_FROM_EMAIL?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
 }
@@ -63,9 +66,36 @@ function getFrontendUrl(env: Env, origin?: string): string {
 }
 
 async function sendResetEmail(email: string, token: string, frontendUrl: string, env: Env): Promise<void> {
-  if (!env.RESEND_API_KEY) return;
-  const from = env.RESEND_FROM_EMAIL?.trim() || 'no-reply@immo-pulse.pages.dev';
   const resetLink = `${frontendUrl.replace(/\/$/, '')}?reset=${encodeURIComponent(token)}`;
+  const defaultFrom = env.MAILGUN_DOMAIN ? `no-reply@${env.MAILGUN_DOMAIN}` : 'no-reply@immo-pulse.pages.dev';
+  const from = env.MAILGUN_FROM_EMAIL?.trim() || defaultFrom;
+
+  if (env.MAILGUN_API_KEY && env.MAILGUN_DOMAIN) {
+    const body = new URLSearchParams();
+    body.set('from', from);
+    body.set('to', email);
+    body.set('subject', 'Réinitialisation de ton mot de passe Immo Pulse');
+    body.set('html', `
+      <p>Bonjour,</p>
+      <p>Tu as demandé à réinitialiser ton mot de passe pour Immo Pulse.</p>
+      <p>Clique sur ce lien pour définir un nouveau mot de passe :</p>
+      <p><a href="${resetLink}">${resetLink}</a></p>
+      <p>Si tu n'as pas demandé cette réinitialisation, ignore ce message.</p>
+    `.trim());
+
+    await fetch(`https://api.mailgun.net/v3/${env.MAILGUN_DOMAIN}/messages`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${btoa(`api:${env.MAILGUN_API_KEY}`)}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: body.toString(),
+    });
+    return;
+  }
+
+  if (!env.RESEND_API_KEY) return;
+  const resendFrom = env.RESEND_FROM_EMAIL?.trim() || defaultFrom;
 
   await fetch('https://api.resend.com/emails', {
     method: 'POST',
@@ -74,7 +104,7 @@ async function sendResetEmail(email: string, token: string, frontendUrl: string,
       Authorization: `Bearer ${env.RESEND_API_KEY}`,
     },
     body: JSON.stringify({
-      from,
+      from: resendFrom,
       to: [email],
       subject: 'Réinitialisation de ton mot de passe Immo Pulse',
       html: `
@@ -203,13 +233,13 @@ export default {
       if (path === '/api/auth/forgot-password' && request.method === 'POST') {
         const body = await request.json() as any;
         const email = normalizeEmail(body.email || '');
-        if (!email) {
-          return json({ error: 'Email requis.' }, 400, cors);
-        }
+        const neutralResponse = { success: true, message: 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.' };
 
-        const user = await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first();
+        const user = email
+          ? await env.DB.prepare('SELECT id FROM users WHERE email = ?').bind(email).first()
+          : null;
         if (!user) {
-          return json({ success: true, message: 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.' }, 200, cors);
+          return json(neutralResponse, 200, cors);
         }
 
         const token = generateResetToken();
@@ -226,7 +256,7 @@ export default {
           // Continue anyway to avoid exposing internal errors.
         }
 
-        return json({ success: true, message: 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.' }, 200, cors);
+        return json(neutralResponse, 200, cors);
       }
 
       // ===== AUTH: Login =====

@@ -72,7 +72,7 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
             className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
           >
             <Target className="w-4 h-4" />
-            CA : {formatEuro(profile.currentMonthGoal.caTarget)}
+            Objectif du mois : {formatEuro(Math.round(profile.ca6MonthsTarget / 6))} ({formatEuro(profile.ca6MonthsTarget)} sur 6 mois)
           </button>
           <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg">
             <Flame className="w-5 h-5" />

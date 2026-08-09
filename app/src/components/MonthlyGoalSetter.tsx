@@ -4,6 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import type { UserProfile, MonthlyGoal } from '@/types/profile';
 import { calculateTargetsFromCA6Months } from '@/types/profile';
+import { formatEuro } from '@/lib/utils';
 import { TrendingUp, Phone, DoorOpen, Calendar, Sparkles, X } from 'lucide-react';
 
 interface MonthlyGoalSetterProps {
@@ -35,7 +36,7 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
   };
 
   return (
-    <div className="min-h-scréén bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
           <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center justify-between">
@@ -49,15 +50,15 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
           <div className="p-6 space-y-6">
             <div className="bg-blue-50 rounded-xl p-4">
               <p className="text-sm text-blue-700">
-                <strong>Ton CA vise :</strong> {profile.ca6MonthsTarget.toLocaleString()}€<br />
-                Commission fixe : {COMMISSION}% · Prix moyen : {(profile.averagePrice / 1000).toFixed(0)}k€
+                <strong>Ton CA vise :</strong> {formatEuro(profile.ca6MonthsTarget)}<br />
+                Commission fixe : {COMMISSION}% · Prix moyen : {formatEuro(profile.averagePrice)}
               </p>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
                 <Label className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-red-500" /> CA ajusté pour {monthLabel} (€)</Label>
-                <span className="text-lg font-bold text-red-600">{caTarget.toLocaleString()}€</span>
+                <span className="text-lg font-bold text-red-600">{formatEuro(caTarget)}</span>
               </div>
               <Slider value={[caTarget]} onValueChange={v => setCaTarget(v[0])} min={5000} max={100000} step={1000} />
             </div>

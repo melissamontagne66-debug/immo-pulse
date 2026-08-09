@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Mail, Lock, ArrowRight, LogIn, UserPlus, WifiOff, Key } from 'lucide-react';
+import { Sparkles, Mail, Lock, ArrowRight, LogIn, UserPlus, Key } from 'lucide-react';
 import { apiForgotPassword, apiResetPassword, isApiConfigured } from '@/services/api';
 
 interface LoginScreenProps {
@@ -30,6 +30,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   const clearMessages = () => {
     setError('');
@@ -41,6 +42,10 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     clearMessages();
     if (!email.trim() || !password.trim()) {
       setError('Renseigne ton email et ton mot de passe.');
+      return;
+    }
+    if (!isValidEmail(email)) {
+      setError('Saisis une adresse email valide.');
       return;
     }
     setLoading(true);
@@ -58,8 +63,12 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       setError('Renseigne tous les champs.');
       return;
     }
+    if (!isValidEmail(email)) {
+      setError('Saisis une adresse email valide.');
+      return;
+    }
     if (password.length < 6) {
-      setError('Le mot de passe doit faire au moins 6 caractères.');
+      setError('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     if (!onRegister) {
@@ -87,7 +96,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!isValidEmail(resetEmail)) {
-      setError('Renseigne un email valide.');
+      setError('Saisis une adresse email valide.');
       return;
     }
     if (!isApiConfigured()) {
@@ -117,7 +126,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       return;
     }
     if (newPassword.length < 6) {
-      setError('Le mot de passe doit faire au moins 6 caractères.');
+      setError('Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -133,7 +142,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       const data = await apiResetPassword(resetToken.trim(), newPassword);
       setLoading(false);
       if (data.success) {
-        setInfo('Ton mot de passe a été réinitialisé. Tu peux te connecter maintenant.');
+        setInfo('Ton mot de passe a été mis à jour. Tu peux te connecter.');
         setMode('login');
         setPassword('');
         setResetToken('');
@@ -156,8 +165,6 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     setMode(nextMode);
   };
 
-  const isCloudMode = isApiConfigured();
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
@@ -167,12 +174,6 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
           <p className="text-gray-500 mt-1">Ton accompagnement personnalisé</p>
-          {!isCloudMode && (
-            <div className="mt-2 inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-medium border border-amber-200">
-              <WifiOff className="w-3 h-3" />
-              Mode local — tes données restent sur cet appareil
-            </div>
-          )}
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
@@ -247,6 +248,9 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
                 {loading ? 'Inscription...' : <>S'inscrire <ArrowRight className="w-4 h-4 ml-2" /></>}
               </Button>
+              <p className="text-xs text-gray-500 leading-relaxed">
+                En créant un compte, tu acceptes que tes données de coaching (profil, bilans, résultats) soient stockées pour faire fonctionner le service. Les contacts que tu notes (prospects, vendeurs) relèvent de ta responsabilité professionnelle&nbsp;: informe-les et supprime leurs données dès qu'elles ne sont plus utiles. Tu peux supprimer ton compte et toutes tes données à tout moment depuis les réglages.
+              </p>
             </form>
           )}
 
@@ -303,12 +307,33 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           )}
         </div>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
-          {isCloudMode
-            ? 'Cette application utilise le cloud pour synchroniser tes données entre appareils. Données gérées conformément au RGPD.'
-            : 'Mode local — tes données restent sur cet appareil. Aucune synchronisation cloud n’est activée.'}
-        </p>
+        <div className="text-center text-xs text-gray-400 mt-6 space-y-1.5">
+          <p>🔒 Tes données sont stockées sur ton appareil et synchronisées de façon sécurisée sur ton compte. Tu les retrouves sur n'importe quel appareil.</p>
+          <button type="button" onClick={() => setShowPrivacy(true)} className="text-red-500 hover:text-red-600 font-medium underline underline-offset-2">
+            Politique de confidentialité
+          </button>
+        </div>
       </div>
+
+      {showPrivacy && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowPrivacy(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-lg w-full max-h-[80vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Politique de confidentialité</h3>
+            <div className="space-y-3 text-sm text-gray-600 leading-relaxed">
+              <p><strong className="text-gray-900">Responsable de traitement&nbsp;:</strong> l'éditeur de l'application Immo Pulse, qui met ce service à ta disposition dans le cadre de ton activité professionnelle.</p>
+              <p><strong className="text-gray-900">Finalité&nbsp;:</strong> tes données (profil, bilans quotidiens, comptes rendus de visite, statistiques) sont traitées uniquement pour faire fonctionner le service de coaching et te restituer ton historique et tes résultats.</p>
+              <p><strong className="text-gray-900">Stockage&nbsp;:</strong> tes données sont enregistrées sur ton appareil (stockage local du navigateur) et synchronisées de façon sécurisée sur ton compte, hébergé par Cloudflare (Workers et base de données D1), afin que tu les retrouves sur n'importe quel appareil.</p>
+              <p><strong className="text-gray-900">Durée de conservation&nbsp;:</strong> tes données sont conservées tant que ton compte est actif. La suppression de ton compte entraîne la suppression de l'ensemble de tes données.</p>
+              <p><strong className="text-gray-900">Tes droits&nbsp;:</strong> tu disposes d'un droit d'accès, de rectification et de suppression de tes données. Tu peux les exercer à tout moment depuis les réglages de l'application, notamment en supprimant ton compte.</p>
+              <p><strong className="text-gray-900">Données de tiers&nbsp;:</strong> les contacts que tu saisis (prospects, vendeurs) relèvent de ta responsabilité professionnelle. Informe ces personnes et supprime leurs données dès qu'elles ne sont plus utiles.</p>
+              <p><strong className="text-gray-900">Contact&nbsp;:</strong> pour toute question ou demande relative à tes données personnelles, contacte le responsable du service via les coordonnées communiquées par ton organisation.</p>
+            </div>
+            <Button onClick={() => setShowPrivacy(false)} className="w-full mt-6 bg-red-600 hover:bg-red-700">
+              Fermer
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

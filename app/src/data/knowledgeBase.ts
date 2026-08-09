@@ -141,6 +141,9 @@ Si prix trop haut:
     category: "technique",
     content: `Le mandat est le contrat obligatoire (loi Hoguet 1970). Sans mandat signé = ZÉRO commercialisation.
 
+⚖️ À SAVOIR — QUI SIGNE LE MANDAT ?
+Un agent mandataire signe des mandats au nom de l'agent immobilier titulaire de la carte professionnelle (carte T), sous couvert de son attestation d'habilitation, de sa garantie financière et de son assurance RC pro. En cas de doute, demande à ton réseau.
+
 MANDAT SIMPLE (stratégie de repli):
 - Le client autorise plusieurs agences + vente directe
 - CONTRE-productif: dévalorisation, perte de rareté, moins d'investissement
@@ -177,6 +180,7 @@ CLAUSE DE CONFIANCE:
 10. Désamorçage dévalorisation`,
     keyPoints: [
       "Mandat obligatoire par la loi Hoguet",
+      "Attestation d'habilitation obligatoire avant toute signature de mandat",
       "Exclusif ou Succès = objectifs prioritaires",
       "Clause de Confiance = arme anti-objection",
       "Mandat simple = perte de rareté et de valeur",

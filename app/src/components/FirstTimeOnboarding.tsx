@@ -26,8 +26,8 @@ const steps = [
     icon: MessageCircle,
     color: 'text-green-600',
     bg: 'bg-green-50',
-    title: 'Ton coach personnel',
-    description: 'Le Coach Immo t’aide à structurer ta prospection et tes RDV. Pose-lui une question pour obtenir des conseils concrets.',
+    title: 'Le Coach Immo t’accompagne chaque jour',
+    description: 'Retrouve un plan d’action personnalisé chaque matin et un bilan guidé chaque soir : c’est ce suivi quotidien qui te fait progresser.',
   },
   {
     icon: HomeIcon,
@@ -41,7 +41,7 @@ const steps = [
     color: 'text-orange-600',
     bg: 'bg-orange-50',
     title: 'Bilan du soir',
-    description: 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les tops. Ça débloqué le lendemain !',
+    description: 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les tops. Ça débloque le lendemain !',
   },
 ];
 

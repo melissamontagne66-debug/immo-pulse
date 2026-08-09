@@ -31,6 +31,11 @@ interface Simulation {
   impotPourcent: number;
 }
 
+// Formate un pourcentage à la française (virgule décimale)
+function formatPct(value: number): string {
+  return value.toLocaleString('fr-FR');
+}
+
 // Palliers de commission : France 69-85%, Espagne 69-87%
 const PALLIERS_FRANCE = [69, 75, 80, 85];
 const PALLIERS_ESPAGNE = [69, 75, 80, 87];
@@ -46,24 +51,33 @@ const TVA_RATE = 0.20; // 20%
 interface CommissionCalculatorProps {
   userKey?: string;
   country?: 'france' | 'spain';
+  averagePrice?: number;
 }
 
-export function CommissionCalculator({ userKey, country = 'france' }: CommissionCalculatorProps) {
+export function CommissionCalculator({ userKey, country = 'france', averagePrice }: CommissionCalculatorProps) {
   const isSpain = country === 'spain';
   const PALLIERS = isSpain ? PALLIERS_ESPAGNE : PALLIERS_FRANCE;
-  const CHARGES_AE = isSpain ? CHARGES_AE_ES : CHARGES_AE_FR;
+  const defaultChargesPourcent = isSpain ? CHARGES_AE_ES * 100 : CHARGES_AE_FR * 100;
   const topRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     topRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, []);
 
-  const [prixVente, setPrixVente] = useState(250000);
-  const [prixVenteInput, setPrixVenteInput] = useState(prixVente.toString());
+  const [prixVente, setPrixVente] = useState(averagePrice ?? 250000);
+  const [prixVenteInput, setPrixVenteInput] = useState(formatEuro(averagePrice ?? 250000));
+  const [prixVenteError, setPrixVenteError] = useState<string | null>(null);
   const [tauxCommissionManual, setTauxCommissionManual] = useState<number | null>(null);
+  const [tauxCommissionInput, setTauxCommissionInput] = useState('');
+  const [commissionError, setCommissionError] = useState<string | null>(null);
   const [apporteurMontant, setApporteurMontant] = useState(0);
   const [fraisNotaire, setFraisNotaire] = useState(0);
   const [impotPourcent, setImpotPourcent] = useState(2.2); // defaut impot liberatoire
+  const [impotInput, setImpotInput] = useState('2.2');
+  const [impotError, setImpotError] = useState<string | null>(null);
+  const [chargesPourcent, setChargesPourcent] = useState(defaultChargesPourcent);
+  const [chargesInput, setChargesInput] = useState(String(defaultChargesPourcent));
+  const [chargesError, setChargesError] = useState<string | null>(null);
   const [isTVAFranchise, setIsTVAFranchise] = useState(false);
   const STORAGE_KEY = userKey ? `immo-pulse-simulations-${userKey}` : 'immo-pulse-simulations';
 
@@ -94,7 +108,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
   // Pallier appliqué sur le HT → c'est ce que le conseiller touche
   const netAvecPallier = Math.round(commissionHT * (pallier / 100));
   // Charges et impôt s'appliquent sur ce que le conseiller encaisse
-  const chargesSociales = Math.round(netAvecPallier * CHARGES_AE);
+  const chargesSociales = Math.round(netAvecPallier * (chargesPourcent / 100));
   const impotLiberatoire = Math.round(netAvecPallier * (impotPourcent / 100));
   const netFinal = netAvecPallier - chargesSociales - impotLiberatoire - apporteurMontant - fraisNotaire;
 
@@ -165,7 +179,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
           {/* Prix de vente */}
           <div>
             <div className="flex items-center justify-between mb-2 gap-4 flex-wrap">
-            <Label>{isSpain ? 'Precio de venta del bien' : 'Prix de vente du bien'}</Label>
+            <Label htmlFor="prix-vente-input">{isSpain ? 'Precio de venta del bien (€)' : 'Prix de vente du bien (€)'}</Label>
             <div className="text-right">
               <div className="text-base font-bold text-red-600">{formatEuro(prixVente)}</div>
               <div className="text-xs text-gray-500">{isSpain ? 'Introduce el precio previsto de venta' : 'Saisis le prix de vente prévu'}</div>
@@ -175,27 +189,51 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
             <div>
               <Label className="text-sm text-gray-700">{isSpain ? 'Precio exacto' : 'Prix exact'}</Label>
               <Input
-                type="number"
-                min={30000}
-                max={2000000}
-                step={1000}
+                id="prix-vente-input"
+                type="text"
+                inputMode="numeric"
+                aria-label={isSpain ? 'Precio de venta del bien (€)' : 'Prix de vente du bien (€)'}
                 value={prixVenteInput}
-                onChange={e => setPrixVenteInput(e.target.value)}
-                onBlur={() => {
-                  const value = clampNumber(Number(prixVenteInput), 30000, 2000000);
+                onChange={e => {
+                  const raw = e.target.value;
+                  setPrixVenteInput(raw);
+                  const cleaned = raw.replace(/[\s  €]/g, '').replace(',', '.');
+                  if (cleaned === '') { setPrixVenteError(null); return; }
+                  const value = parseFloat(cleaned);
+                  if (isNaN(value)) return;
+                  if (value < 10000 || value > 10000000) {
+                    setPrixVenteError(isSpain
+                      ? 'El precio debe estar comprendido entre 10 000 € y 10 000 000 €.'
+                      : 'Le prix de vente doit être compris entre 10 000 € et 10 000 000 €.');
+                    return;
+                  }
+                  setPrixVenteError(null);
                   setPrixVente(value);
-                  setPrixVenteInput(String(value));
+                }}
+                onBlur={() => {
+                  const cleaned = prixVenteInput.replace(/[\s  €]/g, '').replace(',', '.');
+                  const value = parseFloat(cleaned);
+                  if (!isNaN(value) && value >= 10000 && value <= 10000000) {
+                    setPrixVente(value);
+                    setPrixVenteInput(formatEuro(value));
+                  } else {
+                    // Valeur hors borne ou illisible → retour à la dernière valeur valide
+                    setPrixVenteInput(formatEuro(prixVente));
+                  }
+                  setPrixVenteError(null);
                 }}
                 className="mt-1"
               />
+              {prixVenteError && <p className="text-xs text-red-600 mt-1">{prixVenteError}</p>}
             </div>
             <div>
               <Label className="text-sm text-gray-700">{isSpain ? 'Selector rápido' : 'Curseur rapide'}</Label>
               <Slider value={[prixVente]} onValueChange={v => {
                 setPrixVente(v[0]);
-                setPrixVenteInput(String(v[0]));
+                setPrixVenteInput(formatEuro(v[0]));
+                setPrixVenteError(null);
               }} min={30000} max={2000000} step={5000} />
-              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>30k€</span><span>400k€</span><span>800k€</span><span>2M€</span></div>
+              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>{formatEuro(30000, { compact: true })}</span><span>{formatEuro(400000, { compact: true })}</span><span>{formatEuro(800000, { compact: true })}</span><span>{formatEuro(2000000, { compact: true })}</span></div>
             </div>
           </div>          </div>
           {/* Taux de commission : auto + modifiable */}
@@ -209,22 +247,50 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  value={tauxCommissionManual !== null ? tauxCommissionManual : tauxCommissionAuto}
+                  aria-label={isSpain ? 'Tipo de comisión (%)' : 'Taux de commission (%)'}
+                  value={tauxCommissionManual !== null ? tauxCommissionInput : String(tauxCommissionAuto)}
                   onChange={e => {
-                    const val = parseFloat(e.target.value);
-                    setTauxCommissionManual(isNaN(val) ? null : clampNumber(val, 0.1, 20));
+                    const raw = e.target.value;
+                    setTauxCommissionInput(raw);
+                    if (raw === '') {
+                      setTauxCommissionManual(null);
+                      setCommissionError(null);
+                      return;
+                    }
+                    const val = parseFloat(raw);
+                    if (isNaN(val)) return;
+                    if (val < 0 || val > 10) {
+                      // Hors borne → valeur rejetée, le champ reprend la dernière valeur valide
+                      setCommissionError(isSpain
+                        ? 'El tipo de comisión debe estar comprendido entre 0 y 10 %.'
+                        : 'Le taux de commission doit être compris entre 0 et 10 %.');
+                      setTauxCommissionInput(String(tauxCommissionManual !== null ? tauxCommissionManual : tauxCommissionAuto));
+                      return;
+                    }
+                    setCommissionError(null);
+                    setTauxCommissionManual(val);
+                  }}
+                  onBlur={() => {
+                    const val = parseFloat(tauxCommissionInput);
+                    if (tauxCommissionManual !== null && (isNaN(val) || val < 0 || val > 10)) {
+                      setTauxCommissionInput(String(tauxCommissionManual));
+                    } else if (tauxCommissionManual !== null) {
+                      setTauxCommissionInput(String(val));
+                    }
+                    setCommissionError(null);
                   }}
                   className="w-20 text-center font-bold text-purple-700"
                   step={0.1}
-                  min={0.1}
-                  max={20}
+                  min={0}
+                  max={10}
                 />
                 <span className="text-sm font-semibold text-purple-700">%</span>
               </div>
             </div>
+            {commissionError && <p className="text-xs text-red-600">{commissionError}</p>}
             {tauxCommissionManual !== null && (
               <button
-                onClick={() => setTauxCommissionManual(null)}
+                onClick={() => { setTauxCommissionManual(null); setCommissionError(null); }}
                 className="text-xs text-purple-600 hover:text-purple-800 underline"
               >
                 {isSpain ? 'Restablecer automático' : 'Rétablir le taux automatique'}
@@ -233,32 +299,125 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
           </div>
 
           {/* Impôt libératoire */}
-          <div className="bg-white rounded-lg p-3 border border-gray-200">
+          <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
             <div className="flex items-center gap-3">
               <HandCoins className="w-5 h-5 text-indigo-600 flex-shrink-0" />
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">{isSpain ? 'Impuesto liberatorio (%)' : 'Impôt libératoire (%)'}</p>
-                <p className="text-xs text-gray-500">{isSpain ? 'Introduce el % de impuesto liberatorio que te aplica' : 'Renseigne le % d\'impôt libératoire qui t\'applique'}</p>
+                <p className="text-xs text-gray-500">{isSpain ? 'Introduce el % de impuesto liberatorio que se aplica a tu situación' : 'Renseigne le % d\'impôt libératoire qui s\'applique à ta situation'}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Input
                   type="number"
-                  value={impotPourcent}
-                  onChange={e => setImpotPourcent(clampNumber(Number(e.target.value), 0, 15))}
+                  aria-label={isSpain ? 'Tipo de impuesto liberatorio (%)' : 'Taux d\'impôt libératoire (%)'}
+                  value={impotInput}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    setImpotInput(raw);
+                    if (raw === '') { setImpotError(null); return; }
+                    const val = parseFloat(raw);
+                    if (isNaN(val)) return;
+                    if (val < 0 || val > 5) {
+                      // Hors borne → valeur rejetée, le champ reprend la dernière valeur valide
+                      setImpotError(isSpain
+                        ? 'El tipo de impuesto liberatorio debe estar comprendido entre 0 y 5 %.'
+                        : 'Le taux d\'impôt libératoire doit être compris entre 0 et 5 %.');
+                      setImpotInput(String(impotPourcent));
+                      return;
+                    }
+                    setImpotError(null);
+                    setImpotPourcent(val);
+                  }}
+                  onBlur={() => {
+                    const val = parseFloat(impotInput);
+                    if (isNaN(val) || val < 0 || val > 5) {
+                      setImpotInput(String(impotPourcent));
+                    } else {
+                      setImpotInput(String(val));
+                    }
+                    setImpotError(null);
+                  }}
                   className="w-20 text-center font-bold text-indigo-700"
                   step={0.1}
                   min={0}
-                  max={15}
+                  max={5}
                 />
                 <span className="text-sm font-semibold text-indigo-700">%</span>
               </div>
             </div>
+            {impotError && <p className="text-xs text-red-600">{impotError}</p>}
+          </div>
+
+          {/* Charges auto-entrepreneur */}
+          <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-2">
+            <div className="flex items-center gap-3">
+              <Percent className="w-5 h-5 text-red-600 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">
+                  {isSpain
+                    ? `Cargas autónomo (~${formatPct(defaultChargesPourcent)} %)`
+                    : `Charges auto-entrepreneur (~${formatPct(defaultChargesPourcent)} %)`}
+                </p>
+                <p className="text-xs text-gray-500">{isSpain ? 'Puedes ajustar el tipo a tu situación' : 'Tu peux ajuster le taux à ta situation'}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  aria-label={isSpain ? 'Tipo de cargas autónomo (%)' : 'Taux de charges auto-entrepreneur (%)'}
+                  value={chargesInput}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    setChargesInput(raw);
+                    if (raw === '') { setChargesError(null); return; }
+                    const val = parseFloat(raw);
+                    if (isNaN(val)) return;
+                    if (val < 0 || val > 30) {
+                      // Hors borne → valeur rejetée, le champ reprend la dernière valeur valide
+                      setChargesError(isSpain
+                        ? 'El tipo de cargas debe estar comprendido entre 0 y 30 %.'
+                        : 'Le taux de charges doit être compris entre 0 et 30 %.');
+                      setChargesInput(String(chargesPourcent));
+                      return;
+                    }
+                    setChargesError(null);
+                    setChargesPourcent(val);
+                  }}
+                  onBlur={() => {
+                    const val = parseFloat(chargesInput);
+                    if (isNaN(val) || val < 0 || val > 30) {
+                      setChargesInput(String(chargesPourcent));
+                    } else {
+                      setChargesInput(String(val));
+                    }
+                    setChargesError(null);
+                  }}
+                  className="w-20 text-center font-bold text-red-700"
+                  step={0.1}
+                  min={0}
+                  max={30}
+                />
+                <span className="text-sm font-semibold text-red-700">%</span>
+              </div>
+            </div>
+            {chargesError && <p className="text-xs text-red-600">{chargesError}</p>}
+            {chargesPourcent !== defaultChargesPourcent && (
+              <button
+                onClick={() => {
+                  setChargesPourcent(defaultChargesPourcent);
+                  setChargesInput(String(defaultChargesPourcent));
+                  setChargesError(null);
+                }}
+                className="text-xs text-red-600 hover:text-red-800 underline"
+              >
+                {isSpain ? 'Restablecer automático' : 'Rétablir le taux automatique'}
+              </button>
+            )}
           </div>
 
           {/* Pallier de commission */}
           <div>
             <Label className="flex items-center gap-2 mb-2">
-              <TrendingUp className="w-4 h-4 text-blue-600" /> {isSpain ? '¿A qué palier estás en este bien?' : 'À quel pallier es-tu sur ce bien ?'}
+              <TrendingUp className="w-4 h-4 text-blue-600" /> {isSpain ? '¿A qué palier estás en este bien?' : 'À quel palier es-tu sur ce bien ?'}
             </Label>
             <div className="grid grid-cols-4 gap-2">
               {PALLIERS.map(p => (
@@ -271,7 +430,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
                   }`}
                 >
-                  {p}%
+                  {p} %
                   <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en tu bolsillo' : 'dans ta poche'}</span>
                 </button>
               ))}
@@ -297,7 +456,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
               className="mr-2"
             />
             <label htmlFor="tva-franchise" className="text-sm text-gray-700">
-              {isSpain ? 'Régimen de franquicia de IVA (sin TVA)' : 'Franchise de TVA (sans TVA)'}
+              {isSpain ? 'Franquicia de IVA (facturación bajo el umbral)' : 'Franchise en base de TVA (chiffre d\'affaires sous le seuil)'}
             </label>
           </div>
 
@@ -312,27 +471,33 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
             <div className="space-y-2 text-sm">
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                 <span className="text-gray-600">{isSpain ? 'Comisión TTC' : 'Commission TTC'}</span>
-                <span className="font-semibold text-gray-900">{commissionTTC.toLocaleString()} €</span>
+                <span className="font-semibold text-gray-900">{formatEuro(commissionTTC)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                <span className="text-gray-600">{isTVAFranchise ? (isSpain ? 'Franquicia IVA' : 'Franchise TVA') : (isSpain ? 'Retirar IVA (20%)' : 'Retirer TVA (20%)')}</span>
-                <span className="font-medium text-purple-700">-{isTVAFranchise ? '0 €' : `${formatEuro(commissionTTC - commissionHT)}`}</span>
+                <span className="text-gray-600">{isTVAFranchise ? (isSpain ? 'Franquicia IVA' : 'Franchise TVA') : (isSpain ? 'Retirar IVA (20 %)' : 'Retirer TVA (20 %)')}</span>
+                <span className="font-medium text-purple-700">-{isTVAFranchise ? formatEuro(0) : `${formatEuro(commissionTTC - commissionHT)}`}</span>
               </div>
+              {isTVAFranchise && !isSpain && (
+                <p className="text-xs text-gray-500 italic">TVA non applicable — art. 293 B du CGI</p>
+              )}
+              {isTVAFranchise && isSpain && (
+                <p className="text-xs text-gray-500 italic">IVA no aplicable (régimen de franquicia)</p>
+              )}
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                 <span className="text-gray-900 font-medium">{isSpain ? '= Comisión HT' : '= Commission HT'}</span>
                 <span className="font-bold text-purple-700">{formatEuro(commissionHT)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100 bg-blue-50">
-                <span className="text-gray-900 font-medium">{isSpain ? `Tu palier de ${pallier}%` : `Ton pallier de ${pallier}%`}</span>
-                <span className="font-bold text-blue-700">{netAvecPallier.toLocaleString()} €</span>
+                <span className="text-gray-900 font-medium">{isSpain ? `Tu palier de ${pallier} %` : `Ton palier de ${pallier} %`}</span>
+                <span className="font-bold text-blue-700">{formatEuro(netAvecPallier)}</span>
               </div>
               <p className="text-xs text-gray-500 italic">{isSpain ? '(Este es el importe que tú encajas, sobre el que se aplican cargas e impuestos)' : "(C'est ce montant que tu touches, sur lequel s'appliquent charges et impôts)"}</p>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                <span className="text-gray-600">{isSpain ? `Cargas AE (~${Math.round(CHARGES_AE * 100)}%)` : `Charges AE (~${Math.round(CHARGES_AE * 100)}%)`}</span>
+                <span className="text-gray-600">{isSpain ? `Cargas AE (~${formatPct(chargesPourcent)} %)` : `Charges AE (~${formatPct(chargesPourcent)} %)`}</span>
                 <span className="font-medium text-red-600">-{formatEuro(chargesSociales)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                <span className="text-gray-600">{isSpain ? `Impuesto liberatorio (${impotPourcent}%)` : `Impôt libératoire (${impotPourcent}%)`}</span>
+                <span className="text-gray-600">{isSpain ? `Impuesto liberatorio (${formatPct(impotPourcent)} %)` : `Impôt libératoire (${formatPct(impotPourcent)} %)`}</span>
                 <span className="font-medium text-indigo-600">-{formatEuro(impotLiberatoire)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
@@ -346,6 +511,13 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
               <p className="text-sm text-blue-700">{isSpain ? '<strong>NET FINAL</strong> en tu bolsillo :' : '<strong>NET FINAL</strong> dans ta poche :'}</p>
               <p className="text-3xl font-bold text-blue-800 mt-1">{formatEuro(netFinal)}</p>
             </div>
+
+            {/* Hypothèses de calcul */}
+            <p className="text-xs text-gray-400 text-center">
+              {isSpain
+                ? `Hipótesis: tipo de cotizaciones ${formatPct(chargesPourcent)} %, IVA 20 %. A verificar según tu situación real.`
+                : `Hypothèses : taux de cotisations ${formatPct(chargesPourcent)} % (prestations de services), TVA 20 %. À vérifier selon ta situation réelle.`}
+            </p>
           </div>
 
           {/* Sauvegarder */}
@@ -371,7 +543,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
           </h3>
           <div className="space-y-3">
             {simulations.map(sim => {
-              const ch = Math.round(sim.commissionHT * CHARGES_AE);
+              const ch = Math.round(sim.commissionHT * (chargesPourcent / 100));
               const imp = Math.round(sim.commissionHT * (sim.impotPourcent / 100));
               const net = sim.commissionHT - ch - imp - sim.apporteur;
               const netPallier = Math.round(net * (sim.pallier / 100));
@@ -382,7 +554,7 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
                       <div className="flex-1">
                         <p className="font-semibold text-gray-900">{sim.nomVente}</p>
                         <p className="text-sm text-gray-500">
-                          {formatEuro(sim.prixVente)} · {sim.tauxCommission}% · HT {formatEuro(sim.commissionHT)} · Palier {sim.pallier}%
+                          {formatEuro(sim.prixVente)} · {sim.tauxCommission} % · HT {formatEuro(sim.commissionHT)} · Palier {sim.pallier} %
                         </p>
                       </div>
                       <div className="text-right mr-4">
@@ -404,8 +576,8 @@ export function CommissionCalculator({ userKey, country = 'france' }: Commission
       {/* Info */}
       <p className="text-xs text-gray-400 text-center">
         {isSpain
-          ? 'Cálculo basado en régimen de autónomo. Cargas sociales estimadas al ~12.8%. El impuesto liberatorio depende de tu elección personal.'
-          : 'Calcul basé sur le régime auto-entrepreneur. Charges sociales estimées à ~12.8%. L\'impôt libératoire dépend de ton choix personnel.'}
+          ? 'Cálculo basado en régimen de autónomo. Cargas sociales estimadas al ~12,8 %. El impuesto liberatorio depende de tu elección personal.'
+          : 'Calcul basé sur le régime auto-entrepreneur. Charges sociales estimées à ~21,2 % (cotisations sociales prestations de services BIC, hors CFP). L\'impôt libératoire dépend de ton choix personnel.'}
       </p>
     </div>
   );

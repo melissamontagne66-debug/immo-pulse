@@ -39,6 +39,43 @@ function App() {
   const [showFirstTimeOnboarding, setShowFirstTimeOnboarding] = useState(false);
   const [pendingRedirectToReport, setPendingRedirectToReport] = useState(false);
 
+  // Confirmation avant fermeture du bilan si une saisie est en cours
+  const [checkupDirty, setCheckupDirty] = useState(false);
+  const [showCheckupCloseConfirm, setShowCheckupCloseConfirm] = useState(false);
+
+  const requestCloseCheckup = () => {
+    if (checkupDirty) {
+      setShowCheckupCloseConfirm(true);
+    } else {
+      setModalView('none');
+    }
+  };
+
+  // Fermeture via la touche Échap : même comportement que la croix
+  // (confirmation si saisie en cours). Si la confirmation est déjà
+  // affichée, Échap la ferme et revient au bilan.
+  useEffect(() => {
+    if (modalView !== 'checkup') return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (showCheckupCloseConfirm) {
+        setShowCheckupCloseConfirm(false);
+      } else {
+        requestCloseCheckup();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [modalView, checkupDirty, showCheckupCloseConfirm]);
+
+  // Reset de l'état de confirmation quand le modal bilan se ferme
+  useEffect(() => {
+    if (modalView !== 'checkup') {
+      setShowCheckupCloseConfirm(false);
+      setCheckupDirty(false);
+    }
+  }, [modalView]);
+
   // Écouter les demandes de navigation entre onglets (ex: depuis le bilan)
   useEffect(() => {
     const handler = (e: Event) => {
@@ -89,39 +126,44 @@ function App() {
   }, [hasProfile, showFirstTimeOnboarding]);
 
   // ===== CHARGEMENT CLOUD =====
-  const hasLoadedCloud = useRef(false);
+  // State (et non ref) : la fin du chargement DOIT déclencher un re-render,
+  // sinon l'écran "Chargement de ton compte..." reste affiché indéfiniment
+  // pour un compte neuf (cloud vide → aucun setState → page figée jusqu'à F5).
+  const [hasLoadedCloud, setHasLoadedCloud] = useState(false);
   const previousUser = useRef<string | null>(null);
 
   // Reset cloud load flag when user changes
   useEffect(() => {
     const currentUserEmail = currentUser?.email || null;
     if (currentUserEmail !== previousUser.current) {
-      hasLoadedCloud.current = false;
       previousUser.current = currentUserEmail;
+      setHasLoadedCloud(false);
     }
   }, [currentUser?.email]);
 
   useEffect(() => {
     if (!isAuthenticated || !currentUser) return;
-    if (hasLoadedCloud.current) return;
+    if (hasLoadedCloud) return;
 
     const loadFromCloud = async () => {
       if (!isCloudEnabled()) {
-        hasLoadedCloud.current = true;
+        setHasLoadedCloud(true);
         return;
       }
       try {
         const data = await apiSyncLoad();
         if (!data.success) {
-          hasLoadedCloud.current = true;
+          setHasLoadedCloud(true);
           return;
         }
 
-        hasLoadedCloud.current = true;
+        // Un profil cloud vide ({}) ne compte pas comme un profil existant :
+        // il ne doit pas faire sauter l'onboarding wizard (firstName est requis).
+        const cloudProfile = data.profile && data.profile.firstName ? data.profile : null;
 
         // Inject cloud data into hooks
-          if (data.profile) {
-          loadProfileFromCloud(data.profile);
+        if (cloudProfile) {
+          loadProfileFromCloud(cloudProfile);
         }
         if (data.progress) {
           loadProgressFromCloud(data.progress);
@@ -144,12 +186,12 @@ function App() {
         const hasLocalData = progress.dailyResults.length > 0 || visits.length > 0 || hasProfile || progress.currentDay > 1 || progress.nextDayPlans.length > 0;
         const cloudEmpty = (!data.dailyResults || data.dailyResults.length === 0)
           && (!data.visits || data.visits.length === 0)
-          && !data.profile;
+          && !cloudProfile;
 
         if (cloudEmpty && hasLocalData) {
           toast.info('Synchronisation de tes données vers le cloud...', { duration: 3000 });
           await apiSyncSave({
-            profile,
+            profile: hasProfile ? profile : null,
             progress,
             visits,
           });
@@ -157,13 +199,16 @@ function App() {
         } else if (data.dailyResults?.length > 0 || data.visits?.length > 0) {
           toast.success('Données chargées depuis le cloud', { duration: 2000 });
         }
+        setHasLoadedCloud(true);
       } catch {
-        // Network down: silently use localStorage
+        // Network down: silently use localStorage — mais on débloque l'UI
+        // (sinon l'écran de chargement resterait affiché indéfiniment).
+        setHasLoadedCloud(true);
       }
     };
 
     loadFromCloud();
-  }, [isAuthenticated, currentUser, isCloudEnabled]);
+  }, [isAuthenticated, currentUser, hasLoadedCloud]);
   // ===== FIN CHARGEMENT CLOUD =====
 
   // ===== SAUVEGARDE CLOUD =====
@@ -177,7 +222,10 @@ function App() {
       isSyncing.current = true;
       try {
         await apiSyncSave({
-          profile,
+          // Ne jamais pousser le defaultProfile tant que l'onboarding
+          // n'est pas terminé — sinon le prochain chargement croirait
+          // qu'un profil existe et ferait sauter l'onboarding wizard.
+          profile: hasProfile ? profile : null,
           progress,
           visits,
         });
@@ -190,7 +238,7 @@ function App() {
 
     const timeout = setTimeout(syncData, 3000);
     return () => clearTimeout(timeout);
-  }, [progress, profile, visits, currentUser]);
+  }, [progress, profile, visits, currentUser, hasProfile]);
   // ===== FIN SAUVEGARDE CLOUD =====
 
   // Scroll to top when tab changes
@@ -208,7 +256,7 @@ function App() {
     );
   }
 
-  if (isCloudEnabled() && !hasLoadedCloud.current) {
+  if (isCloudEnabled() && !hasLoadedCloud) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 text-center max-w-md">
@@ -341,7 +389,7 @@ function App() {
           />
         );
       case 'commission':
-        return <CommissionCalculator userKey={userKey} country={profile.country} />;
+        return <CommissionCalculator userKey={userKey} country={profile.country} averagePrice={profile.averagePrice} />;
       default:
         return (
           <Dashboard
@@ -378,7 +426,8 @@ function App() {
         {renderContent()}
       </Layout>
 
-      {/* Modal overlay: Daily Checkup */}
+      {/* Modal overlay: Daily Checkup — pas de fermeture au clic sur l'overlay :
+          l'overlay n'a volontairement aucun onClick. */}
       {modalView === 'checkup' && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8 px-4">
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden my-auto">
@@ -387,7 +436,7 @@ function App() {
                 <h2 className="text-lg font-bold text-white">Bilan de ta journée — Jour {progress.currentDay}</h2>
                 <p className="text-red-100 text-sm">Fais le point sur tes résultats réels</p>
               </div>
-              <button onClick={() => setModalView('none')} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
+              <button onClick={requestCloseCheckup} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
             <div className="p-6 max-h-[70vh] overflow-y-auto">
               <DailyCheckup
@@ -395,12 +444,44 @@ function App() {
                 profile={profile}
                 currentDay={progress.currentDay}
                 completedDays={progress.completedDays}
+                dailyResults={progress.dailyResults}
                 onSave={handleSaveCheckup}
                 onClose={handleCloseCheckup}
+                onRequestClose={requestCloseCheckup}
+                onDirtyChange={setCheckupDirty}
                 onUpdateProfile={updateProfile}
               />
             </div>
           </div>
+
+          {/* Confirmation avant fermeture si une saisie est en cours */}
+          {showCheckupCloseConfirm && (
+            <div className="fixed inset-0 z-[60] bg-black/60 flex items-center justify-center px-4">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+                <h3 className="text-base font-bold text-gray-900">Fermer le bilan ?</h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  Ta vérification du jour est en cours. Si tu fermes sans valider, elle restera sauvegardée en brouillon — tu pourras la reprendre.
+                </p>
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => setShowCheckupCloseConfirm(false)}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+                  >
+                    Reprendre
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowCheckupCloseConfirm(false);
+                      setModalView('none');
+                    }}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+                  >
+                    Fermer quand même
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

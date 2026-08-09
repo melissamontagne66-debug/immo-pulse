@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -6,6 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import type { UserProfile } from '@/types/profile';
 import { defaultProfile, calculateTargetsFromCA6Months } from '@/types/profile';
 import { getCityPrice, getSuggestedPriceText } from '@/data/cityPrices';
+import { formatEuro } from '@/lib/utils';
 import {
   User, MapPin, ArrowRight, Sparkles, TrendingUp, Euro, Home,
   Lightbulb, Check, PlayCircle, Calendar, GraduationCap, HeartHandshake
@@ -17,22 +18,91 @@ interface OnboardingWizardProps {
 
 type Step = 'language' | 'identity' | 'expérience' | 'sector' | 'goals' | 'confirm';
 
+const STEP_ORDER: Step[] = ['language', 'identity', 'expérience', 'sector', 'goals', 'confirm'];
+
+// Brouillon du wizard stocké dans une clé séparée du profil
+// (`iad-coach-profile-{email}`) : App.tsx affiche le wizard tant que le profil
+// n'existe pas — écrire un profil partiel ferait sauter le wizard au F5.
+const SESSION_KEY = 'iad-coach-session';
+const DRAFT_PREFIX = 'immo-pulse-onboarding-draft';
+
+interface OnboardingDraft {
+  step: Step;
+  profile: Partial<UserProfile>;
+  hasMentor: boolean | null;
+  onboardingStep: number;
+  onboardingDone: boolean;
+}
+
+function getSessionInfo(): { email: string; firstName: string; lastName: string } {
+  try {
+    const stored = localStorage.getItem(SESSION_KEY);
+    if (stored) {
+      const session = JSON.parse(stored);
+      return {
+        email: session.email || '',
+        firstName: session.firstName || '',
+        lastName: session.lastName || '',
+      };
+    }
+  } catch { /* ignore */ }
+  return { email: '', firstName: '', lastName: '' };
+}
+
+function loadDraft(email: string): OnboardingDraft | null {
+  if (!email) return null;
+  try {
+    const stored = localStorage.getItem(`${DRAFT_PREFIX}-${email}`);
+    if (stored) {
+      const draft = JSON.parse(stored);
+      if (draft && draft.onboardingDone === false) return draft;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveDraft(email: string, draft: OnboardingDraft) {
+  if (!email) return;
+  try {
+    localStorage.setItem(`${DRAFT_PREFIX}-${email}`, JSON.stringify(draft));
+  } catch { /* ignore */ }
+}
+
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
-  const [step, setStep] = useState<Step>('language');
+  const [sessionInfo] = useState(getSessionInfo);
+  const [draft] = useState<OnboardingDraft | null>(() => loadDraft(sessionInfo.email));
+  const [step, setStep] = useState<Step>(draft?.step ?? 'language');
   const [profile, setProfile] = useState<UserProfile>({
     ...defaultProfile,
+    ...(draft?.profile || {}),
+    // Pré-remplit prénom/nom avec les valeurs du compte (saisies à l'inscription)
+    firstName: draft?.profile?.firstName ?? sessionInfo.firstName,
+    lastName: draft?.profile?.lastName ?? sessionInfo.lastName,
     startDate: new Date().toISOString().split('T')[0],
   });
+  // Question parrain/collaborateur : aucune réponse pré-sélectionnée
+  const [hasMentor, setHasMentor] = useState<boolean | null>(draft?.hasMentor ?? null);
 
   const update = (field: keyof UserProfile, value: any) => {
     setProfile(prêv => ({ ...prêv, [field]: value }));
+  };
+
+  // Persiste le brouillon à chaque validation d'étape (reprise au F5)
+  const persistDraft = (next: Step, done = false) => {
+    saveDraft(sessionInfo.email, {
+      step: next,
+      profile,
+      hasMentor,
+      onboardingStep: STEP_ORDER.indexOf(next) + 1,
+      onboardingDone: done,
+    });
   };
 
   const isStepValid = () => {
     switch (step) {
       case 'language': return !!profile.language;
       case 'identity': return profile.firstName.trim() && profile.lastName.trim() && profile.city.trim();
-      case 'expérience': return !!profile.expérienceLevel;
+      case 'expérience': return !!profile.expérienceLevel && hasMentor !== null;
       case 'sector': return profile.averagePrice > 0;
       case 'goals': return profile.ca6MonthsTarget > 0;
       case 'confirm': return true;
@@ -40,11 +110,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const nextStep = () => {
-    if (step === 'language') setStep('identity');
-    else if (step === 'identity') setStep('expérience');
-    else if (step === 'expérience') setStep('sector');
-    else if (step === 'sector') setStep('goals');
-    else if (step === 'goals') setStep('confirm');
+    if (step === 'language') { persistDraft('identity'); setStep('identity'); }
+    else if (step === 'identity') { persistDraft('expérience'); setStep('expérience'); }
+    else if (step === 'expérience') { persistDraft('sector'); setStep('sector'); }
+    else if (step === 'sector') { persistDraft('goals'); setStep('goals'); }
+    else if (step === 'goals') { persistDraft('confirm'); setStep('confirm'); }
     else {
       const COMMISSION = 5;
       const targets = calculateTargetsFromCA6Months(
@@ -56,6 +126,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
       );
       const finalProfile: UserProfile = {
         ...profile,
+        hasMentor: hasMentor ?? false,
         commissionsPct: COMMISSION,
         currentMonthGoal: {
           ...profile.currentMonthGoal,
@@ -65,21 +136,26 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
           averagePrice: profile.averagePrice,
         },
       };
+      // onboardingDone: true → le brouillon n'est plus jamais restauré
+      persistDraft('confirm', true);
       onComplete(finalProfile);
     }
   };
 
   const prêvStep = () => {
-    if (step === 'identity') setStep('language');
-    else if (step === 'expérience') setStep('identity');
-    else if (step === 'sector') setStep('expérience');
-    else if (step === 'goals') setStep('sector');
-    else if (step === 'confirm') setStep('goals');
+    const back: Step | null =
+      step === 'identity' ? 'language'
+      : step === 'expérience' ? 'identity'
+      : step === 'sector' ? 'expérience'
+      : step === 'goals' ? 'sector'
+      : step === 'confirm' ? 'goals'
+      : null;
+    if (back) { persistDraft(back); setStep(back); }
   };
 
   const stepLabels: Record<Step, { title: string; subtitle: string }> = {
-    language: { title: profile.language === 'es' ? '¿Qué idioma prefieres?' : 'Quelle langue souhaites-tu ?', subtitle: profile.language === 'es' ? 'Puedes cambiarlo más tarde' : 'Tu pourras le changer plus tard' },
-    identity: { title: profile.language === 'es' ? '¿Quién eres?' : 'Qui es-tu ?', subtitle: profile.language === 'es' ? 'Empecemos por conocernos' : 'Commençons par apprendre à se connaître' },
+    language: { title: profile.language === 'es' ? '¿Qué idioma prefieres?' : 'Quelle langue souhaites-tu ?', subtitle: profile.language === 'es' ? 'Puedes cambiarlo más tarde desde el panel de control.' : 'Tu pourras la changer plus tard depuis le tableau de bord.' },
+    identity: { title: profile.language === 'es' ? '¿Quién eres?' : 'Qui es-tu ?', subtitle: profile.language === 'es' ? 'Empecemos por conocernos' : 'Commençons par faire connaissance' },
     expérience: { title: profile.language === 'es' ? 'Tu trayectoria' : 'Ton parcours', subtitle: profile.language === 'es' ? 'Para personalizar tu acompañamiento' : 'Pour personnaliser ton accompagnement' },
     sector: { title: profile.language === 'es' ? 'Tu sector' : 'Ton secteur', subtitle: profile.language === 'es' ? '¿Dónde vas a ejercer?' : 'Où vas-tu exercer ?' },
     goals: { title: profile.language === 'es' ? 'Tus objetivos para los próximos 6 meses' : 'Tes objectifs sur les 6 prochains mois', subtitle: profile.language === 'es' ? 'Un objetivo que te guíe, no una presión' : 'Un cap qui te guide, pas une pression' },
@@ -87,6 +163,20 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const isEs = profile.language === 'es';
+
+  // Estimation du prix moyen pour la ville + type de secteur choisis
+  const estimatedPrice = profile.city.trim()
+    ? Math.round(getCityPrice(profile.city, (profile.sectorType || 'centre-ville') as any, isEs ? 'spain' : 'france') * 75 / 10000) * 10000
+    : null;
+
+  // Pré-remplit le prix moyen avec l'estimation tant que la valeur est
+  // restée au défaut (250 000 €) — toute saisie manuelle est conservée.
+  useEffect(() => {
+    if (!estimatedPrice) return;
+    setProfile(prêv => prêv.averagePrice === defaultProfile.averagePrice
+      ? { ...prêv, averagePrice: estimatedPrice }
+      : prêv);
+  }, [estimatedPrice]);
 
   const expérienceOptions = [
     { id: 'débutant' as const, label: isEs ? 'Empiezo' : 'Je débute', icon: '🌱', desc: isEs ? 'Primeros pasos en inmobiliaria' : 'Premiers pas dans l\'immobilier' },
@@ -103,7 +193,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   ];
 
   return (
-    <div className="min-h-scréén bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
@@ -156,11 +246,6 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     <span className="font-semibold">Español</span>
                   </button>
                 </div>
-                <p className="text-center text-xs text-gray-500 mt-4">
-                  {profile.language === 'es'
-                    ? 'Puedes cambiar el idioma más tarde desde el panel de control.'
-                    : 'Tu pourras changer la langue plus tard depuis le tableau de bord.'}
-                </p>
               </div>
             )}
 
@@ -186,7 +271,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             {step === 'expérience' && (
               <div className="space-y-5">
                 <div>
-                  <Label className="flex items-center gap-2 mb-3"><Calendar className="w-4 h-4 text-gray-400" /> {isEs ? '¿Desde cuándo empezaste?' : 'Depuis combien de temps tu as commencé ?'}</Label>
+                  <Label className="flex items-center gap-2 mb-3"><Calendar className="w-4 h-4 text-gray-400" /> {isEs ? '¿Desde cuándo empezaste?' : 'Quand as-tu démarré ?'}</Label>
                   <div className="grid grid-cols-2 gap-2">
                     {expérienceOptions.map(opt => (
                       <button
@@ -231,9 +316,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     <div className="mt-3 bg-blue-50 rounded-lg p-3 border border-blue-200">
                       <p className="text-sm text-blue-800">
                         {isEs ? (
-                          <><strong>¡Estos vídeos son tus aliados para empezar con serenidad!</strong> Te dan las bases jurídicas y legales esenciales para ir al terreno con confianza y tener el derecho de registrar tus primeros mandatos. Un paso clave que te hará operativo más rápidamente.</>
+                          <><strong>¡Estos vídeos son tus aliados para empezar con serenidad!</strong> Te preparan para firmar tus primeros mandatos: míralos en prioridad. Y antes de cualquier firma, verifica que has recibido tu certificado de habilitación de tu red (ley Hoguet): sin él, no puedes firmar ningún mandato. Es el documento que te protege, a ti y a tus clientes.</>
                         ) : (
-                          <><strong>Ces vidéos sont tes alliées pour démarrer sereinement !</strong> Elles te donnent les bases juridiques et légales essentielles pour aller sur le terrain en confiance et avoir le droit de rentrer tes premiers mandats. Une étape clé qui te rendra opérationnel plus rapidement.</>
+                          <><strong>Ces vidéos sont tes alliées pour démarrer sereinement !</strong> Elles te préparent à signer tes premiers mandats : regarde-les en priorité. Et avant toute signature, vérifie que tu as bien reçu ton attestation d'habilitation de la part de ton réseau (loi Hoguet) : sans elle, tu ne peux pas signer de mandat. C'est elle qui te protège, toi et tes clients.</>
                         )}
                       </p>
                     </div>
@@ -282,9 +367,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                     ].map(opt => (
                       <button
                         key={String(opt.val)}
-                        onClick={() => update('hasMentor', opt.val)}
+                        onClick={() => setHasMentor(opt.val)}
                         className={`flex-1 p-3 rounded-lg border text-sm font-medium transition-all ${
-                          profile.hasMentor === opt.val
+                          hasMentor === opt.val
                             ? 'border-red-500 bg-red-50 text-red-700'
                             : 'border-gray-200 hover:border-gray-300 text-gray-600'
                         }`}
@@ -321,7 +406,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         onClick={() => {
                           update('sectorType', sector.id);
                           if (profile.city.trim()) {
-                            const suggested = getCityPrice(profile.city, sector.id as any);
+                            const suggested = getCityPrice(profile.city, sector.id as any, isEs ? 'spain' : 'france');
                             const avgSize = 75;
                             update('averagePrice', Math.round(suggested * avgSize / 10000) * 10000);
                           }
@@ -345,16 +430,14 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       <div>
                         <p className="text-sm font-medium text-blue-800">{isEs ? 'Estimación para' : 'Estimation pour'} {profile.city}</p>
                         <p className="text-sm text-blue-700 mt-1">{getSuggestedPriceText(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france', isEs ? 'es' : 'fr')}</p>
-                        <button
-                          onClick={() => {
-                            const suggested = getCityPrice(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france');
-                            const avgSize = 75;
-                            update('averagePrice', Math.round(suggested * avgSize / 10000) * 10000);
-                          }}
-                          className="mt-2 flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          <Check className="w-3 h-3" /> {isEs ? 'Usar esta estimación' : 'Utiliser cette estimation'}
-                        </button>
+                        {estimatedPrice !== null && profile.averagePrice !== estimatedPrice && (
+                          <button
+                            onClick={() => update('averagePrice', estimatedPrice)}
+                            className="mt-2 flex items-center gap-1.5 text-xs bg-blue-600 text-white px-3 py-1.5 rounded-lg hover:bg-blue-700 transition-colors"
+                          >
+                            <Check className="w-3 h-3" /> {isEs ? 'Usar esta estimación' : 'Utiliser cette estimation'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -395,10 +478,10 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <Label className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-red-500" /> {isEs ? 'CA objetivo (€)' : 'CA visé (€)'}</Label>
-                    <span className="text-lg font-bold text-red-600">{profile.ca6MonthsTarget.toLocaleString()}€</span>
+                    <span className="text-lg font-bold text-red-600">{formatEuro(profile.ca6MonthsTarget)}</span>
                   </div>
                   <Slider value={[profile.ca6MonthsTarget]} onValueChange={v => update('ca6MonthsTarget', v[0])} min={30000} max={300000} step={5000} />
-                  <div className="flex justify-between text-xs text-gray-400 mt-1"><span>30k€</span><span>150k€</span><span>300k€</span></div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1"><span>{formatEuro(30000)}</span><span>{formatEuro(150000)}</span><span>{formatEuro(300000)}</span></div>
                 </div>
 
 

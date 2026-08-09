@@ -17,6 +17,11 @@ FRONTEND_URL = "http://127.0.0.1:4173,http://localhost:4173,https://immo-pulse.p
 
 # Secrets à configurer avec: wrangler secret put JWT_SECRET
 # JWT_SECRET = "ton-secret-très-long-et-aléatoire-minimum-32-caractères"
-# Variables pour l'envoi d'email via Resend :
+# Variables pour l'envoi d'email via Mailgun :
+# wrangler secret put MAILGUN_API_KEY
+# wrangler secret put MAILGUN_DOMAIN
+# wrangler secret put MAILGUN_FROM_EMAIL
+# Exemple : MAILGUN_FROM_EMAIL = "no-reply@immo-pulse.pages.dev"
+# Si Mailgun n'est pas configuré, le backend utilise Resend si RESEND_API_KEY est défini.
 # wrangler secret put RESEND_API_KEY
 # RESEND_FROM_EMAIL = "no-reply@immo-pulse.pages.dev"

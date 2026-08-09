@@ -25,7 +25,7 @@ export function HistoryView({ dailyResults, profile: _profile }: HistoryViewProp
         </div>
         <h3 className="text-xl font-bold text-gray-900">Aucun bilan encore</h3>
         <p className="text-gray-500 mt-2">Remplis ton premier bilan de journée pour voir ton historique ici.</p>
-        <p className="text-sm text-gray-400 mt-1">Tes bilans sont enregistrés localement ou sur ton compte cloud selon ton mode d'utilisation.</p>
+        <p className="text-sm text-gray-400 mt-1">Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.</p>
       </div>
     );
   }

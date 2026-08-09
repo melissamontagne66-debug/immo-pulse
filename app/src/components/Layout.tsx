@@ -98,7 +98,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
             className="flex items-center gap-1 text-xs text-red-600 hover:text-red-800 mt-1.5 underline"
           >
             <Target className="w-3 h-3" />
-            CA visé : {formatEuro(profile.currentMonthGoal.caTarget)}
+            CA visé : {formatEuro(profile.ca6MonthsTarget)}
           </button>
         </div>
 

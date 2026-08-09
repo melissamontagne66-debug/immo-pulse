@@ -141,6 +141,8 @@ export function useAuth() {
     return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
+  // REGRESSION-CHECK: inscription compte neuf → étape 1 onboarding visible sans F5
+  // (le rendu post-inscription est piloté par l'état React — pas de window.location.reload ici)
   // Register
   const register = useCallback(async (
     email: string,
@@ -188,7 +190,8 @@ export function useAuth() {
           setCurrentUser(user);
           saveSession(user);
           setIsLoading(false);
-          setTimeout(() => { window.location.reload(); }, 100);
+          // Pas de reload : setCurrentUser déclenche le rendu → App affiche
+          // l'écran de chargement cloud puis l'étape 1 de l'onboarding.
           return { success: true };
         }
         setIsLoading(false);
@@ -220,7 +223,8 @@ export function useAuth() {
     setCurrentUser(user);
     saveSession(user);
     setIsLoading(false);
-    setTimeout(() => { window.location.reload(); }, 100);
+    // Pas de reload : setCurrentUser déclenche le rendu → App affiche
+    // directement l'étape 1 de l'onboarding (pas de profil → OnboardingWizard).
     return { success: true };
   }, []);
 
