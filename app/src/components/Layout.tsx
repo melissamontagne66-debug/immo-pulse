@@ -25,6 +25,7 @@ const getTabs = (lang: 'fr' | 'es') => [
   { id: 'today', label: lang === 'es' ? 'Hoy' : "Aujourd'hui", icon: '✅' },
   { id: 'report', label: lang === 'es' ? 'Informe' : 'Compte rendu', icon: '📝' },
   { id: 'commission', label: lang === 'es' ? 'Comisión' : 'Commission', icon: '💰' },
+  { id: 'contacts', label: lang === 'es' ? 'Contactos' : 'Contacts', icon: '👥' },
   { id: 'history', label: lang === 'es' ? 'Historial' : 'Historique', icon: '📊' },
 ];
 

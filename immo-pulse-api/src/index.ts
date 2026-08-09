@@ -425,6 +425,21 @@ export default {
           generatedMessage: r.generated_message,
         }));
 
+        // Contacts chauds
+        const contactsRows = await env.DB.prepare(
+          'SELECT * FROM contacts WHERE user_id = ? ORDER BY follow_up_date ASC'
+        ).bind(userId).all();
+        const contacts = (contactsRows.results || []).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          phone: r.phone,
+          context: r.context,
+          origin: r.origin,
+          followUpDate: r.follow_up_date,
+          status: r.status,
+          createdAt: r.created_at,
+        }));
+
         return json({ success: true, profile, progress: progressData || {
           dailyResults,
           completedDays,
@@ -435,7 +450,7 @@ export default {
           totalRdv: dailyResults.reduce((s: number, r: any) => s + r.rdv_r1_done + r.rdv_r2_done, 0),
           totalMandats: dailyResults.reduce((s: number, r: any) => s + r.mandats_signed, 0),
           totalVisites: dailyResults.reduce((s: number, r: any) => s + r.visites_done, 0),
-        }, completedDays, visits }, 200, cors);
+        }, completedDays, visits, contacts }, 200, cors);
       }
 
       // ===== VISITS: POST =====
@@ -470,6 +485,41 @@ export default {
         if (!id) return json({ error: 'ID manquant.' }, 400, cors);
 
         await env.DB.prepare('DELETE FROM visit_reports WHERE id = ? AND user_id = ?').bind(id, userId).run();
+        return json({ success: true }, 200, cors);
+      }
+
+      // ===== CONTACTS: POST =====
+      if (path === '/api/contacts' && request.method === 'POST') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+
+        const body = await request.json() as any;
+        if (!body.name || !String(body.name).trim()) {
+          return json({ error: 'Nom manquant.' }, 400, cors);
+        }
+        const id = body.id || `contact-${Date.now()}`;
+
+        await env.DB.prepare(
+          `INSERT OR REPLACE INTO contacts
+            (id, user_id, name, phone, context, origin, follow_up_date, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+        ).bind(
+          id, userId, String(body.name).trim(), body.phone || '', body.context || '', body.origin || '',
+          body.followUpDate || null, body.status || 'chaud', body.createdAt || new Date().toISOString()
+        ).run();
+
+        return json({ success: true, id }, 200, cors);
+      }
+
+      // ===== CONTACTS: DELETE =====
+      if (path === '/api/contacts' && request.method === 'DELETE') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+
+        const id = url.searchParams.get('id');
+        if (!id) return json({ error: 'ID manquant.' }, 400, cors);
+
+        await env.DB.prepare('DELETE FROM contacts WHERE id = ? AND user_id = ?').bind(id, userId).run();
         return json({ success: true }, 200, cors);
       }
 

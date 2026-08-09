@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { DailyResults } from '@/types';
+import { toLocalDateKey, parseLocalDateKey } from '@/lib/utils';
 import { Calendar, BarChart3, TrendingUp, Star, Phone, Users, CalendarCheck, Home, FileCheck, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 
 type ViewMode = 'week' | 'month';
@@ -41,14 +42,17 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
   };
 
   const period = getPeriodDates();
+  // Clés de date locales YYYY-MM-DD — les comparaisons se font en chaînes pour
+  // éviter les décalages UTC (bug « Aucune donnée » sur un jour avec bilan).
+  const periodStartKey = toLocalDateKey(period.start);
+  const periodEndKey = toLocalDateKey(period.end);
 
   // Filter results for current period
   const periodResults = useMemo(() => {
     return dailyResults.filter(r => {
-      const d = new Date(r.date);
-      return d >= period.start && d <= period.end;
-    }).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  }, [dailyResults, period.start, period.end]);
+      return r.date >= periodStartKey && r.date <= periodEndKey;
+    }).sort((a, b) => parseLocalDateKey(b.date).getTime() - parseLocalDateKey(a.date).getTime());
+  }, [dailyResults, periodStartKey, periodEndKey]);
 
   // Aggregated stats
   const stats = useMemo(() => {
@@ -75,7 +79,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
     const days: { date: string; label: string; results: DailyResults | null }[] = [];
     const current = new Date(period.start);
     while (current <= period.end) {
-      const dateStr = current.toISOString().split('T')[0];
+      const dateStr = toLocalDateKey(current);
       const result = periodResults.find(r => r.date === dateStr) || null;
       days.push({
         date: dateStr,
@@ -205,15 +209,20 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
                       )}
                     </div>
                     {day.results ? (
-                      <div className="flex gap-2 flex-wrap">
-                        {day.results.callsMade > 0 && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{day.results.callsMade} conv.</span>}
-                        {day.results.contactsApproached > 0 && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{day.results.contactsApproached} contacts</span>}
-                        {day.results.rdvR1Done > 0 && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{day.results.rdvR1Done} R1</span>}
-                        {day.results.rdvR2Done > 0 && <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{day.results.rdvR2Done} R2</span>}
-                        {day.results.mandatsSigned > 0 && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{day.results.mandatsSigned} mandat{day.results.mandatsSigned > 1 ? 's' : ''}</span>}
-                        {day.results.visitesDone > 0 && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{day.results.visitesDone} visite{day.results.visitesDone > 1 ? 's' : ''}</span>}
-                        {day.results.offresWritten > 0 && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{day.results.offresWritten} offre{day.results.offresWritten > 1 ? 's' : ''}</span>}
-                      </div>
+                      <>
+                        <div className="flex gap-2 flex-wrap">
+                          {day.results.callsMade > 0 && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{day.results.callsMade} conv.</span>}
+                          {day.results.contactsApproached > 0 && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{day.results.contactsApproached} contacts</span>}
+                          {day.results.rdvR1Done > 0 && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{day.results.rdvR1Done} R1</span>}
+                          {day.results.rdvR2Done > 0 && <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{day.results.rdvR2Done} R2</span>}
+                          {day.results.mandatsSigned > 0 && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{day.results.mandatsSigned} mandat{day.results.mandatsSigned > 1 ? 's' : ''}</span>}
+                          {day.results.visitesDone > 0 && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{day.results.visitesDone} visite{day.results.visitesDone > 1 ? 's' : ''}</span>}
+                          {day.results.offresWritten > 0 && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{day.results.offresWritten} offre{day.results.offresWritten > 1 ? 's' : ''}</span>}
+                        </div>
+                        {day.results.notes && (
+                          <p className="text-xs text-gray-500 mt-2 whitespace-pre-line">{day.results.notes}</p>
+                        )}
+                      </>
                     ) : (
                       <p className="text-xs text-gray-400">Aucune donnée</p>
                     )}

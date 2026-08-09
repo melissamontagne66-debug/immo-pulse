@@ -15,11 +15,14 @@ import { NextDayPlanner } from '@/components/NextDayPlanner';
 import { HistoryView } from '@/components/HistoryView';
 import { VisitReportWriter } from '@/components/VisitReportWriter';
 import { CommissionCalculator } from '@/components/CommissionCalculator';
+import { ContactsView } from '@/components/ContactsView';
 import { useAuth } from '@/hooks/useAuth';
 import { useProgress } from '@/hooks/useProgress';
 import { useChat } from '@/hooks/useChat';
 import { useProfile } from '@/hooks/useProfile';
 import { useVisits } from '@/hooks/useVisits';
+import { useContacts } from '@/hooks/useContacts';
+import { useSales } from '@/hooks/useSales';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import type { DailyResults, NextDayPlan } from '@/types';
@@ -32,6 +35,8 @@ function App() {
   const userKey = getUserKey();
 
   const { visits, addVisit, updateVisit: updateVisitReport, deleteVisit, deleteProperty, stats: visitStats, loadFromCloud: loadVisitsFromCloud } = useVisits(userKey);
+  const contactsState = useContacts(userKey);
+  const { sales } = useSales(userKey);
 
   const [activeTab, setActiveTab] = useState('dashboard');
   const [showGoalSetter, setShowGoalSetter] = useState(false);
@@ -180,6 +185,9 @@ function App() {
         }
         if (data.visits && data.visits.length > 0) {
           loadVisitsFromCloud(data.visits);
+        }
+        if (data.contacts && data.contacts.length > 0) {
+          contactsState.loadFromCloud(data.contacts);
         }
 
         // Migration: if cloud is empty but local has data → push to cloud
@@ -342,6 +350,8 @@ function App() {
             currentWeek={currentWeek}
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
+            sales={sales}
+            contactsState={contactsState}
           />
         );
       case 'today':
@@ -360,6 +370,10 @@ function App() {
             onOpenCheckup={() => setModalView('checkup')}
             onNavigate={setActiveTab}
             userEmail={currentUser?.email}
+            onCreateContact={(note) => {
+              contactsState.addContact({ nom: '', telephone: '', contexte: note, origine: 'Action du jour', dateRelance: '', statut: 'chaud' });
+              setActiveTab('contacts');
+            }}
           />
         );
       case 'chat':
@@ -375,7 +389,7 @@ function App() {
         );
       case 'history':
         return (
-          <HistoryView dailyResults={progress.dailyResults} profile={profile} />
+          <HistoryView dailyResults={progress.dailyResults} profile={profile} sales={sales} />
         );
       case 'report':
         return (
@@ -390,6 +404,8 @@ function App() {
         );
       case 'commission':
         return <CommissionCalculator userKey={userKey} country={profile.country} averagePrice={profile.averagePrice} />;
+      case 'contacts':
+        return <ContactsView userKey={userKey} state={contactsState} />;
       default:
         return (
           <Dashboard
@@ -402,6 +418,8 @@ function App() {
             currentWeek={currentWeek}
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
+            sales={sales}
+            contactsState={contactsState}
           />
         );
     }

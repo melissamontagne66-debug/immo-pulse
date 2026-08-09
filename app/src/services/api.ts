@@ -158,6 +158,31 @@ export async function apiDeleteVisit(id: string) {
   return await res.json();
 }
 
+// --- CONTACTS ---
+
+export async function apiSaveContact(contact: any) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/contacts`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify(contact),
+  });
+  return await res.json();
+}
+
+export async function apiDeleteContact(id: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/contacts?id=${id}`, {
+    method: 'DELETE',
+    headers: headers(),
+  });
+  return await res.json();
+}
+
 // --- UTIL ---
 
 export function isCloudEnabled(): boolean {

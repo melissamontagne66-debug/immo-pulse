@@ -9,11 +9,13 @@ import type { UserProfile } from '@/types/profile';
 import {
   CheckCircle2, Circle, ClipboardCheck,
   Database, ChevronLeft, ChevronRight, Bell,
-  ChevronDown, ChevronUp, Lightbulb
+  ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil
 } from 'lucide-react';
 import { getProspectionActionForDay, getProspectionCategoryInfo } from '@/data/prospectionActions';
 import { DailyMorningAction } from '@/components/DailyMorningAction';
 import type { DailyResults } from '@/types';
+import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
+import { toLocalDateKey } from '@/lib/utils';
 
 interface DailyActionsProps {
   currentDay: number;
@@ -28,6 +30,7 @@ interface DailyActionsProps {
   onOpenCheckup: () => void;
   onNavigate?: (tab: string) => void;
   userEmail?: string;
+  onCreateContact?: (contexte: string) => void;
 }
 
 // Idées de contenu réseaux sociaux — une par jour, cycle de 30 idées
@@ -180,6 +183,7 @@ export function DailyActions({
   onOpenCheckup,
   onNavigate,
   userEmail,
+  onCreateContact,
 }: DailyActionsProps) {
   const isAdmin = userEmail === 'melissa.montagne66@gmail.com';
 
@@ -219,8 +223,13 @@ export function DailyActions({
   const [expandedTips, setExpandedTips] = useState<Record<string, boolean>>({});
 
   // Check if today's checkup was done
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = toLocalDateKey(new Date());
   const todayCheckupDone = dailyResults.some(r => r.date === todayStr);
+
+  // Compteurs d'objectifs du jour (partagés avec Dashboard et le bilan du soir)
+  const { counters, increment } = useDailyCounters();
+  // Notes de résultats par action (persistées)
+  const { notes, setNote } = useActionNotes();
 
   // Build the list of daily actions
   const action = getProspectionActionForDay(currentDay, profile.expérienceLevel, profile.language);
@@ -371,6 +380,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       catLabel: catInfo.label,
       catIcon: catInfo.icon,
       askResult: true,
+      counterKeys: ['conversations', 'contacts'] as CounterKey[],
     },
     {
       id: `admin-jour-${currentDay}`,
@@ -396,6 +406,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       catLabel: 'R1',
       catIcon: '📅',
       askResult: false,
+      counterKeys: ['r1'] as CounterKey[],
     },
     {
       id: `r2-jour-${currentDay}`,
@@ -411,6 +422,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       catLabel: 'R2',
       catIcon: '✍️',
       askResult: false,
+      counterKeys: ['r2'] as CounterKey[],
     },
     ...(showRetours ? [{
       id: `retours-jour-${currentDay}`,
@@ -424,6 +436,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       catLabel: isEs ? 'Retornos' : 'Retours',
       catIcon: '📞',
       askResult: false,
+      counterKeys: ['visites'] as CounterKey[],
     }] : []),
     {
       id: `défi-jour-${currentDay}`,
@@ -534,21 +547,37 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
   const totalCount = allTasks.length + 1; // +1 for CRM
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const handleToggle = (taskId: string, isDone: boolean, askResult: boolean) => {
+  // Métadonnées d'affichage des compteurs rapides sur les cartes action
+  const counterMeta: Record<CounterKey, { label: string; target: number }> = {
+    conversations: { label: isEs ? 'Conversaciones' : 'Conversations', target: dailyTargets.calls },
+    contacts: { label: isEs ? 'Contactos' : 'Contacts', target: dailyTargets.contactsPhysiques },
+    r1: { label: 'R1', target: dailyTargets.rdvR1 },
+    r2: { label: 'R2', target: dailyTargets.rdvR2 },
+    visites: { label: isEs ? 'Visitas' : 'Visites', target: dailyTargets.visites },
+  };
+
+  const handleToggle = (taskId: string, isDone: boolean) => {
+    // Cochage direct en 1 tap — la modale de résultat reste disponible
+    // via le bouton « ✏️ Noter un résultat » mais n'est plus obligatoire.
     if (isDone) {
       onUncompleteDay(taskId);
-    } else if (askResult) {
-      setPendingActionId(taskId);
-      setActionResult('');
-      setShowResultDialog(true);
     } else {
       onCompleteDay(taskId);
     }
   };
 
+  const openResultDialog = (taskId: string) => {
+    setPendingActionId(taskId);
+    setActionResult(notes[taskId] ?? '');
+    setShowResultDialog(true);
+  };
+
   const confirmResult = () => {
     if (!actionResult.trim()) return;
-    if (pendingActionId) onCompleteDay(pendingActionId);
+    if (pendingActionId) {
+      if (!completedDays.includes(pendingActionId)) onCompleteDay(pendingActionId);
+      setNote(pendingActionId, actionResult);
+    }
     setShowResultDialog(false);
     setPendingActionId(null);
     setActionResult('');
@@ -623,12 +652,13 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         {allTasks.map(task => {
           const isDone = completedDays.includes(task.id);
           const isExpanded = expandedTips[task.id];
+          const note = notes[task.id] as string | undefined;
           return (
             <Card key={task.id} className={`border-2 ${isDone ? 'bg-green-50/50 border-green-200' : 'border-gray-200'}`}>
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
                   <button
-                    onClick={() => handleToggle(task.id, isDone, task.askResult || false)}
+                    onClick={() => handleToggle(task.id, isDone)}
                     className="mt-0.5 flex-shrink-0"
                   >
                     {isDone
@@ -645,6 +675,25 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                     <p className={`text-sm font-semibold ${isDone ? 'line-through text-gray-500' : 'text-gray-900'}`}>
                       {task.title}
                     </p>
+                    {/* Note de résultat persistée — éditable au tap */}
+                    {isDone && note && (
+                      <button
+                        onClick={() => openResultDialog(task.id)}
+                        className="mt-1 flex items-center gap-1 text-xs text-green-700 hover:text-green-800 text-left"
+                      >
+                        <Pencil className="w-3 h-3 flex-shrink-0" />
+                        ✓ {isEs ? 'Hecho' : 'Fait'} — {note.length > 80 ? `${note.slice(0, 80)}…` : note}
+                      </button>
+                    )}
+                    {/* Création rapide d'une fiche contact à partir de la note */}
+                    {isDone && note && onCreateContact && (
+                      <button
+                        onClick={() => onCreateContact(note)}
+                        className="mt-2 px-3 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        ➕ Créer la fiche contact
+                      </button>
+                    )}
                     <p className="text-xs text-gray-600 mt-1 leading-relaxed whitespace-pre-line">{task.description}</p>
                     {task.script && (
                       <div className="mt-2 bg-white/60 rounded-lg p-2.5 border border-gray-200">
@@ -682,13 +731,41 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                         {isEs ? 'Redactar los informes de visitas' : 'Rédiger les compte rendus de visites'}
                       </button>
                     )}
-                    {!isDone && task.askResult && (
+                    {task.askResult && !note && (
                       <button
-                        onClick={() => handleToggle(task.id, false, true)}
+                        onClick={() => openResultDialog(task.id)}
                         className="mt-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-medium transition-colors"
                       >
-                        {isEs ? 'Marcar y anotar mis resultados' : 'Cocher et noter mes résultats'}
+                        {isEs ? '✏️ Anotar un resultado' : '✏️ Noter un résultat'}
                       </button>
+                    )}
+                    {/* Compteurs rapides (tap = +1) — partagés avec le Dashboard et le bilan */}
+                    {task.counterKeys && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {(task.counterKeys as CounterKey[]).map(k => (
+                          <div key={k} className="flex items-center gap-1.5 bg-white/80 border border-gray-200 rounded-full px-2 py-1">
+                            <span className="text-xs text-gray-500">{counterMeta[k].label}</span>
+                            <button
+                              onClick={() => increment(k, -1)}
+                              disabled={counters[k] <= 0}
+                              aria-label={isEs ? `Quitar 1 ${counterMeta[k].label}` : `Retirer 1 ${counterMeta[k].label}`}
+                              className="w-5 h-5 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                            >
+                              <Minus className="w-3 h-3" />
+                            </button>
+                            <span className={`text-xs font-bold min-w-[2.5rem] text-center ${counters[k] >= counterMeta[k].target ? 'text-green-600' : 'text-gray-900'}`}>
+                              {counters[k]}/{counterMeta[k].target}
+                            </span>
+                            <button
+                              onClick={() => increment(k, 1)}
+                              aria-label={isEs ? `Añadir 1 ${counterMeta[k].label}` : `Ajouter 1 ${counterMeta[k].label}`}
+                              className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                            >
+                              <Plus className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 </div>

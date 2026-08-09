@@ -2,15 +2,18 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
+import type { Sale } from '@/hooks/useSales';
 import { BilanHistory } from './BilanHistory';
+import { parseLocalDateKey, formatEuro } from '@/lib/utils';
 import { ClipboardCheck, Phone, Calendar, FileCheck, Star, MessageSquare, Clock, BarChart3 } from 'lucide-react';
 
 interface HistoryViewProps {
   dailyResults: DailyResults[];
   profile: UserProfile;
+  sales: Sale[];
 }
 
-export function HistoryView({ dailyResults, profile: _profile }: HistoryViewProps) {
+export function HistoryView({ dailyResults, profile: _profile, sales }: HistoryViewProps) {
   const [showStats, setShowStats] = useState(false);
 
   if (showStats) {
@@ -71,7 +74,7 @@ export function HistoryView({ dailyResults, profile: _profile }: HistoryViewProp
               <CardTitle className="text-sm flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <ClipboardCheck className="w-4 h-4 text-red-600" />
-                  {new Date(result.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
+                  {parseLocalDateKey(result.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                 </span>
                 <span className="text-xs text-gray-400">Bilan #{dailyResults.length - index}</span>
               </CardTitle>
@@ -104,6 +107,13 @@ export function HistoryView({ dailyResults, profile: _profile }: HistoryViewProp
                   <p className="text-xs text-orange-500">Visites</p>
                 </div>
               </div>
+
+              {/* Ventes du jour (enregistrées via le calculateur de commission) */}
+              {sales.filter(s => s.date === result.date).map(sale => (
+                <p key={sale.id} className="text-xs text-gray-700 mb-3">
+                  💰 Vente enregistrée&nbsp;: {sale.name} — {formatEuro(sale.net)} net
+                </p>
+              ))}
 
               {/* Prospection time */}
               {result.prospectionTime && (
@@ -152,7 +162,7 @@ export function HistoryView({ dailyResults, profile: _profile }: HistoryViewProp
               {result.notes && (
                 <div className="mt-3 text-xs text-gray-500">
                   <p className="font-medium">Notes :</p>
-                  <p>{result.notes}</p>
+                  <p className="whitespace-pre-line">{result.notes}</p>
                 </div>
               )}
             </CardContent>

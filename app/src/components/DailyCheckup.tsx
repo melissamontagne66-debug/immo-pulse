@@ -6,11 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
+import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
+import { toLocalDateKey } from '@/lib/utils';
 import {
   Phone, Users, Calendar, FileCheck, Home,
   TrendingUp, Clock, Star, Trophy, AlertTriangle,
   CalendarPlus, ArrowRight, PlayCircle, CheckCircle, XCircle,
-  Database, ClipboardCheck, Lightbulb
+  Database, ClipboardCheck, Lightbulb, ChevronDown, ChevronUp
 } from 'lucide-react';
 
 const CHECKUP_DRAFT_PREFIX = 'iad-coach-checkup-draft';
@@ -110,18 +112,46 @@ function getDailyActions(day: number, profile: UserProfile, dailyResults: DailyR
 export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
 
-  // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning, 3 = success
-  const [step, setStep] = useState<number>(() => draft?.step ?? 0);
+  // Compteurs d'objectifs du jour (partagés avec Dashboard / Aujourd'hui)
+  const { counters, hasData: countersUsed, setAll: setAllCounters } = useDailyCounters(userKey);
+  // Notes de résultats saisies à la coche dans « Aujourd'hui »
+  const { notes: actionNotes } = useActionNotes(userKey);
+
+  const isEs = profile.language === 'es';
+  const dailyActions = getDailyActions(currentDay, profile, dailyResults, isEs);
+
+  // Une action a un statut si elle est cochée dans « Aujourd'hui » ou si son
+  // compteur du jour a été incrémenté (R1, R2, visites/retours).
+  const actionCounterKey = (actionId: string): CounterKey | null => {
+    if (actionId === `r1-jour-${currentDay}`) return 'r1';
+    if (actionId === `r2-jour-${currentDay}`) return 'r2';
+    if (actionId === `retours-jour-${currentDay}`) return 'visites';
+    return null;
+  };
+  const actionHasStatus = (actionId: string): boolean => {
+    if (completedDays.includes(actionId)) return true;
+    const ck = actionCounterKey(actionId);
+    return ck !== null && counters[ck] > 0;
+  };
+
+  // MOD-13 : si toutes les actions ont un statut et que les compteurs ont été
+  // utilisés, on escamote la phase de vérification (le bilan s'ouvre sur le formulaire).
+  const verificationComplete = countersUsed && dailyActions.every(a => actionHasStatus(a.id));
+
+  // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning
+  const [step, setStep] = useState<number>(() => draft?.step ?? (verificationComplete ? 1 : 0));
+  const [verificationSkipped] = useState(() => !draft && verificationComplete);
+  const [recapOpen, setRecapOpen] = useState(false);
 
   // Action verification state — la vérification porte sur la liste COMPLÈTE
   // des actions du jour (la même que l'écran « Aujourd'hui »).
-  const isEs = profile.language === 'es';
-  const dailyActions = getDailyActions(currentDay, profile, dailyResults, isEs);
   const [actionVerifications, setActionVerifications] = useState<Record<string, boolean | null>>(() => {
     // Pré-cochage : les actions déjà cochées dans « Aujourd'hui » sont pré-marquées Faite (modifiable)
     const preChecked: Record<string, boolean> = {};
     dailyActions.forEach(a => {
       if (completedDays.includes(a.id)) preChecked[a.id] = true;
+      // Compteur incrémenté => considérée faite aussi (ex. R1 compté sans cochage)
+      else if (actionHasStatus(a.id)) preChecked[a.id] = true;
     });
     // Le brouillon reprend la main, mais ses valeurs null (non répondu) n'écrasent pas le pré-cochage
     const fromDraft = { ...(draft?.actionVerifications ?? {}) };
@@ -144,19 +174,26 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
+  // Notes du jour versées dans le champ « Notes » (concaténation « action : note »)
+  const notesPrefill = dailyActions
+    .filter(a => actionNotes[a.id])
+    .map(a => `${a.label} : ${actionNotes[a.id]}`)
+    .join('\n');
+
   const [results, setResults] = useState(() => draft?.results ?? {
-    date: new Date().toISOString().split('T')[0],
-    callsMade: 0,
-    contactsApproached: 0,
+    date: toLocalDateKey(new Date()),
+    // Pré-remplissage depuis les compteurs du jour (modifiables — le bilan fait foi)
+    callsMade: counters.conversations,
+    contactsApproached: counters.contacts,
     rdvR1Fixed: 0,
-    rdvR1Done: 0,
-    rdvR2Done: 0,
+    rdvR1Done: counters.r1,
+    rdvR2Done: counters.r2,
     mandatsSigned: 0,
-    visitesDone: 0,
+    visitesDone: counters.visites,
     offresWritten: 0,
     prospectionTime: '',
     comptesRendusFaits: undefined as boolean | undefined,
-    notes: '',
+    notes: notesPrefill,
     wins: '',
     challenges: '',
     mood: 3,
@@ -220,6 +257,15 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     }
     onSave(results as any);
     clearDraft(userKey, currentDay);
+
+    // Le bilan validé fait foi : il réécrit les compteurs du jour (tuiles Dashboard / Aujourd'hui)
+    setAllCounters({
+      conversations: results.callsMade || 0,
+      contacts: results.contactsApproached || 0,
+      r1: results.rdvR1Done || 0,
+      r2: results.rdvR2Done || 0,
+      visites: results.visitesDone || 0,
+    });
 
     // Prepare next day tasks based on what was reported
     const reportedTasks: string[] = [];
@@ -417,6 +463,54 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <strong>Bilan de ta journée</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
           </p>
         </div>
+
+        {/* Récapitulatif repliable — affiché quand la vérification a été escamotée
+            (journée déjà saisie au fil de l'eau). Permet de corriger en rouvrant la vérification. */}
+        {verificationSkipped && (
+          <Card className="bg-gray-50 border-gray-200">
+            <CardContent className="p-4">
+              <button
+                onClick={() => setRecapOpen(o => !o)}
+                className="w-full flex items-center justify-between text-left"
+              >
+                <p className="text-sm font-semibold text-gray-800">Ta journée en un coup d'œil</p>
+                {recapOpen ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+              </button>
+              {recapOpen && (
+                <div className="mt-3 space-y-3">
+                  <div className="space-y-1.5">
+                    {dailyActions.map(a => {
+                      const status = actionVerifications[a.id];
+                      const note = actionNotes[a.id];
+                      return (
+                        <div key={a.id} className="flex items-start gap-2 text-xs">
+                          <span>{status === true ? '✅' : status === false ? '❌' : '➖'}</span>
+                          <div className="flex-1 min-w-0">
+                            <span className="text-gray-700">{a.icon} {a.label}</span>
+                            {note && <p className="text-gray-500 italic mt-0.5">{note}</p>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-2 flex-wrap">
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{counters.conversations} conversation{counters.conversations > 1 ? 's' : ''}</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{counters.contacts} contact{counters.contacts > 1 ? 's' : ''}</span>
+                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{counters.r1} R1</span>
+                    <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{counters.r2} R2</span>
+                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{counters.visites} visite{counters.visites > 1 ? 's' : ''}</span>
+                  </div>
+                  <button
+                    onClick={() => setStep(0)}
+                    className="text-xs font-medium text-red-600 hover:text-red-700 underline"
+                  >
+                    Corriger la vérification des actions
+                  </button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Offer alert - if offer written */}
         {results.offresWritten > 0 && (

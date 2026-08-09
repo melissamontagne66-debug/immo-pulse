@@ -5,8 +5,11 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatEuro, clampNumber } from '@/lib/utils';
 import { Euro, Calculator, TrendingUp, User, Percent, Minus, Equal, Trash2, Save, AlertCircle, HandCoins } from 'lucide-react';
+import { useSales } from '@/hooks/useSales';
+import { SaleCelebration } from '@/components/SaleCelebration';
 
 // Grille de commission-type (degressive) — suggestion par defaut
 function getCommissionRate(price: number): number {
@@ -17,18 +20,6 @@ function getCommissionRate(price: number): number {
   if (price <= 300000) return 5.0;
   if (price <= 500000) return 4.5;
   return 4.0;
-}
-
-interface Simulation {
-  id: number;
-  nomVente: string;
-  prixVente: number;
-  tauxCommission: number;
-  commissionTTC: number;
-  commissionHT: number;
-  apporteur: number;
-  pallier: number;
-  impotPourcent: number;
 }
 
 // Formate un pourcentage à la française (virgule décimale)
@@ -52,9 +43,23 @@ interface CommissionCalculatorProps {
   userKey?: string;
   country?: 'france' | 'spain';
   averagePrice?: number;
+  firstName?: string; // sinon lu depuis iad-coach-profile-{userKey}
 }
 
-export function CommissionCalculator({ userKey, country = 'france', averagePrice }: CommissionCalculatorProps) {
+// Prénom lu depuis le profil local (iad-coach-profile-{userKey})
+function readFirstName(userKey?: string): string {
+  try {
+    const key = userKey ? `iad-coach-profile-${userKey}` : 'iad-coach-profile';
+    const stored = localStorage.getItem(key);
+    if (stored) {
+      const profile = JSON.parse(stored);
+      if (profile?.firstName) return String(profile.firstName);
+    }
+  } catch { /* ignore */ }
+  return '';
+}
+
+export function CommissionCalculator({ userKey, country = 'france', averagePrice, firstName }: CommissionCalculatorProps) {
   const isSpain = country === 'spain';
   const PALLIERS = isSpain ? PALLIERS_ESPAGNE : PALLIERS_FRANCE;
   const defaultChargesPourcent = isSpain ? CHARGES_AE_ES * 100 : CHARGES_AE_FR * 100;
@@ -79,15 +84,12 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   const [chargesInput, setChargesInput] = useState(String(defaultChargesPourcent));
   const [chargesError, setChargesError] = useState<string | null>(null);
   const [isTVAFranchise, setIsTVAFranchise] = useState(false);
-  const STORAGE_KEY = userKey ? `immo-pulse-simulations-${userKey}` : 'immo-pulse-simulations';
 
-  const [simulations, setSimulations] = useState<Simulation[]>(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch { /* ignore */ }
-    return [];
-  });
+  // Ventes enregistrées (hook MOD-12 : localStorage immo-pulse-sales-{userKey})
+  const { sales, addSale, removeSale } = useSales(userKey ?? '');
+  const [mandatDialogOpen, setMandatDialogOpen] = useState(false);
+  const [celebration, setCelebration] = useState<{ net: number } | null>(null);
+
   const [nomVente, setNomVente] = useState('');
   const [pallier, setPallier] = useState(75);
 
@@ -112,30 +114,27 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   const impotLiberatoire = Math.round(netAvecPallier * (impotPourcent / 100));
   const netFinal = netAvecPallier - chargesSociales - impotLiberatoire - apporteurMontant - fraisNotaire;
 
+  // Clic sur « Enregistrer » : on demande d'abord si le bien est aussi un mandat signé
   const saveSimulation = () => {
     if (!nomVente.trim()) return;
-    const newId = simulations.length > 0 ? Math.max(...simulations.map(s => s.id)) + 1 : 1;
-    const newSim: Simulation = {
-      id: newId,
-      nomVente: nomVente.trim(),
-      prixVente,
-      tauxCommission,
-      commissionTTC,
-      commissionHT,
-      apporteur: apporteurMontant,
-      pallier,
-      impotPourcent,
-    };
-    const updated = [...simulations, newSim];
-    setSimulations(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    setNomVente('');
+    setMandatDialogOpen(true);
   };
 
-  const removeSimulation = (id: number) => {
-    const updated = simulations.filter(s => s.id !== id);
-    setSimulations(updated);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  // Confirmation de la vente après la question mandat (défaut : Oui)
+  const confirmSale = (countsAsMandat: boolean) => {
+    addSale({
+      id: `sale-${Date.now()}`,
+      name: nomVente.trim(),
+      price: prixVente,
+      net: netFinal,
+      fees: commissionTTC, // honoraires TTC = prix × taux de commission
+      palier: pallier,
+      date: new Date().toISOString().split('T')[0],
+      countsAsMandat,
+    });
+    setMandatDialogOpen(false);
+    setNomVente('');
+    setCelebration({ net: netFinal });
   };
 
   return (
@@ -535,43 +534,76 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
         </CardContent>
       </Card>
 
-      {/* Simulations enregistrées */}
-      {simulations.length > 0 && (
+      {/* Ventes enregistrées */}
+      {sales.length > 0 && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-blue-600" /> {isSpain ? 'Ventas guardadas' : 'Ventes enregistrées'}
           </h3>
           <div className="space-y-3">
-            {simulations.map(sim => {
-              const ch = Math.round(sim.commissionHT * (chargesPourcent / 100));
-              const imp = Math.round(sim.commissionHT * (sim.impotPourcent / 100));
-              const net = sim.commissionHT - ch - imp - sim.apporteur;
-              const netPallier = Math.round(net * (sim.pallier / 100));
-              return (
-                <Card key={sim.id} className="overflow-hidden">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{sim.nomVente}</p>
-                        <p className="text-sm text-gray-500">
-                          {formatEuro(sim.prixVente)} · {sim.tauxCommission} % · HT {formatEuro(sim.commissionHT)} · Palier {sim.pallier} %
-                        </p>
-                      </div>
-                      <div className="text-right mr-4">
-                        <p className="text-xs text-gray-400">{isSpain ? 'Net conservado' : 'Net conservé'}</p>
-                        <p className="text-lg font-bold text-green-700">{formatEuro(netPallier)}</p>
-                      </div>
-                      <button onClick={() => removeSimulation(sim.id)} className="text-gray-400 hover:text-red-500 p-2">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+            {sales.map(sale => (
+              <Card key={sale.id} className="overflow-hidden">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <p className="font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
+                        {sale.name}
+                        {sale.countsAsMandat && (
+                          <span className="text-xs font-medium bg-purple-50 text-purple-700 rounded-full px-2 py-0.5">
+                            {isSpain ? 'Mandato' : 'Mandat'}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-sm text-gray-500">
+                        {formatEuro(sale.price)} · {isSpain ? 'Honorarios' : 'Honoraires'} {formatEuro(sale.fees)} · Palier {sale.palier} %
+                        {sale.date && ` · ${new Date(`${sale.date}T12:00:00`).toLocaleDateString(isSpain ? 'es-ES' : 'fr-FR', { day: 'numeric', month: 'short' })}`}
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              );
-            })}
+                    <div className="text-right mr-4">
+                      <p className="text-xs text-gray-400">{isSpain ? 'Net conservado' : 'Net conservé'}</p>
+                      <p className="text-lg font-bold text-green-700">{formatEuro(sale.net)}</p>
+                    </div>
+                    <button onClick={() => removeSale(sale.id)} className="text-gray-400 hover:text-red-500 p-2">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       )}
+
+      {/* Question mandat à l'enregistrement */}
+      <Dialog open={mandatDialogOpen} onOpenChange={setMandatDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{isSpain ? '¿Es también un mandato que has firmado?' : 'Ce bien est-il aussi un mandat que tu as signé ?'}</DialogTitle>
+            <DialogDescription>
+              {isSpain
+                ? 'Si firmaste el mandato de este bien, contará 1 mandato en tus objetivos.'
+                : 'Si tu as signé le mandat de ce bien, il comptera 1 mandat dans tes objectifs.'}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => confirmSale(false)}>
+              {isSpain ? 'No, simple reventa' : 'Non, simple revente'}
+            </Button>
+            <Button autoFocus onClick={() => confirmSale(true)} className="bg-red-600 hover:bg-red-700">
+              {isSpain ? 'Sí, contar 1 mandato' : 'Oui, compter 1 mandat'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Célébration à l'enregistrement */}
+      <SaleCelebration
+        show={celebration !== null}
+        firstName={firstName ?? readFirstName(userKey)}
+        net={celebration?.net ?? 0}
+        isSpain={isSpain}
+        onClose={() => setCelebration(null)}
+      />
 
       {/* Info */}
       <p className="text-xs text-gray-400 text-center">

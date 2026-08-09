@@ -1,12 +1,15 @@
 import { useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSmartDashboard } from '@/hooks/useSmartDashboard';
+import { useDailyCounters, type CounterKey } from '@/hooks/useDailyCounters';
+import type { Sale } from '@/hooks/useSales';
+import type { useContacts } from '@/hooks/useContacts';
 import type { UserProfile } from '@/types/profile';
 import { getMonthlyMandatTarget } from '@/types/profile';
 import type { UserProgress, DailyResults } from '@/types';
 import type { WeekPlan } from '@/types';
-import { Flame, Target, AlertTriangle, ArrowRight, Sunrise } from 'lucide-react';
-import { formatEuro } from '@/lib/utils';
+import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknote } from 'lucide-react';
+import { formatEuro, toLocalDateKey } from '@/lib/utils';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
 
 interface DashboardProps {
@@ -19,11 +22,15 @@ interface DashboardProps {
   currentWeek: WeekPlan;
   onNavigate: (tab: string) => void;
   onSetMonthlyGoal: () => void;
+  sales: Sale[];
+  contactsState: ReturnType<typeof useContacts>;
 }
 
-export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyResults, onNavigate, onSetMonthlyGoal }: DashboardProps) {
+export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyResults, onNavigate, onSetMonthlyGoal, sales, contactsState }: DashboardProps) {
   const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak);
   const alertes = insights.filter(i => i.type === 'alerte');
+  const isEs = profile.language === 'es';
+  const { counters, increment } = useDailyCounters();
 
   // Objectif mensuel de mandats selon le niveau
   const monthsSinceStart = useMemo(() => {
@@ -37,23 +44,37 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
   // Mandats signés ce mois-ci (depuis le 1er du mois)
   const mandatsThisMonth = useMemo(() => {
     const now = new Date();
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+    const monthStart = toLocalDateKey(new Date(now.getFullYear(), now.getMonth(), 1));
     return dailyResults
       .filter(r => r.date >= monthStart)
       .reduce((sum, r) => sum + r.mandatsSigned, 0);
   }, [dailyResults]);
 
+  const currentMonth = toLocalDateKey(new Date()).slice(0, 7); // 'YYYY-MM'
+
+  // Ventes du mois qui comptent aussi comme mandat (enregistrées via le calculateur)
+  const mandatsVentes = sales.filter(s => s.countsAsMandat && s.date.startsWith(currentMonth)).length;
+  const mandatsThisMonthTotal = mandatsThisMonth + mandatsVentes;
+
+  // CA du mois = honoraires d'agence encaissés sur les ventes enregistrées
+  const caThisMonth = sales.filter(s => s.date.startsWith(currentMonth)).reduce((sum, s) => sum + s.fees, 0);
+  const caTarget = Math.round(profile.ca6MonthsTarget / 6);
+  const caPct = caTarget > 0 ? Math.min(100, Math.round((caThisMonth / caTarget) * 100)) : 0;
+
+  // Contacts à relancer aujourd'hui (ou en retard)
+  const dueContacts = contactsState.getDueContacts();
+
   // Objectifs quotidiens (sans mandat qui est maintenant mensuel)
-  const dailyObjectives = [
-    { label: 'Conversations', value: dailyTargets.calls, icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-    { label: 'Contacts physiques', value: dailyTargets.contactsPhysiques, icon: DoorOpen, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
-    { label: 'R1', value: dailyTargets.rdvR1, icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-    { label: 'R2', value: dailyTargets.rdvR2, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-    { label: 'Visites', value: dailyTargets.visites, icon: Home, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+  const dailyObjectives: { key: CounterKey; label: string; value: number; icon: any; color: string; bg: string; border: string }[] = [
+    { key: 'conversations', label: isEs ? 'Conversaciones' : 'Conversations', value: dailyTargets.calls, icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+    { key: 'contacts', label: isEs ? 'Contactos físicos' : 'Contacts physiques', value: dailyTargets.contactsPhysiques, icon: DoorOpen, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+    { key: 'r1', label: 'R1', value: dailyTargets.rdvR1, icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+    { key: 'r2', label: 'R2', value: dailyTargets.rdvR2, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+    { key: 'visites', label: isEs ? 'Visitas' : 'Visites', value: dailyTargets.visites, icon: Home, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
   ];
 
   // Progression mandats par semaine
-  const mandatProgressPct = monthlyMandatTarget > 0 ? Math.min(100, Math.round((mandatsThisMonth / monthlyMandatTarget) * 100)) : 0;
+  const mandatProgressPct = monthlyMandatTarget > 0 ? Math.min(100, Math.round((mandatsThisMonthTotal / monthlyMandatTarget) * 100)) : 0;
   const weekTarget = Math.ceil(monthlyMandatTarget / 4);
 
   return (
@@ -89,7 +110,7 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
               <FileCheck className="w-5 h-5 text-purple-600" />
               <p className="text-sm font-semibold text-purple-800">Objectif mandats ce mois-ci</p>
             </div>
-            <p className="text-xs text-purple-600 bg-white px-2 py-0.5 rounded-full font-medium">{mandatsThisMonth} / {monthlyMandatTarget}</p>
+            <p className="text-xs text-purple-600 bg-white px-2 py-0.5 rounded-full font-medium">{mandatsThisMonthTotal} / {monthlyMandatTarget}</p>
           </div>
           {/* Barre de progression */}
           <div className="w-full h-3 bg-purple-100 rounded-full overflow-hidden">
@@ -102,19 +123,99 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
         </CardContent>
       </Card>
 
+      {/* CA du mois — honoraires encaissés sur les ventes enregistrées */}
+      <Card className="bg-green-50 border-green-200" title="CA = honoraires d'agence encaissés sur tes ventes du mois.">
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Banknote className="w-5 h-5 text-green-600" />
+              <p className="text-sm font-semibold text-green-800">CA réalisé ce mois&nbsp;: {formatEuro(caThisMonth)} / Objectif&nbsp;: {formatEuro(caTarget)}</p>
+            </div>
+            <p className="text-xs text-green-600 bg-white px-2 py-0.5 rounded-full font-medium">{caPct}&nbsp;%</p>
+          </div>
+          {/* Barre de progression */}
+          <div className="w-full h-3 bg-green-100 rounded-full overflow-hidden">
+            <div className="h-full bg-green-500 rounded-full transition-all" style={{ width: `${caPct}%` }} />
+          </div>
+          <p className="text-xs text-green-600 mt-1">{caPct}&nbsp;% atteint</p>
+        </CardContent>
+      </Card>
+
+      {/* Relances de contacts dues aujourd'hui (ou en retard) */}
+      {dueContacts.length > 0 && (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold text-amber-800">📞 À relancer aujourd'hui&nbsp;:</p>
+            {dueContacts.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3 bg-white/70 rounded-lg px-3 py-2">
+                <p className="text-sm text-gray-800 min-w-0 truncate">
+                  <span className="font-medium">{c.nom || 'Sans nom'}</span>
+                  {c.contexte && <> — {c.contexte.length > 60 ? `${c.contexte.slice(0, 60)}…` : c.contexte}</>}
+                </p>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {c.telephone && (
+                    <a
+                      href={`tel:${c.telephone.replace(/\s+/g, '')}`}
+                      className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      Appeler
+                    </a>
+                  )}
+                  <button
+                    onClick={() => contactsState.postponeContact(c.id)}
+                    className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Repousser
+                  </button>
+                  <button
+                    onClick={() => contactsState.updateContact(c.id, { dateRelance: '' })}
+                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Fait
+                  </button>
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Objectifs du jour — petites cartes */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Tes objectifs aujourd'hui</h3>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-          {dailyObjectives.map(obj => (
-            <Card key={obj.label} className={`${obj.border} ${obj.bg} hover:shadow-md transition-shadow cursor-pointer`} onClick={() => onNavigate('today')}>
-              <CardContent className="p-4 text-center">
-                <obj.icon className={`w-6 h-6 ${obj.color} mx-auto mb-2`} />
-                <p className="text-2xl font-bold text-gray-900">{obj.value}</p>
-                <p className="text-xs text-gray-500 mt-0.5">{obj.label}/jour</p>
-              </CardContent>
-            </Card>
-          ))}
+          {dailyObjectives.map(obj => {
+            const count = counters[obj.key];
+            const done = count >= obj.value;
+            return (
+              <Card key={obj.key} className={`${done ? 'border-green-300 bg-green-50' : `${obj.border} ${obj.bg}`} hover:shadow-md transition-shadow cursor-pointer`} onClick={() => onNavigate('today')}>
+                <CardContent className="p-4 text-center">
+                  <obj.icon className={`w-6 h-6 ${done ? 'text-green-600' : obj.color} mx-auto mb-2`} />
+                  <p className="text-2xl font-bold text-gray-900">
+                    {count}<span className="text-base font-semibold text-gray-400">/{obj.value}</span>
+                  </p>
+                  <p className="text-xs text-gray-500 mt-0.5">{obj.label}</p>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <button
+                      onClick={e => { e.stopPropagation(); increment(obj.key, -1); }}
+                      disabled={count <= 0}
+                      aria-label={isEs ? `Quitar 1 ${obj.label}` : `Retirer 1 ${obj.label}`}
+                      className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={e => { e.stopPropagation(); increment(obj.key, 1); }}
+                      aria-label={isEs ? `Añadir 1 ${obj.label}` : `Ajouter 1 ${obj.label}`}
+                      className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       </div>
 

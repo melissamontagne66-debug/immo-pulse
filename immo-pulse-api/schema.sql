@@ -74,6 +74,20 @@ CREATE TABLE IF NOT EXISTS visit_reports (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Table des contacts chauds (mini-carnet de prospects)
+CREATE TABLE IF NOT EXISTS contacts (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  phone TEXT,
+  context TEXT,
+  origin TEXT,
+  follow_up_date TEXT,
+  status TEXT DEFAULT 'chaud',
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Table des actions complétées
 CREATE TABLE IF NOT EXISTS completed_actions (
   user_id TEXT NOT NULL,
