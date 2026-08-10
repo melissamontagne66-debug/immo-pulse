@@ -173,7 +173,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
-          <p className="text-gray-500 mt-1">Ton accompagnement personnalisé</p>
+          <p className="text-gray-500 mt-1">Ton accompagnement quotidien</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">

@@ -61,8 +61,8 @@ const actionsCycle: ProspectionAction[] = [
     id: 'p-01',
     day: 1,
     category: 'estimation',
-    title: 'Ton défi du jour — Sors sur le terrain et fais parler de toi !',
-    description: `🗓 **ACTION URGENTE — Bloque ton agenda maintenant :** Mets 2h de prospection dans ton agenda chaque jour du lundi au vendredi. Alterne les créneaux : 11h-13h une semaine, 17h-19h la semaine suivante. Ces 2h sont sacrées — terrain, PIGE, réseaux sociaux, tout ce qui te met au contact des propriétaires compte.
+    title: 'Action recommandée — Sors sur le terrain et fais parler de toi !',
+    description: `🗓 **ACTION URGENTE — Bloque ton agenda maintenant :** Mets 2h de prospection dans ton agenda chaque jour du lundi au vendredi. Chaque jour ouvré, au créneau de ton choix : 11 h – 13 h 30 ou 17 h – 19 h. Ces 2h sont sacrées — terrain, PIGE, réseaux sociaux, tout ce qui te met au contact des propriétaires compte.
 
 **Si tu es débutant** : Tu débutes et ton fichier est encore petit — parfait, c'est normal. Aujourd'hui : du terrain classique.
 
@@ -88,7 +88,7 @@ Puis demande naturellement : "Au fait, j'ai changé d'agence / de réseau — qu
 Chaque ancien client satisfait = 2 à 3 recommandations naturelles.`,
     script: 'Conseil méthodo — Que tu sois débutant ou confirmé, l\'essentiel est de BOUGER aujourd\'hui. Pas d\'excuse. Sélectionne tes biens en vente sur ton outil interne, prépare ton angle, et sors. Tes scripts et mémos de formation sont à ta disposition.',
     objectif: '🎯 Débutant : 2 biens en vente ciblés, 10 portes toquées, 1 R1 minimum // Confirmé : 10 anciens clients relancés, 2 recommandations obtenues',
-    duree: '11h-13h ou 17h-19h',
+    duree: '11 h – 13 h 30 ou 17 h – 19 h',
   },
   // J2 — Apporteurs : panneaux avec sélection ciblée
   {
@@ -279,7 +279,7 @@ Chaque relance = un R1 potentiel. Ton fichier est ton actif numéro 1.`,
     day: 16,
     category: 'apporteurs',
     title: 'Apporteurs — Cibler les cuisinistes du secteur',
-    description: `Le cuisiniste est le premier au courant du projet de vie. Un proprio qui veut vendre se dit : "Si je refais la cuisine, je vendrai plus cher". Il va voir le cuisiniste AVANT l\'agent immobilier.\n\n**Ton script** :\n"Je vous propose un partenariat pour transformer vos devis dormants en ventes. Quand un client hésite à signer parce qu\'il a un projet de vente, parlez de moi. Je fais l\'estimation, je conseille sur la rentabilité des travaux, et si le vendeur ne fait pas les travaux, je présente vos plans 3D à tous mes acheteurs. Vous touchez 6% de ma commission via Propertips."\n\nTrouve 2 cuisinistes sur ton secteur et lance-toi !`,
+    description: `Le cuisiniste est le premier au courant du projet de vie. Un proprio qui veut vendre se dit : "Si je refais la cuisine, je vendrai plus cher". Il va voir le cuisiniste AVANT l\'agent immobilier.\n\n**Ton script** :\n"Je vous propose un partenariat pour transformer vos devis dormants en ventes. Quand un client hésite à signer parce qu\'il a un projet de vente, parlez de moi. Je fais l\'estimation, je conseille sur la rentabilité des travaux, et si le vendeur ne fait pas les travaux, je présente vos plans 3D à tous mes acheteurs. Vous touchez 6 % de ma commission via Propertips."\n\nTrouve 2 cuisinistes sur ton secteur et lance-toi !`,
     script: 'Conseil méthodo — Le cuisiniste est bloqué : le client hésite à signer un devis de 15 000€. Tu deviens son sauveur en apportant la clarté sur la plus-value. Tes scripts complets pour les cuisinistes sont dans tes mémos.',
     objectif: '🎯 2 cuisinistes contactés, 1 partenariat conclu minimum',
     duree: '1h',
@@ -355,8 +355,8 @@ Les vendeurs rappellent dans la journée — sois prêt.`,
     day: 21,
     category: 'apporteurs',
     title: 'Apporteurs — Cibler les brocanteurs et vide-maison',
-    description: `Quand on vide une maison de fond en comble, ce n\'est jamais pour refaire la déco : c\'est parce que la maison va être vendue. Généralement suite à un décès (succession) ou un départ en EHPAD.\n\n**Ton script** :\n"Je vois souvent vos camions sur le secteur. J\'accompagne beaucoup de familles en succession et elles me demandent souvent qui peut vider la maison proprement. J\'aimerais vous recommander systématiquement. Et quand vous videz une maison qui va être mise en vente, proposez-leur de me rencontrer. Je m\'occupe de tout : estimation, notaire, visites. Vous touchez 6% via Propertips."\n\nTrouve 2 entreprises de vide-maison ou brocanteurs sur ton secteur.`,
-    script: 'Conseil méthodo — Le brocanteur est souvent le PREMIER prestataire appelé, parfois même avant le notaire. S\'il te recommande à ce moment-là, tu as 90% de chances de prendre le mandat sans concurrence. Tes scripts complets sont dans tes mémos.',
+    description: `Quand on vide une maison de fond en comble, ce n\'est jamais pour refaire la déco : c\'est parce que la maison va être vendue. Généralement suite à un décès (succession) ou un départ en EHPAD.\n\n**Ton script** :\n"Je vois souvent vos camions sur le secteur. J\'accompagne beaucoup de familles en succession et elles me demandent souvent qui peut vider la maison proprement. J\'aimerais vous recommander systématiquement. Et quand vous videz une maison qui va être mise en vente, proposez-leur de me rencontrer. Je m\'occupe de tout : estimation, notaire, visites. Vous touchez 6 % via Propertips."\n\nTrouve 2 entreprises de vide-maison ou brocanteurs sur ton secteur.`,
+    script: 'Conseil méthodo — Le brocanteur est souvent le PREMIER prestataire appelé, parfois même avant le notaire. S\'il te recommande à ce moment-là, tu as 90 % de chances de prendre le mandat sans concurrence. Tes scripts complets sont dans tes mémos.',
     objectif: '🎯 2 brocanteurs/vide-maison contactés, 1 partenariat conclu minimum',
     duree: '1h',
   },
@@ -418,8 +418,8 @@ Là, tu passes à l'estimation patrimoniale offerte.\n\n**Question magique** : "
     day: 25,
     category: 'apporteurs',
     title: 'Apporteurs — Cibler les pharmaciens de quartier',
-    description: `Le pharmacien est l\'un des derniers commerces de proximité où l\'on se confie. Il est le premier au courant des "accidents de vie" qui déclenchent une vente : grand âge, séparation, naissance.\n\n**Ton script** (hors heures de pointe, 14h-15h) :\n"Je suis [Ton Nom], conseiller immobilier ici dans le quartier. Dans mon métier, j\'accompagne souvent des personnes qui doivent vendre leur bien suite à un changement de vie. Si l\'un de vos patients vous confie qu\'il est inquiet pour la gestion de sa maison, donnez-lui simplement ma carte. Je m\'occupe de tout avec une douceur totale. Vous touchez 6% via Propertips."\n\n**Important** : Ne cible pas seulement le titulaire. Les préparateurs passent le plus de temps à discuter avec les clients.`,
-    script: 'Conseil méthodo — Le pharmacien a une relation de confiance absolue. S\'il dit "Allez voir [Ton Nom]", vous avez déjà gagné 80% de la confiance. Discrétion et éthique avant tout. Tes scripts complets sont dans tes mémos.',
+    description: `Le pharmacien est l\'un des derniers commerces de proximité où l\'on se confie. Il est le premier au courant des "accidents de vie" qui déclenchent une vente : grand âge, séparation, naissance.\n\n**Ton script** (hors heures de pointe, 14h-15h) :\n"Je suis [Ton Nom], conseiller immobilier ici dans le quartier. Dans mon métier, j\'accompagne souvent des personnes qui doivent vendre leur bien suite à un changement de vie. Si l\'un de vos patients vous confie qu\'il est inquiet pour la gestion de sa maison, donnez-lui simplement ma carte. Je m\'occupe de tout avec une douceur totale. Vous touchez 6 % via Propertips."\n\n**Important** : Ne cible pas seulement le titulaire. Les préparateurs passent le plus de temps à discuter avec les clients.`,
+    script: 'Conseil méthodo — Le pharmacien a une relation de confiance absolue. S\'il dit "Allez voir [Ton Nom]", vous avez déjà gagné 80 % de la confiance. Discrétion et éthique avant tout. Tes scripts complets sont dans tes mémos.',
     objectif: '🎯 2 pharmacies contactées, 1 partenariat conclu minimum',
     duree: '1h',
   },
@@ -446,7 +446,7 @@ Là, tu passes à l'estimation patrimoniale offerte.\n\n**Question magique** : "
    - Pas de projet : "Bonjour [Prénom], je vous envoie mon dernier rapport sur l'évolution du marché dans votre quartier. Même sans projet de vente, c'est toujours utile de suivre la valeur de son patrimoine. N'hésitez pas à le transmettre à votre entourage."
 
 3. **Chaque relance = un RDV potentiel.** Un contact qui a déjà reçu une estimation de toi = 3x plus facile à convertir qu'un contact froid.`,
-    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre, qui connaît ta méthode et ton sérieux = un mandat à 80% si tu relances au bon moment. Segmentez, personnalisez, convertissez.`,
+    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre, qui connaît ta méthode et ton sérieux = un mandat à 80 % si tu relances au bon moment. Segmentez, personnalisez, convertissez.`,
     objectif: '🎯 10 estimations relancées, 3 contacts avec projet proche rappelés, 1 R1 fixé minimum',
     duree: '1h',
   },
@@ -509,7 +509,7 @@ Si un apporteur a posé un panneau et que tu n'as rien eu en retour depuis 2 moi
     day: 30,
     category: 'apporteurs',
     title: 'Apporteurs — Cibler les toiletteurs pour chiens',
-    description: `Le propriétaire d\'un chien traite son animal comme un membre de la famille. Pendant que Médor se fait une beauté, le maître discute de sa vie : le déménagement, la séparation, l\'agrandissement.\n\n**Ton script** (décontracté, pas en costume) :\n"Salut ! Je suis [Ton Nom], conseiller immo ici. Tu entres chez les gens toute la journée, tu crées un lien super fort. Quand un client te dit qu\'il déménage ou qu\'il cherche plus grand, glisse-lui mon nom. Pour chaque vente qui se fait grâce à toi, tu touches 6% de mes honoraires. Et je dirige tous mes nouveaux acquéreurs avec chiens vers toi !"\n\nEmmène ton chien si tu en as un !`,
+    description: `Le propriétaire d\'un chien traite son animal comme un membre de la famille. Pendant que Médor se fait une beauté, le maître discute de sa vie : le déménagement, la séparation, l\'agrandissement.\n\n**Ton script** (décontracté, pas en costume) :\n"Salut ! Je suis [Ton Nom], conseiller immo ici. Tu entres chez les gens toute la journée, tu crées un lien super fort. Quand un client te dit qu\'il déménage ou qu\'il cherche plus grand, glisse-lui mon nom. Pour chaque vente qui se fait grâce à toi, tu touches 6 % de mes honoraires. Et je dirige tous mes nouveaux acquéreurs avec chiens vers toi !"\n\nEmmène ton chien si tu en as un !`,
     script: 'Conseil méthodo — Le toiletteur a des infos "fraîches" et ultra-locales. La posture est amicale, communautaire. Si tu aimes les animaux, tu as déjà un point commun énorme. Tes scripts complets sont dans tes mémos.',
     objectif: '🎯 2 toiletteurs contactés, 1 partenariat conclu minimum',
     duree: '1h',
@@ -651,7 +651,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
    - Pas de projet : "Bonjour [Prénom], mon dernier rapport sur l'évolution du marché dans votre quartier. Même sans projet de vente, c'est toujours utile. N'hésitez pas à le transmettre à votre entourage."
 
 3. **Chaque relance = un RDV potentiel.** Un contact qui a déjà reçu une estimation de toi = 3x plus facile à convertir qu'un contact froid.`,
-    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80% si tu relances au bon moment.`,
+    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80 % si tu relances au bon moment.`,
     objectif: '🎯 10 estimations relancées, 3 contacts avec projet proche rappelés, 1 R1 fixé minimum',
     duree: '1h',
   },
@@ -700,7 +700,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     description: `La gardienne d\'immeuble sait TOUT : qui divorce, qui attend un enfant, qui h\érite, qui s\'en va. C\'est la pige immobili\ère à la source historique.
 
 **Ton script** :
-"Bonjour [Pr\énom], vous faites un super boulot pour tenir la r\ésidence. Comme vous \êtes au c\œur de l\'immeuble, vous savez toujours tout avant tout le monde ! D\ès que vous entendez parler d\'un projet de vente, vous m\'envoyez l\'info. Si je vends, vous touchez 6% de ma commission. Sur un appartement \à 200 000\€, \ça vous fait un tr\ès beau ch\èque pour une simple info."`,
+"Bonjour [Pr\énom], vous faites un super boulot pour tenir la r\ésidence. Comme vous \êtes au c\œur de l\'immeuble, vous savez toujours tout avant tout le monde ! D\ès que vous entendez parler d\'un projet de vente, vous m\'envoyez l\'info. Si je vends, vous touchez 6 % de ma commission. Sur un appartement \à 200 000\€, \ça vous fait un tr\ès beau ch\èque pour une simple info."`,
     script: 'Conseil m\éthodo — La gardienne = source d\'infos en temps r\éel. Elle conna\ît tous les mouvements de l\'immeuble. Tes scripts complets sont dans tes m\émos.',
     objectif: '🎯 2 gardiennes contact\ées, 1 partenariat conclu minimum',
     duree: '1h',
@@ -757,7 +757,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
    - Pas de projet : "Bonjour [Prénom], mon dernier rapport sur l'évolution du marché dans votre quartier. Même sans projet de vente, c'est toujours utile. N'hésitez pas à le transmettre à votre entourage."
 
 3. **Chaque relance = un RDV potentiel.** Un contact qui a déjà reçu une estimation de toi = 3x plus facile à convertir qu'un contact froid.`,
-    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80% si tu relances au bon moment.`,
+    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80 % si tu relances au bon moment.`,
     objectif: '🎯 10 estimations relancées, 3 contacts avec projet proche rappelés, 1 R1 fixé minimum',
     duree: '1h',
   },
@@ -768,7 +768,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'inter-cabinets',
     title: 'Inter-cabinets — Session optimisée',
     description: `Session inter-cabinets hebdomadaire optimisée.\n\nAnalyse tes résultats des semaines précédentes :\n• Quels confrères ont le mieux répondu ? → Priorise-les\n• Quels biens se sont vendus en inter-cabinet ? → Répète la formule\n• Quels biens stagnent encore ? → Change d\'approche (nouveaux confrères, ajustement de prix)\n\nL\'inter-cabinet doit devenir un canal régulier de vente, pas juste une solution de dernier recours.`,
-    script: 'Conseil méthodo — Analyse tes résultats d\'inter-cabinet. Double les efforts sur ce qui marche, ajuste ce qui coince. L\'inter-cabinet peut représenter 20-30% de tes ventes si tu le systématises.',
+    script: 'Conseil méthodo — Analyse tes résultats d\'inter-cabinet. Double les efforts sur ce qui marche, ajuste ce qui coince. L\'inter-cabinet peut représenter 20-30 % de tes ventes si tu le systématises.',
     objectif: '🎯 5 biens analysés, 8 confrères contactés, 3 visites programmées',
     duree: '1h',
   },
@@ -802,7 +802,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 51,
     category: 'apporteurs',
     title: 'Apporteurs — Cibler les diagnostiqueurs DPE',
-    description: `Le diagnostiqueur DPE fait face à des propriétaires dépités par une mauvaise note (F ou G) qui se rendent compte que les travaux coûtent trop cher. Le client dit : "Laissez tomber, je vais vendre en l\'état."\n\n**Ton script** :\n"On travaille souvent ensemble en bout de chaîne, mais je te propose qu\'on s\'entraide au début. Quand tu tombes sur un propriétaire dépité par son DPE, ne le laisse pas dans l\'impasse. Dis-lui que tu connais un agent expert qui sait valoriser les passoires thermiques auprès d\'investisseurs. Tu me mets en relation sur Propertips, tu prends tes 6%, et je te confie systématiquement les diagnostics de mes futurs mandats."\n\nC\'est gagnant-gagnant sur toute la ligne.`,
+    description: `Le diagnostiqueur DPE fait face à des propriétaires dépités par une mauvaise note (F ou G) qui se rendent compte que les travaux coûtent trop cher. Le client dit : "Laissez tomber, je vais vendre en l\'état."\n\n**Ton script** :\n"On travaille souvent ensemble en bout de chaîne, mais je te propose qu\'on s\'entraide au début. Quand tu tombes sur un propriétaire dépité par son DPE, ne le laisse pas dans l\'impasse. Dis-lui que tu connais un agent expert qui sait valoriser les passoires thermiques auprès d\'investisseurs. Tu me mets en relation sur Propertips, tu prends tes 6 %, et je te confie systématiquement les diagnostics de mes futurs mandats."\n\nC\'est gagnant-gagnant sur toute la ligne.`,
     script: 'Conseil méthodo — Le diagnostiqueur DPE = apporteur de qualité. Les propriétaires avec passoires thermiques veulent vendre VITE. Tes scripts complets sont dans tes mémos.',
     objectif: '🎯 2 diagnostiqueurs DPE contactés, 1 partenariat conclu minimum',
     duree: '1h',
@@ -853,7 +853,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
    - Pas de projet : "Bonjour [Prénom], mon dernier rapport sur l'évolution du marché dans votre quartier. Même sans projet de vente, c'est toujours utile. N'hésitez pas à le transmettre à votre entourage."
 
 3. **Chaque relance = un RDV potentiel.** Un contact qui a déjà reçu une estimation de toi = 3x plus facile à convertir qu'un contact froid.`,
-    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80% si tu relances au bon moment.`,
+    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80 % si tu relances au bon moment.`,
     objectif: '🎯 10 estimations relancées, 3 contacts avec projet proche rappelés, 1 R1 fixé minimum',
     duree: '1h',
   },
@@ -864,7 +864,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'inter-cabinets',
     title: 'Inter-cabinets — Session de suivi',
     description: `Session inter-cabinets : suivi des visites de la semaine précédente + nouvelles propositions.\n\n1. Appelle les confrères qui ont fait des visites la semaine dernière → feedback, offres ?\n2. Identifie les nouveaux biens invendus → nouvelles propositions\n3. Programme les visites de la semaine à venir\n\nL\'inter-cabinet doit devenir un RENDEZ-VOUS hebdomadaire dans ton agenda, comme un R1 ou un R2.`,
-    script: 'Conseil méthodo — L\'inter-cabinet mérite sa place dans ton agenda hebdo. 1h par semaine consacrée aux inter-cabinets = 20-30% de ventes en plus. C\'est le meilleur ROI de ton temps.',
+    script: 'Conseil méthodo — L\'inter-cabinet mérite sa place dans ton agenda hebdo. 1h par semaine consacrée aux inter-cabinets = 20-30 % de ventes en plus. C\'est le meilleur ROI de ton temps.',
     objectif: '🎯 4 suivis de visites, 5 nouveaux confrères contactés, 3 visites programmées',
     duree: '1h',
   },
@@ -898,7 +898,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 58,
     category: 'apporteurs',
     title: 'Apporteurs — Conciergerie Airbnb et gestionnaires',
-    description: `Les gestionnaires de conciergerie Airbnb gèrent les appartements d\'investisseurs. Ils sont en contact direct avec des propriétaires bailleurs qui vivent parfois à l\'autre bout de la France.\n\n**Ton script** :\n"Vous gérez des parcs de biens pour des investisseurs. Vous savez comme moi que certains propriétaires se lassent de la gestion ou s\'inquiètent des nouvelles lois sur les meublés touristiques. Si l\'un de vos clients veut arbitrer son patrimoine et vendre son bien, ne le laissez pas chercher une agence au hasard. Proposez-lui mes services. Vous me mettez en relation sur Propertips, et vous touchez 6%. En plus, je propose vos services de conciergerie à tous mes acheteurs investisseurs."\n\nC\'est un partenariat durable.`,
+    description: `Les gestionnaires de conciergerie Airbnb gèrent les appartements d\'investisseurs. Ils sont en contact direct avec des propriétaires bailleurs qui vivent parfois à l\'autre bout de la France.\n\n**Ton script** :\n"Vous gérez des parcs de biens pour des investisseurs. Vous savez comme moi que certains propriétaires se lassent de la gestion ou s\'inquiètent des nouvelles lois sur les meublés touristiques. Si l\'un de vos clients veut arbitrer son patrimoine et vendre son bien, ne le laissez pas chercher une agence au hasard. Proposez-lui mes services. Vous me mettez en relation sur Propertips, et vous touchez 6 %. En plus, je propose vos services de conciergerie à tous mes acheteurs investisseurs."\n\nC\'est un partenariat durable.`,
     script: 'Conseil méthodo — Le gestionnaire de conciergerie = apporteur récurrent. Un investisseur qui vend = souvent un autre qui achète. Tes scripts complets sont dans tes mémos.',
     objectif: '🎯 2 conciergeries contactées, 1 partenariat conclu minimum',
     duree: '1h',
@@ -923,7 +923,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     description: `Dernier rapport local du trimestre. Génère-le, envoie-le à tous tes contacts, et cible les derniers propriétaires non contactés.\n\n1. Génère le rapport final du T1 (3 min)\n2. Envoie-le à tous tes contacts (email + WhatsApp)\n3. Cible les 10 derniers propriétaires de ton secteur\n4. "Voici mon dernier rapport du trimestre. Les chiffres sont très parlants. Si vous ou votre entourage souhaitez connaître la valeur de votre patrimoine..."\n\nBilan du trimestre : combien de mandats as-tu signé grâce au rapport local ?
 
 💡 **Ton rapport local te sert 1 à 2 mois.** La prochaine fois que cette action revient, réutilise ce même rapport et combine-le avec du terrain proche de biens en vente (recherche acquéreurs).`,
-    script: 'Conseil méthodo — Bilan du trimestre. Le rapport local a probablement généré 30-40% de tes mandats. Continue sur cette lancée au trimestre 2. Chaque rapport = un actif qui grandit.',
+    script: 'Conseil méthodo — Bilan du trimestre. Le rapport local a probablement généré 30-40 % de tes mandats. Continue sur cette lancée au trimestre 2. Chaque rapport = un actif qui grandit.',
     objectif: '🎯 1 rapport final généré, 20 contacts recontactés, 5 nouveaux propriétaires, 2 R1 minimum',
     duree: '11h-13h ou 17h-19h',
   },
@@ -949,7 +949,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
    - Pas de projet : "Bonjour [Prénom], mon dernier rapport sur l'évolution du marché dans votre quartier. Même sans projet de vente, c'est toujours utile. N'hésitez pas à le transmettre à votre entourage."
 
 3. **Chaque relance = un RDV potentiel.** Un contact qui a déjà reçu une estimation de toi = 3x plus facile à convertir qu'un contact froid.`,
-    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80% si tu relances au bon moment.`,
+    script: `Conseil méthodo — La relance des estimations est l'action la plus rentable de ton business. Un contact qui t'a déjà vu à l'œuvre = un mandat à 80 % si tu relances au bon moment.`,
     objectif: '🎯 10 estimations relancées, 3 contacts avec projet proche rappelés, 1 R1 fixé minimum',
     duree: '1h',
   },
@@ -1006,7 +1006,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'apporteurs',
     title: 'Apporteurs — Renforcement du réseau existant',
     description: `Aujourd\'hui : renforce les liens avec tes apporteurs existants.\n\nPasse chez tes 5 meilleurs apporteurs avec un petit cadeau et des nouvelles du marché.\n\n"Je passais dans le coin, je voulais savoir comment se passe votre mois, est-ce que les gens ont des projets de rénovation en ce moment ? Comment est le marché ? J\'ai parlé de vous cette semaine !"\n\nLe feedback est obligatoire : dès qu\'une mise en relation est faite, tiens-le au courant de CHAQUE étape.\n\nTrouve aussi 1 nouvel apporteur original.`,
-    script: 'Conseil méthodo — "Café stratégique" mensuel avec chaque apporteur. Ne viens pas demander "t\'as un mandat ?" — viens pour discuter du marché. Le feedback systématique après chaque mise en relation = un apporteur motivé à 200%.',
+    script: 'Conseil méthodo — "Café stratégique" mensuel avec chaque apporteur. Ne viens pas demander "t\'as un mandat ?" — viens pour discuter du marché. Le feedback systématique après chaque mise en relation = un apporteur motivé à 200 %.',
     objectif: '🎯 5 apporteurs renforcés avec cadeau, 1 nouvel apporteur original contacté',
     duree: '2h',
   },
@@ -1043,7 +1043,7 @@ PIGE Légale avec ciblage avancé basé sur tes résultats des 10 semaines préc
     category: 'inter-cabinets',
     title: 'Inter-cabinets — Session T2-S1',
     description: `Première session inter-cabinets du trimestre 2.\n\nNouveaux biens invendus du T1 à relancer, nouveaux confrères à contacter, nouvelles stratégies de prix.\n\nL\'inter-cabinet est maintenant un rendez-vous hebdomadaire immuable dans ton agenda.`,
-    script: 'Conseil méthodo — Trimestre 2, semaine 1. L\'inter-cabinet fait partie de ta routine. Chaque semaine, 1h consacrée aux confrères = 20-30% de ventes en plus.',
+    script: 'Conseil méthodo — Trimestre 2, semaine 1. L\'inter-cabinet fait partie de ta routine. Chaque semaine, 1h consacrée aux confrères = 20-30 % de ventes en plus.',
     objectif: '🎯 5 biens analysés, 7 confrères contactés, 3 visites programmées',
     duree: '1h',
   },
@@ -1080,7 +1080,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 72,
     category: 'apporteurs',
     title: 'Apporteurs — Cuisiniste (rotation T2)',
-    description: `Rotation des apporteurs originaux — retour chez les cuisinistes.\n\nPasse voir tes cuisinistes partenaires : nouvelles du mois, feedback sur les derniers contacts, petit cadeau.\n\nTrouve aussi 1 nouveau cuisiniste sur un secteur adjacent.\n\n**Rappel du deal** : devis en attente → mise en relation → 6% sur vente + plans 3D présentés aux acheteurs si le vendeur ne fait pas les travaux.`,
+    description: `Rotation des apporteurs originaux — retour chez les cuisinistes.\n\nPasse voir tes cuisinistes partenaires : nouvelles du mois, feedback sur les derniers contacts, petit cadeau.\n\nTrouve aussi 1 nouveau cuisiniste sur un secteur adjacent.\n\n**Rappel du deal** : devis en attente → mise en relation → 6 % sur vente + plans 3D présentés aux acheteurs si le vendeur ne fait pas les travaux.`,
     script: 'Conseil méthodo — La rotation des apporteurs originaux assure que tu ne les oublies pas. Un cuisiniste qui n\'a pas de tes nouvelles depuis 2 mois = un cuisiniste qui oublie de parler de toi. Le "café stratégique" mensuel est obligatoire.',
     objectif: '🎯 2 cuisinistes relancés, 1 nouveau contacté, 1 mise en relation activée',
     duree: '1h',
@@ -1155,8 +1155,8 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 79,
     category: 'apporteurs',
     title: 'Apporteurs — Brocanteur / vide-maison (rotation T2)',
-    description: `Rotation des apporteurs originaux — retour chez les brocanteurs et vide-maison.\n\nPasse voir tes partenaires : nouvelles du mois, feedback, petit cadeau.\n\nTrouve 1 nouveau brocanteur sur un secteur adjacent.\n\n**Rappel du deal** : vide-maison → mise en relation → 6% sur vente + recommandation systématique à tes clients en succession.`,
-    script: 'Conseil méthodo — Le brocanteur te met en contact avec des vendeurs en succession = mandats sans concurrence dans 90% des cas. C\'est l\'apporteur le plus rentable si tu entretiens bien la relation.',
+    description: `Rotation des apporteurs originaux — retour chez les brocanteurs et vide-maison.\n\nPasse voir tes partenaires : nouvelles du mois, feedback, petit cadeau.\n\nTrouve 1 nouveau brocanteur sur un secteur adjacent.\n\n**Rappel du deal** : vide-maison → mise en relation → 6 % sur vente + recommandation systématique à tes clients en succession.`,
+    script: 'Conseil méthodo — Le brocanteur te met en contact avec des vendeurs en succession = mandats sans concurrence dans 90 % des cas. C\'est l\'apporteur le plus rentable si tu entretiens bien la relation.',
     objectif: '🎯 2 brocanteurs relancés, 1 nouveau contacté, 1 mise en relation',
     duree: '1h',
   },
@@ -1188,7 +1188,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'inter-cabinets',
     title: 'Inter-cabinets — Session hebdo (T2)',
     description: `Session inter-cabinets hebdomadaire.\n\nSuivi, nouvelles propositions, planification. L\'inter-cabinet est un rendez-vous immuable dans ton agenda.\n\nLes confrères qui te connaissent = des confrères qui t\'appellent quand ils ont un acquéreur chaud.`,
-    script: 'Conseil méthodo — L\'inter-cabinet hebdo = 20-30% de tes ventes. C\'est le meilleur ROI de ton temps. 1h par semaine = des ventes que tu n\'aurais jamais faites seul.',
+    script: 'Conseil méthodo — L\'inter-cabinet hebdo = 20-30 % de tes ventes. C\'est le meilleur ROI de ton temps. 1h par semaine = des ventes que tu n\'aurais jamais faites seul.',
     objectif: '🎯 4 suivis, 6 confrères contactés, 3 visites programmées',
     duree: '1h',
   },
@@ -1236,7 +1236,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'apporteurs',
     title: 'Apporteurs — Pharmacien (rotation T2)',
     description: `Rotation des apporteurs originaux — retour chez les pharmaciens.\n\nPasse voir tes partenaires : nouvelles du mois, feedback, petit cadeau.\n\nTrouve 1 nouvelle pharmacie sur un secteur adjacent.\n\n**Rappel** : discrétion et éthique avant tout. Jamais "qui est malade ?" — toujours "je suis une ressource pour vos patients en difficulté".`,
-    script: 'Conseil méthodo — Le pharmacien = relation de confiance absolue. S\'il recommande = 80% de la confiance est déjà gagnée. Le "café stratégique" mensuel est obligatoire pour entretenir cette relation précieuse.',
+    script: 'Conseil méthodo — Le pharmacien = relation de confiance absolue. S\'il recommande = 80 % de la confiance est déjà gagnée. Le "café stratégique" mensuel est obligatoire pour entretenir cette relation précieuse.',
     objectif: '🎯 2 pharmaciens relancés, 1 nouvelle pharmacie contactée, 1 mise en relation',
     duree: '1h',
   },
@@ -1267,7 +1267,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 89,
     category: 'inter-cabinets',
     title: 'Inter-cabinets — Bilan mensuel',
-    description: `Dernier inter-cabinet du mois. Bilan + planification.\n\n1. Bilan : combien de ventes ce mois-ci ? Quels confrères ont délivré ?\n2. Remercie les confrères actifs\n3. Planifie les inter-cabinets du mois prochain\n4. Identifie les biens qui bloquent et ajuste la stratégie\n\nL\'inter-cabinet = 20-30% de tes ventes. Entretiens ce canal précieux.`,
+    description: `Dernier inter-cabinet du mois. Bilan + planification.\n\n1. Bilan : combien de ventes ce mois-ci ? Quels confrères ont délivré ?\n2. Remercie les confrères actifs\n3. Planifie les inter-cabinets du mois prochain\n4. Identifie les biens qui bloquent et ajuste la stratégie\n\nL\'inter-cabinet = 20-30 % de tes ventes. Entretiens ce canal précieux.`,
     script: 'Conseil méthodo — Bilan mensuel des inter-cabinets. Les confrères qui délivrent méritent un remerciement. Les biens qui stagnent méritent une nouvelle stratégie. Planifie le mois prochain avec ambition.',
     objectif: '🎯 Bilan mensuel fait, 8 confrères contactés, 4 visites programmées pour le mois prochain',
     duree: '1h',

@@ -3,7 +3,7 @@ import type { KnowledgeModule } from '@/types';
 export const aiPersona = {
   name: "Coach",
   rôle: "Coach Immobilier basé sur les méthodes des tops performers",
-  tone: "direct, chaleureux, exigeant mais bienveillant. Inspiré des meilleurs conseillers immobiliers qui font 300k€+ de CA. Conseils concrets, pas de théorie. Tutoiement. Encouragement mais push à l'action."
+  tone: "direct, chaleureux, exigeant mais bienveillant. Inspiré des meilleurs conseillers immobiliers qui font plus de 300 000 € de CA. Conseils concrets, pas de théorie. Tutoiement. Encouragement mais push à l'action."
 };
 
 export const knowledgeModules: KnowledgeModule[] = [
@@ -90,7 +90,7 @@ Clôture R1:
       "Ne jamais donner le prix au R1",
       "Le mètre laser = crédibilité immédiate",
       "Toujours fixer le R2 avant de partir",
-      "Écouter 80%, parler 20%"
+      "Écouter 80 %, parler 20 %"
     ]
   },
   {
@@ -111,7 +111,7 @@ VERROUILLAGE R1:
 STRATÉGIE DES 3 SCENARIOS:
 1. Prix Attractif: déclencher compétition, vente sous 1 mois
 2. Prix Marché: prix juste optimal, vente 2-3 mois
-3. Prix Ambitieux: 10% au-dessus max, risque de stagnation
+3. Prix Ambitieux: 10 % au-dessus max, risque de stagnation
 
 PREUVE IRREFUTABLE:
 - Ventes comparables: 3-5 biens vendus < 3 mois (non négociables)
@@ -124,7 +124,7 @@ CLOTURE PRIX:
 - "Compte tenu de votre objectif, quel scénario?"
 
 Si prix trop haut:
-- Stratégie de repli: accepter 10% au-dessus avec point sous 1 semaine
+- Stratégie de repli: accepter 10 % au-dessus avec point sous 1 semaine
 - "S'il n'y a pas assez d'appels/visites, on ajuste immédiatement"
 - Savoir dire non si nécessaire`,
     keyPoints: [
@@ -158,7 +158,7 @@ MANDAT EXCLUSIF (objectif prioritaire):
 MANDAT SUCCES (variante):
 - Le vendeur peut trouver l'acquéreur
 - Doit le référer pour sécurisation transaction
-- Vente via contact vendeur = 50% réduction honoraires
+- Vente via contact vendeur = 50 % réduction honoraires
 - "Mieux vaut la moitié de quelque chose que le tôtalité de rien"
 
 CLAUSE DE CONFIANCE:
@@ -169,7 +169,7 @@ CLAUSE DE CONFIANCE:
 
 15 Arguments Anti-Objection:
 1. Vente au prix fort (rareté)
-2. Sécurité juridique (70% transactions PAP échouent)
+2. Sécurité juridique (70 % transactions PAP échouent)
 3. Garantie de performance (Clause Confiance)
 4. Qualification acheteur (pas de curieux)
 5. Transparence du suivi (CR après chaque visite)
@@ -195,7 +195,7 @@ CLAUSE DE CONFIANCE:
 
 STRUCTURE DU LPSI:
 1. Introduction: valider les objectifs "Vendre dans les meilleures conditions?"
-2. Présentation le réseau: stabilité, 98% satisfaction, couverture
+2. Présentation le réseau: stabilité, 98 % satisfaction, couverture
 3. Mise en valeur: photos pro, home-staging 3D, vidéo
 4. Diffusion massive: 100+ portails, le réseau international
 5. Synergie réseau: 15000 conseillers, prèscription
@@ -204,10 +204,10 @@ STRUCTURE DU LPSI:
 8. Prix: preuve par biens vendus
 
 VALORISATION PHOTOS:
-- Les acheteurs passent 60% de leur temps sur les photos
-- Mauvaise photo = baisse de 15% de la valeur perçue
+- Les acheteurs passent 60 % de leur temps sur les photos
+- Mauvaise photo = baisse de 15 % de la valeur perçue
 - Photographe pro spécialisé immobilier
-- Home-staging virtuel 3D: 75% des biens vendus mieux
+- Home-staging virtuel 3D: 75 % des biens vendus mieux
 
 DIFFUSION:
 - Vitrine le réseau + sites premium
@@ -256,7 +256,7 @@ MÉTHODE DES 3 ÉTAPES:
 → "Si je ne suis pas capable de défendre la valeur de mon travail, comment puis-je défendre votre prix?"
 
 3. "Je veux essayer de vendre seul (PAP)"
-→ "50%+ des transactions PAP échouent. Mon rôle est d'éliminer ce risque."
+→ "50 %+ des transactions PAP échouent. Mon rôle est d'éliminer ce risque."
 
 4. "Envoyez-moi l'estimation par email"
 → "Le prix ne vaut rien sans la stratégie. L'estimation = plan d'action."
@@ -264,11 +264,11 @@ MÉTHODE DES 3 ÉTAPES:
 5. "Le délai de 3 mois est trop long"
 → "Garantie Confiance: si je manque à un engagement, vous rompez sans frais."
 
-6. "Je veux un prix 10k€ au-dessus"
+6. "Je veux un prix 10 000 € au-dessus"
 → "Prix trop haut = assurance de prix final bas. Mon expertise = vendre au max du marché."
 
 7. "Je n'aime pas l'idée du panneau"
-→ "50% des acheteurs sont des voisins ou connaissent le quartier."
+→ "50 % des acheteurs sont des voisins ou connaissent le quartier."
 
 8. "Je dois y réfléchir / en parler à mon conjoint"
 → "Si votre conjoint était là, qu'est-ce qui le ferait hésiter le plus?"`,
@@ -317,7 +317,7 @@ TIPS CONCRETS:
       "Appeler pour un acquéreur, pas pour un mandat",
       "Technique des 3 oui pour désarmer",
       "Cibler les biens 30+ jours en ligne",
-      "80% des personnes qui décroche donnent un RDV",
+      "80 % des personnes qui décroche donnent un RDV",
       "Toujours proposer la visite pour 'vérifier' avant d'amener le client"
     ]
   },
@@ -423,8 +423,8 @@ STRATÉGIE DES FLUX:
 - "Excusez-moi, je termine avec la famille X qui vient de partir"
 
 RÈGLE 80/20:
-- L'acheteur parle 80% du temps
-- Toi seulement 20%
+- L'acheteur parle 80 % du temps
+- Toi seulement 20 %
 - S'il parle de décoration et travaux = bon signe (se projette)
 
 ITINERAIRE STRATEGIQUE:
@@ -582,14 +582,14 @@ SUIVI ACTIF:
 GESTION DES MEUBLES:
 - Liste détaillée pièce par pièce
 - Valoriser au prix d'occasion (pas neuf, pas achat d'époque)
-- Maximum 5% du prix sans justificatifs détaillés
+- Maximum 5 % du prix sans justificatifs détaillés
 - Réduit les frais de mutation pour l'acquéreur`,
     keyPoints: [
       "Dossier complet sous 4h",
       "Le délai SRU ne commence qu'avec le compromis",
       "Relance notaire sous 24h",
       "Débloquér les pièces toi-même",
-      "Meubles: max 5% sans justificatifs"
+      "Meubles: max 5 % sans justificatifs"
     ]
   },
   {
@@ -643,10 +643,10 @@ ACTE AUTHENTIQUE:
     content: `Les premières 72h après signature du mandat sont critiques.
 
 MISE EN VALEUR:
-- Désencombrement: 50% des objets personnels en moins
+- Désencombrement: 50 % des objets personnels en moins
 - Nettoyage extrême (vitrès, miroirs, joints salle de bain)
 - Circulation sans obstacle (lignes de fuite)
-- Vendeurs absents pour 70% des visites
+- Vendeurs absents pour 70 % des visites
 
 PHOTOS:
 - Grand-angle indispensable
@@ -671,7 +671,7 @@ REDACTION ANNONCE:
 - 14 jours de délai de rétractation du mandat = tout mettre en œuvre vite`,
     keyPoints: [
       "72h max pour tout mettre en ligne",
-      "Désencombrer 50% minimum",
+      "Désencombrer 50 % minimum",
       "Toutes les lumières allumées pour les photos",
       "Titre = émotion pas description",
       "Effet nouveauté = critique pour le prix"
@@ -704,8 +704,8 @@ INDICATEURS (après 2-3 semaines):
 - Visites mais pas de contre-visite/offre = prix trop haut
 - Ne jamais attendre plus de 3 semaines pour réagir
 
-STRATÉGIE DU 5%:
-- Baisser d'au moins 5% du prix initial
+STRATÉGIE DU 5 %:
+- Baisser d'au moins 5 % du prix initial
 - Répéter jusqu'à ce que le téléphone sonne
 - Garantit un effet "nouveauté" sur les alertes
 
@@ -721,7 +721,7 @@ ACTE DE CLOTURE:
     keyPoints: [
       "Prix trop haut = invisible pour la bonne cible",
       "Réagir au maximum sous 3 semaines",
-      "Baisser d'au moins 5% à chaque fois",
+      "Baisser d'au moins 5 % à chaque fois",
       "Le marché est le seul qui décide du prix",
       "Toujours donner une fourchette, pas un prix exact"
     ]
@@ -805,7 +805,7 @@ ELECTRICITE + GAZ:
 
 LOI CARREZ:
 - Uniquement ventes lots de copropriété
-- Si surface réelle < 5% surface acte = réduction prix possible
+- Si surface réelle < 5 % surface acte = réduction prix possible
 - Délai d'action: 1 an après acte authentique
 
 STRATÉGIE:
@@ -817,7 +817,7 @@ STRATÉGIE:
       "DPE obligatoire pour publier",
       "Appeler pour expliquer les diagnostics avant envoi",
       "Passoire thérmique ne bloqué pas la vente",
-      "Loi Carrez: -5% surface = réduction prix",
+      "Loi Carrez: -5 % surface = réduction prix",
       "Utiliser les défauts comme levier de négociation"
     ]
   },
@@ -825,7 +825,7 @@ STRATÉGIE:
     id: "réseau-social",
     title: "Google My Business & Réseaux Sociaux",
     category: "prospection",
-    content: `80% des parcours de vente commencent par une recherche locale.
+    content: `80 % des parcours de vente commencent par une recherche locale.
 
 GOOGLE MY BUSINESS:
 - Titre: [Prénom Nom] - Conseiller Immobilier [Ville]
@@ -873,12 +873,12 @@ FACEBOOK/INSTA:
     content: `Ce que tes clients achètent: ton ASSURANCE. Pas tes photos, pas tes annonces.
 
 LE TRANSFERT DE CERTITUDE:
-- Le client arrive avec 90% d'incertitude
-- Si ta certitude est à 50%, il ne signera jamais
+- Le client arrive avec 90 % d'incertitude
+- Si ta certitude est à 50 %, il ne signera jamais
 - Ton job: faire déborder ta certitude dans son réservoir
 
 ASSURANCE AU R1:
-- "Le marché valide ce prix à 285k€. Voici les 3 ventes qui le prouvent."
+- "Le marché valide ce prix à 285 000 €. Voici les 3 ventes qui le prouvent."
 - "À ce prix, on crée l'événement. Au-dessus, on crée l'oubli."
 - Pas de "Je pense que..." ou "On pourrait essayer..."
 
@@ -887,7 +887,7 @@ ASSURANCE FACE A L'ACHETEUR:
 - Ton calme face au problème = assurance que c'est géré
 
 LE "NON" DE L'EXPERT:
-- "Si vous voulez tester 50k€ au-dessus, je ne vous accompagnerai pas"
+- "Si vous voulez tester 50 000 € au-dessus, je ne vous accompagnerai pas"
 - Celui qui est prêt à quitter la table mène la danse
 - Le détâchement émotionnel est ta plus grande force
 

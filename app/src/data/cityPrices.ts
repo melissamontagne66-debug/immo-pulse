@@ -2,6 +2,8 @@
 // Sources: meilleursagents, seLoger, données 2025-2026
 // Les prix sont indicatifs pour guider le conseiller débutant
 
+import { formatEuro } from '@/lib/utils';
+
 export interface CityPrice {
   city: string;
   center: number;
@@ -194,7 +196,7 @@ export function getSuggestedPriceText(city: string, sectorType: 'centre-ville' |
   const estimatedAvg = pricePerM2 * avgApartmentSize;
   
   if (lang === 'es') {
-    return `En ${city} (${getPriceLabel(sectorType, 'es')}), el precio medio es de unos ${(pricePerM2).toLocaleString()}€/m². Para un apartamento medio de ${avgApartmentSize}m², eso da unos ${estimatedAvg.toLocaleString()}€. Puedes ajustar según el tipo de bien principal que vayas a vender (estudio, casa, villa...).`;
+    return `En ${city} (${getPriceLabel(sectorType, 'es')}), el precio medio es de unos ${formatEuro(pricePerM2)}/m². Para un apartamento medio de ${avgApartmentSize}m², eso da unos ${formatEuro(estimatedAvg)}. Puedes ajustar según el tipo de bien principal que vayas a vender (estudio, casa, villa...).`;
   }
-  return `Sur ${city} (${getPriceLabel(sectorType)}), le prix moyen est d'environ ${(pricePerM2).toLocaleString()}€/m². Pour un appartement moyen de ${avgApartmentSize}m², ça donne environ ${estimatedAvg.toLocaleString()}€. Tu peux ajuster selon le type de bien principal que tu vas vendre (studio, maison, villa...).`;
+  return `Sur ${city} (${getPriceLabel(sectorType)}), le prix moyen est d'environ ${formatEuro(pricePerM2)}/m². Pour un appartement moyen de ${avgApartmentSize} m², cela donne environ ${formatEuro(estimatedAvg)}. Tu peux ajuster selon le type de bien principal que tu vas vendre (studio, maison, villa...).`;
 }

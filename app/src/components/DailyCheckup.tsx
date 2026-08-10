@@ -8,6 +8,7 @@ import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
+import { getDailyActionsForDay, getMonthsSinceStart, plural } from '@/lib/goals';
 import {
   Phone, Users, Calendar, FileCheck, Home,
   TrendingUp, Clock, Star, Trophy, AlertTriangle,
@@ -67,47 +68,8 @@ interface DailyCheckupProps {
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
 }
 
-// Calculate months elapsed since start date
-function getMonthsSinceStart(startDate: string): number {
-  const start = new Date(startDate);
-  const now = new Date();
-  const months = (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-  return Math.max(0, months);
-}
-
-// List of daily actions to verify.
-// ⚠️ Cette logique recopie fidèlement la génération de `dailyTasks` dans
-// DailyActions.tsx (mêmes ids, mêmes conditions) — une source de données
-// unique entre les deux écrans arrive dans une MOD ultérieure.
-function getDailyActions(day: number, profile: UserProfile, dailyResults: DailyResults[], isEs: boolean = false) {
-  // Conditions identiques à DailyActions.tsx
-  const hasMandats = dailyResults.some(r => r.mandatsSigned > 0);
-  const firstMandatResult = dailyResults.find(r => r.mandatsSigned > 0);
-  const daysSinceLastMandat = firstMandatResult
-    ? Math.floor((new Date().getTime() - new Date(firstMandatResult.date).getTime()) / (1000 * 60 * 60 * 24))
-    : 999;
-  const showRetours = hasMandats; // Retours uniquement si mandat enregistré
-  const showMandatProactif = hasMandats && daysSinceLastMandat <= 7;
-  const showInterCabinets = hasMandats && day % 7 === 3; // Jours 3, 10, 17...
-  const isFirstMonth = getMonthsSinceStart(profile.startDate) < 1 && !profile.primoListeCalled;
-
-  return [
-    { id: `prospection-jour-${day}`, label: isEs ? 'Acción de prospección' : 'Action de prospection', icon: '🚪' },
-    { id: `admin-jour-${day}`, label: isEs ? 'Tareas administrativas' : 'Tâches administratives', icon: '📋' },
-    { id: `r1-jour-${day}`, label: isEs ? 'Hacer tus R1' : 'Effectuer tes R1', icon: '📅' },
-    { id: `r2-jour-${day}`, label: isEs ? 'Hacer tus R2' : 'Effectuer tes R2', icon: '✍️' },
-    ...(showRetours ? [{ id: `retours-jour-${day}`, label: isEs ? 'Hacer los retornos de visitas' : 'Faire les retours de visites', icon: '📞' }] : []),
-    { id: `défi-jour-${day}`, label: isEs ? 'Reto del día' : 'Défi du jour', icon: '🏆' },
-    { id: `apporteurs-jour-${day}`, label: isEs ? 'Registrar colaboradores' : 'Enregistrer tes apporteurs', icon: '🤝' },
-    { id: `plateformes-jour-${day}`, label: isEs ? 'Contactar bienes en plataformas' : 'Contacter les nouveaux biens sur les plateformes', icon: '💻' },
-    ...(isFirstMonth ? [{ id: `primo-jour-${day}`, label: isEs ? 'Llamar a tu lista primo' : 'Appeler ta primo liste', icon: '❤️' }] : []),
-    ...(showMandatProactif ? [{ id: `mandat-proactif-jour-${day}`, label: isEs ? 'Acciones proactivas sobre tu nuevo mandato' : 'Actions proactives sur ton nouveau mandat', icon: '🚀' }] : []),
-    ...(showInterCabinets ? [{ id: `inter-cabinets-jour-${day}`, label: isEs ? 'Inter-agencias' : 'Inter-cabinets', icon: '🔄' }] : []),
-    ...(day <= 14 ? [{ id: `gmb-jour-${day}`, label: 'Google My Business', icon: '🌐' }] : []),
-    { id: `social-jour-${day}`, label: isEs ? 'Contenido redes sociales' : 'Réseaux sociaux — Idée du jour', icon: '📱' },
-    { id: 'daily-crm-update', label: isEs ? 'Actualizar el CRM' : 'Mettre à jour le CRM', icon: '🗄️' },
-  ];
-}
+// Liste des actions du jour à vérifier — source unique partagée avec l'écran
+// « Aujourd'hui » : getDailyActionsForDay dans src/lib/goals.ts (MOD-19).
 
 export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
@@ -118,7 +80,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const { notes: actionNotes } = useActionNotes(userKey);
 
   const isEs = profile.language === 'es';
-  const dailyActions = getDailyActions(currentDay, profile, dailyResults, isEs);
+  const dailyActions = getDailyActionsForDay(currentDay, profile, dailyResults, isEs);
 
   // Une action a un statut si elle est cochée dans « Aujourd'hui » ou si son
   // compteur du jour a été incrémenté (R1, R2, visites/retours).
@@ -293,9 +255,9 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   };
 
   const prospectionOptions = [
-    { id: 'matin', label: '11h-13h30', desc: 'Créneau du midi' },
-    { id: 'soir', label: '17h-19h', desc: 'Créneau du soir' },
-    { id: 'les-deux', label: 'Les deux', desc: '11h-13h30 + 17h-19h' },
+    { id: 'matin', label: '11 h – 13 h 30', desc: 'Créneau du midi' },
+    { id: 'soir', label: '17 h – 19 h', desc: 'Créneau du soir' },
+    { id: 'les-deux', label: 'Les deux', desc: '11 h – 13 h 30 + 17 h – 19 h' },
     { id: 'autre', label: 'Autre horaire', desc: 'Terrain hors créneaux' },
   ];
 
@@ -312,7 +274,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             Avant de faire ton bilan, vérifions les actions du jour. Celles déjà cochées dans « Aujourd'hui » sont pré-marquées ✅ — tu peux modifier chaque réponse.
           </p>
           <p className="text-xs font-semibold text-amber-700 mt-2">
-            {verifiedCount}/{dailyActions.length} action{dailyActions.length > 1 ? 's' : ''} vérifiée{verifiedCount > 1 ? 's' : ''}
+            {verifiedCount}/{dailyActions.length} {plural(verifiedCount, 'action vérifiée', 'actions vérifiées')}
           </p>
         </div>
 
@@ -438,7 +400,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             className="w-full bg-red-600 hover:bg-red-700 py-3 text-base disabled:opacity-50 shadow-lg"
           >
             <ArrowRight className="w-4 h-4 mr-2" />
-            {allActionsVerified ? 'Continuer vers mon bilan →' : `Vérifie les ${actionsRestantes} action${actionsRestantes > 1 ? 's' : ''} restante${actionsRestantes > 1 ? 's' : ''}`}
+            {allActionsVerified ? 'Continuer vers mon bilan →' : `Vérifie les ${plural(actionsRestantes, 'action restante', 'actions restantes')}`}
           </Button>
         </div>
       </div>
@@ -494,11 +456,11 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                     })}
                   </div>
                   <div className="flex gap-2 flex-wrap">
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{counters.conversations} conversation{counters.conversations > 1 ? 's' : ''}</span>
-                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{counters.contacts} contact{counters.contacts > 1 ? 's' : ''}</span>
+                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{plural(counters.conversations, 'conversation')}</span>
+                    <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{plural(counters.contacts, 'contact')}</span>
                     <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{counters.r1} R1</span>
                     <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{counters.r2} R2</span>
-                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{counters.visites} visite{counters.visites > 1 ? 's' : ''}</span>
+                    <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{plural(counters.visites, 'visite')}</span>
                   </div>
                   <button
                     onClick={() => setStep(0)}
@@ -587,7 +549,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
               <Clock className="w-4 h-4 text-blue-600" />
               <p className="text-sm font-semibold text-blue-800">Tes créneaux de terrain recommandés</p>
             </div>
-            <p className="text-sm text-blue-700"><strong>11h-13h30</strong> et/ou <strong>17h-19h</strong> — Meilleurs taux de réponse.</p>
+            <p className="text-sm text-blue-700"><strong>11 h – 13 h 30</strong> et <strong>17 h – 19 h</strong>, chaque jour ouvré, au choix — Meilleurs taux de réponse.</p>
           </CardContent>
         </Card>
 

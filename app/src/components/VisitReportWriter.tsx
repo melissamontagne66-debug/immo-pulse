@@ -9,6 +9,7 @@ import {
   User, MapPin, TrendingUp,
   BarChart3, AlertTriangle, FileText
 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { VisitReport, VisitStatus } from '@/types';
 import type { VisitStats } from '@/types';
 import { VisitHistory } from './VisitHistory';
@@ -32,12 +33,90 @@ const statusLabels: Record<VisitStatus, { label: string; color: string }> = {
 
 };
 
+type SellerCivility = 'M./Mme' | 'M.' | 'Mme';
+
+// Infos de l'agent lues depuis la session (iad-coach-session) puis le profil
+// local (iad-coach-profile-{email}) — le profil est prioritaire.
+interface AgentInfo {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  city: string;
+}
+
+function readAgentInfo(): AgentInfo {
+  const info: AgentInfo = { firstName: '', lastName: '', phone: '', city: '' };
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    if (session?.firstName) info.firstName = String(session.firstName);
+    if (session?.lastName) info.lastName = String(session.lastName);
+    const email = session?.email;
+    if (email) {
+      const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+      const profile = profileRaw ? JSON.parse(profileRaw) : null;
+      if (profile?.firstName) info.firstName = String(profile.firstName);
+      if (profile?.lastName) info.lastName = String(profile.lastName);
+      if (profile?.phone) info.phone = String(profile.phone);
+      if (profile?.city) info.city = String(profile.city);
+    }
+  } catch { /* ignore */ }
+  return info;
+}
+
+// Reformulation diplomatique des notes brutes : quelques règles par mots-clés,
+// puis une reformulation générique adoucie en fallback.
+const DIPLOMATIC_RULES: { pattern: RegExp; replacement: string }[] = [
+  {
+    pattern: /trop cher|prix\s+(jugé\s+)?(trop\s+)?(élevé|haut)|hors de prix|surestimé|au-dessus du marché/i,
+    replacement: 'Le prix a été perçu comme au-dessus de son budget / du marché',
+  },
+  {
+    pattern: /cuisine.{0,30}(rénover|refaire|vieille|vétuste|vieillotte)|(rénover|refaire).{0,30}cuisine/i,
+    replacement: 'Des travaux de rafraîchissement sont à prévoir (cuisine)',
+  },
+  {
+    pattern: /salle de bain.{0,30}(refaire|vieille|vétuste|vieillotte)|(refaire|rénover).{0,30}salle de bain/i,
+    replacement: 'Des travaux de rafraîchissement sont à prévoir (salle de bain)',
+  },
+  {
+    pattern: /bruyant|trop de bruit|bruit\s+(de la\s+)?(rue|route|voisin)/i,
+    replacement: "L'environnement sonore a été noté comme un point d'attention",
+  },
+  {
+    pattern: /trop (petit|sombre)|exigu|manque de (place|lumière)|sombre/i,
+    replacement: "La surface ou la luminosité a été perçue comme juste par rapport à ses attentes",
+  },
+  {
+    pattern: /travaux|à rénover|vétuste|rafraîchir/i,
+    replacement: 'Des travaux sont à anticiper sur le bien',
+  },
+];
+
+// Retours catégorisés qui sonnent positifs → ils alimentent les points positifs
+const POSITIVE_PATTERN = /adore|adoré|coup de cœur|parfait|dans le budget|dans son budget|bien placé|calme|lumineux|aime|plaît|plait|super|top|ravi|conquis|ok\b/i;
+
+function diplomatize(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  for (const rule of DIPLOMATIC_RULES) {
+    if (rule.pattern.test(trimmed)) return rule.replacement;
+  }
+  return `Un point d'attention a été relevé : ${trimmed}`;
+}
+
+// Découpe une note en lignes/puces exploitables
+function splitLines(raw: string): string[] {
+  return raw.split(/\n|•/).map(l => l.trim()).filter(Boolean);
+}
+
 export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, onDeleteVisit, onDeleteProperty }: VisitReportWriterProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('form');
   const [sellerName, setSellerName] = useState('');
+  const [sellerCivility, setSellerCivility] = useState<SellerCivility>('M./Mme');
   const [propertyAddress, setPropertyAddress] = useState('');
   const [buyerName, setBuyerName] = useState('');
-  const [visitStatus, setVisitStatus] = useState<VisitStatus>('intéressé');
+  const [visitStatus, setVisitStatus] = useState<VisitStatus | null>(null);
   const [priceFeedback, setPriceFeedback] = useState('');
   const [locationFeedback, setLocationFeedback] = useState('');
   const [workFeedback, setWorkFeedback] = useState('');
@@ -47,9 +126,13 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
   const [keyPoints, setKeyPoints] = useState('');
   const [notes, setNotes] = useState('');
   const [saved, setSaved] = useState(false);
+  const [savedRecap, setSavedRecap] = useState<{ address: string; seller: string; statusLabel: string } | null>(null);
   const [generatedMessage, setGeneratedMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
+  const agentRef = useRef<AgentInfo | null>(null);
+  if (agentRef.current === null) agentRef.current = readAgentInfo();
+  const agent = agentRef.current;
 
   // Scroll en haut au montage
   useEffect(() => {
@@ -71,61 +154,77 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
   };
 
   const generateMessage = () => {
+    if (!visitStatus) return;
     const date = new Date().toLocaleDateString('fr-FR');
     const statusLabel = statusLabels[visitStatus]?.label || visitStatus;
 
-    let msg = `Bonjour ${sellerName || 'madame, monsieur'},
+    // Points positifs : points d'appui + retours catégorisés positifs
+    const positiveLines: string[] = [...splitLines(strongPoints)];
+    // Points de vigilance : points faibles + retours catégorisés négatifs/neutres
+    const vigilanceLines: string[] = splitLines(weakPoints).map(diplomatize);
 
-Suite à la visite du ${date}${buyerName ? ` avec ${buyerName}` : ''}, voici mon retour :
-
-**Statut de l'acquéreur :** ${statusLabel}
-
-`;
-
-    // Points positifs
-    if (strongPoints.trim()) {
-      msg += `**Points positifs :**
-${strongPoints}
-
-`;
+    const categories: { label: string; value: string }[] = [
+      { label: 'Prix', value: priceFeedback },
+      { label: 'Emplacement', value: locationFeedback },
+      { label: 'Travaux', value: workFeedback },
+      { label: 'Général', value: generalFeedback },
+    ];
+    for (const cat of categories) {
+      for (const line of splitLines(cat.value)) {
+        if (POSITIVE_PATTERN.test(line)) {
+          positiveLines.push(line);
+        } else {
+          vigilanceLines.push(diplomatize(line));
+        }
+      }
     }
 
-    // Points négatifs
-    if (weakPoints.trim()) {
-      msg += `**Points à prendre en compte :**
-${weakPoints}
-
-`;
+    if (positiveLines.length === 0) {
+      positiveLines.push("L'acquéreur a découvert votre bien avec intérêt.");
+    }
+    if (vigilanceLines.length === 0) {
+      vigilanceLines.push("Aucun point de vigilance particulier n'a été soulevé.");
     }
 
-    // Retours par catégorie
-    const hasCategoryFeedback = priceFeedback.trim() || locationFeedback.trim() || workFeedback.trim() || generalFeedback.trim();
-    if (hasCategoryFeedback) {
-      msg += `**Retours détaillés :**
-`;
-      if (priceFeedback.trim()) msg += `• Prix : ${priceFeedback}\n`;
-      if (locationFeedback.trim()) msg += `• Emplacement : ${locationFeedback}\n`;
-      if (workFeedback.trim()) msg += `• Travaux : ${workFeedback}\n`;
-      if (generalFeedback.trim()) msg += `• Général : ${generalFeedback}\n`;
-      msg += `
-`;
-    }
-
-    // Prochaines étapes selon le statut
+    // Prochaine étape selon le statut
+    let nextStep = '';
     if (visitStatus === 'intéressé') {
-      msg += `**Prochaine étape :** Je reste en contact rapproché avec l'acquéreur pour faire avancer le dossier. Je vous tiens informé s'il y a du nouveau.`;
+      nextStep = "Je reste en contact rapproché avec l'acquéreur pour faire avancer le dossier. Je vous tiens informé dès qu'il y a du nouveau.";
     } else if (visitStatus === 'réflexion') {
-      msg += `**Prochaine étape :** L'acquéreur réfléchit et compare. Je fais un suivi dans les 48h pour l'accompagner dans sa décision.`;
+      nextStep = "L'acquéreur réfléchit et compare. Je fais un suivi sous 48 h pour l'accompagner dans sa décision.";
     } else if (visitStatus === 'négatif') {
-      msg += `**Prochaine étape :** Ce retour m'aide à affiner ma stratégie. Je vais cibler davantage les prochains visiteurs et vous trouver le bon acquéreur.`;
+      nextStep = "Ce retour m'aide à affiner ma stratégie. Je vais cibler davantage les prochains visiteurs pour vous trouver le bon acquéreur.";
     } else if (visitStatus === 'offre') {
-      msg += `**Prochaine étape :** Excellente nouvelle ! Je prépare l'offre avec l'acquéreur et vous contacte très vite avec les détails.`;
+      nextStep = "Excellente nouvelle ! Je prépare l'offre avec l'acquéreur et vous contacte très vite avec les détails.";
     }
 
-    msg += `
+    const greeting = sellerName.trim()
+      ? `Bonjour ${sellerCivility} ${sellerName.trim()},`
+      : 'Bonjour,';
+    const visitLine = buyerName.trim()
+      ? `Suite à la visite de votre bien du ${date} avec ${buyerName.trim()}, voici mon retour.`
+      : `Suite à la visite de votre bien du ${date}, voici mon retour.`;
 
-Bonne journée,
-[Votre nom]`;
+    const signatureLines: string[] = [];
+    const fullName = `${agent.firstName} ${agent.lastName}`.trim();
+    if (fullName) signatureLines.push(fullName);
+    if (agent.phone) signatureLines.push(agent.phone);
+
+    const msg = `${greeting}
+
+${visitLine}
+
+Statut de l'acquéreur : ${statusLabel}
+
+Points positifs :
+${positiveLines.map(l => `• ${l}`).join('\n')}
+
+Points de vigilance :
+${vigilanceLines.map(l => `• ${l}`).join('\n')}
+
+Prochaine étape : ${nextStep}
+
+Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : ''}`;
 
     setGeneratedMessage(msg);
   };
@@ -146,6 +245,7 @@ Bonne journée,
         document.body.removeChild(textarea);
       }
       setCopied(true);
+      toast.success('Message copié ✓');
       setTimeout(() => setCopied(false), 2000);
     } catch {
       // Silently fail
@@ -153,7 +253,7 @@ Bonne journée,
   };
 
   const handleSave = () => {
-    if (!propertyAddress.trim() || !sellerName.trim()) return;
+    if (!propertyAddress.trim() || !sellerName.trim() || !visitStatus) return;
 
     const newVisit: VisitReport = {
       id: `visit-${Date.now()}`,
@@ -179,15 +279,23 @@ Bonne journée,
 
     onAddVisit(newVisit);
 
-    // Show saved confirmation
+    // Confirmation + récap de la fiche enregistrée
     setSaved(true);
+    setSavedRecap({
+      address: propertyAddress.trim(),
+      seller: `${sellerCivility} ${sellerName.trim()}`,
+      statusLabel: statusLabels[visitStatus]?.label || visitStatus,
+    });
+    toast.success('Compte rendu enregistré ✓');
     setTimeout(() => setSaved(false), 3000);
 
-    // Reset form
+    // Reset form + efface le message généré affiché
+    setGeneratedMessage('');
     setSellerName('');
+    setSellerCivility('M./Mme');
     setPropertyAddress('');
     setBuyerName('');
-    setVisitStatus('intéressé');
+    setVisitStatus(null);
     setPriceFeedback('');
     setLocationFeedback('');
     setWorkFeedback('');
@@ -253,18 +361,30 @@ Bonne journée,
       <Card>
         <CardContent className="p-5 space-y-4">
           <h3 className="font-semibold text-gray-900 flex items-center gap-2"><User className="w-4 h-4 text-red-500" /> Infos vendeur & bien</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-[110px_1fr_1fr] gap-4">
+            <div>
+              <Label className="text-xs">Civilité</Label>
+              <select
+                value={sellerCivility}
+                onChange={e => setSellerCivility(e.target.value as SellerCivility)}
+                className="mt-1 w-full h-9 rounded-md border border-input bg-white px-2 text-sm"
+              >
+                <option value="M./Mme">M./Mme</option>
+                <option value="M.">M.</option>
+                <option value="Mme">Mme</option>
+              </select>
+            </div>
             <div>
               <Label className="text-xs">Nom du vendeur *</Label>
-              <Input value={sellerName} onChange={e => setSellerName(e.target.value)} placeholder="Ex: Dupont" className="mt-1" />
+              <Input value={sellerName} onChange={e => setSellerName(e.target.value)} placeholder="Ex : Dupont" className="mt-1" />
             </div>
             <div>
               <Label className="text-xs">Nom de l'acquéreur</Label>
-              <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Ex: Martin" className="mt-1" />
+              <Input value={buyerName} onChange={e => setBuyerName(e.target.value)} placeholder="Ex : Martin" className="mt-1" />
             </div>
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
               <Label className="text-xs flex items-center gap-1"><MapPin className="w-3 h-3" /> Adresse du bien *</Label>
-              <Input value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} placeholder="Ex: 12 rue des Lilas, 66000 Perpignan" className="mt-1" />
+              <Input value={propertyAddress} onChange={e => setPropertyAddress(e.target.value)} placeholder={agent.city ? `Ex : 12 rue des Lilas, ${agent.city}` : 'Ex : 12 rue des Lilas, 66000 Perpignan'} className="mt-1" />
             </div>
           </div>
         </CardContent>
@@ -286,20 +406,20 @@ Bonne journée,
       {/* Retours par catégorie — TOUJOURS VISIBLES */}
       <Card>
         <CardContent className="p-5 space-y-4">
-          <h3 className="font-semibold text-gray-900 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-blue-500" /> Retours de l'acheteur — Dès qu'on touche un sujet, note-le ici</h3>
+          <h3 className="font-semibold text-gray-900 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-blue-500" /> Retours de l'acheteur — Dès qu'un sujet est abordé, note-le ici</h3>
 
           <div className="space-y-3">
             <div>
               <Label className="text-xs text-gray-500 font-medium">💰 Retour sur le PRIX</Label>
-              <Textarea value={priceFeedback} onChange={e => setPriceFeedback(e.target.value)} placeholder="Ex: 'Trop cher par rapport au marché', 'Dans le budget', 'Demande à voir les comparables'..." className="mt-1" rows={2} />
+              <Textarea value={priceFeedback} onChange={e => setPriceFeedback(e.target.value)} placeholder="Ex : « Trop cher par rapport au marché », « Dans le budget », « Il demande à voir les comparables »…" className="mt-1" rows={2} />
             </div>
             <div>
               <Label className="text-xs text-gray-500 font-medium">📍 Retour sur l'EMPLACEMENT</Label>
-              <Textarea value={locationFeedback} onChange={e => setLocationFeedback(e.target.value)} placeholder="Ex: 'Adore le quartier', 'Trop bruyant', 'Bien placé près des écoles'..." className="mt-1" rows={2} />
+              <Textarea value={locationFeedback} onChange={e => setLocationFeedback(e.target.value)} placeholder="Ex : « Il adore le quartier », « Trop bruyant », « Bien placé près des écoles »…" className="mt-1" rows={2} />
             </div>
             <div>
               <Label className="text-xs text-gray-500 font-medium">🔧 Retour sur les TRAVAUX</Label>
-              <Textarea value={workFeedback} onChange={e => setWorkFeedback(e.target.value)} placeholder="Ex: 'Cuisine à refaire', 'Électricité OK', 'Salle de bain vieillotte'..." className="mt-1" rows={2} />
+              <Textarea value={workFeedback} onChange={e => setWorkFeedback(e.target.value)} placeholder="Ex : « Cuisine à refaire », « Électricité OK », « Salle de bain vieillotte »…" className="mt-1" rows={2} />
             </div>
             <div>
               <Label className="text-xs text-gray-500 font-medium">📝 Retours GÉNÉRAUX</Label>
@@ -355,21 +475,28 @@ Bonne journée,
             <h3 className="font-semibold text-blue-800">Message type pour le vendeur</h3>
           </div>
           <p className="text-sm text-blue-600 mb-3">
-            Génère un message récapitulatif prêt à envoyer à ton vendeur. Il reprend le statut de l&apos;acquéreur, les points positifs et négatifs, et les prochaines étapes.
+            Génère un message récapitulatif prêt à envoyer à ton vendeur. Il reprend le statut de l&apos;acquéreur, les points positifs, les points de vigilance et la prochaine étape.
           </p>
           <Button
             onClick={generateMessage}
+            disabled={!visitStatus}
             variant="outline"
-            className="w-full bg-white border-blue-300 text-blue-700 hover:bg-blue-50"
+            className="w-full bg-white border-blue-300 text-blue-700 hover:bg-blue-50 disabled:opacity-50"
           >
             <FileText className="w-4 h-4 mr-2" /> Générer le message type
           </Button>
+          {!visitStatus && (
+            <p className="text-xs text-blue-500 mt-2">Choisis d&apos;abord le résultat de la visite pour générer le message.</p>
+          )}
 
           {generatedMessage && (
             <div className="mt-4 space-y-3">
               <div className="bg-white rounded-lg p-4 border border-blue-200">
                 <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">{generatedMessage}</pre>
               </div>
+              <p className="text-xs text-blue-600">
+                ✏️ Message reformulé pour rester diplomatique — relis avant d&apos;envoyer. Tes notes brutes restent privées et ne partent jamais au vendeur.
+              </p>
               <Button
                 onClick={copyToClipboard}
                 className="w-full bg-blue-600 hover:bg-blue-700"
@@ -377,7 +504,7 @@ Bonne journée,
                 {copied ? (
                   <>✓ Copié !</>
                 ) : (
-                  <><Copy className="w-4 h-4 mr-2" /> Copier le message en un clic</>
+                  <><Copy className="w-4 h-4 mr-2" /> Copier le message</>
                 )}
               </Button>
             </div>
@@ -388,17 +515,29 @@ Bonne journée,
       {/* Save button */}
       <Button
         onClick={handleSave}
-        disabled={!sellerName.trim() || !propertyAddress.trim()}
+        disabled={!sellerName.trim() || !propertyAddress.trim() || !visitStatus}
         className="w-full bg-red-600 hover:bg-red-700 py-3 text-base disabled:opacity-50"
       >
         <CheckCircle className="w-4 h-4 mr-2" />
-        {saved ? 'Compte rendu enregistré !' : 'Enregistrer le compte rendu'}
+        {saved ? 'Compte rendu enregistré ✓' : 'Enregistrer le compte rendu'}
       </Button>
 
-      {saved && (
-        <p className="text-center text-sm text-green-600">
-          Le compte rendu est sauvegardé. Tu pourras le consulter dans l&apos;historique pour tes RDV de suivi.
+      {!visitStatus && sellerName.trim() && propertyAddress.trim() && (
+        <p className="text-center text-sm text-amber-600">
+          Choisis le résultat de la visite (Intéressé, En réflexion, Négatif ou Offre) pour pouvoir enregistrer.
         </p>
+      )}
+
+      {saved && savedRecap && (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4 space-y-1">
+          <p className="text-sm font-semibold text-green-700">Compte rendu enregistré ✓</p>
+          <p className="text-sm text-green-700">
+            {savedRecap.address} — Vendeur : {savedRecap.seller} — Statut : {savedRecap.statusLabel}
+          </p>
+          <p className="text-xs text-green-600">
+            Tu pourras le consulter dans l&apos;historique pour tes RDV de suivi.
+          </p>
+        </div>
       )}
     </div>
   );

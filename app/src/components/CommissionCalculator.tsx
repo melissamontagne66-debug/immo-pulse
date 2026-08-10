@@ -507,7 +507,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
 
             {/* Net final */}
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
-              <p className="text-sm text-blue-700">{isSpain ? '<strong>NET FINAL</strong> en tu bolsillo :' : '<strong>NET FINAL</strong> dans ta poche :'}</p>
+              <p className="text-sm text-blue-700"><strong>NET FINAL</strong>{isSpain ? ' en tu bolsillo :' : ' dans ta poche :'}</p>
               <p className="text-3xl font-bold text-blue-800 mt-1">{formatEuro(netFinal)}</p>
             </div>
 

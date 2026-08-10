@@ -31,7 +31,7 @@ const month1Weeks: WeekPlan[] = [
       {
         id: generateId(1, 1, 4), day: 4,
         title: "RDV R1 ou R2 (max 2/jour)",
-        description: "Maximum 2 RDV R1 ou R2 par jour. Objectif : Maîtriser la découverte vendeur au R1. Écouter 80%, parler 20%. Ne JAMAIS donner le prix au R1.",
+        description: "Maximum 2 RDV R1 ou R2 par jour. Objectif : Maîtriser la découverte vendeur au R1. Écouter 80 %, parler 20 %. Ne JAMAIS donner le prix au R1.",
         category: "rdv", estimatedTime: "3h", moduleRef: "r1-préparation"
       },
       {

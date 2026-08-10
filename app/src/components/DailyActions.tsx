@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,11 +16,14 @@ import { DailyMorningAction } from '@/components/DailyMorningAction';
 import type { DailyResults } from '@/types';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
+import { getGoals, plural } from '@/lib/goals';
+import { MarkdownText } from '@/components/MarkdownText';
 
 interface DailyActionsProps {
   currentDay: number;
   completedDays: string[];
     profile: UserProfile;
+  // Conservée pour compat avec App.tsx — les objectifs sont lus depuis @/lib/goals (MOD-19)
   dailyTargets: { calls: number; contactsPhysiques: number; rdvR1: number; rdvR2: number; mandats: number; visites: number };
   dailyResults: DailyResults[];
   onCompleteDay: (dayId: string) => void;
@@ -175,7 +178,6 @@ export function DailyActions({
   currentDay,
   completedDays,
   profile,
-  dailyTargets,
   dailyResults,
   onCompleteDay,
   onUncompleteDay,
@@ -187,32 +189,11 @@ export function DailyActions({
 }: DailyActionsProps) {
   const isAdmin = userEmail === 'melissa.montagne66@gmail.com';
 
-  // Check if in first month for primo list
-  const monthsSinceStart = useMemo(() => {
-    const start = new Date(profile.startDate);
-    const now = new Date();
-    return (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-  }, [profile.startDate]);
-  const isFirstMonth = monthsSinceStart < 1 && !profile.primoListeCalled;
+  // Objectifs & liste d'actions du jour — source unique : src/lib/goals.ts (MOD-19).
+  // La même liste (ids, conditions, ordre) sert à la vérification du bilan du soir.
+  const goals = getGoals(profile, currentDay, dailyResults);
+  const targets = goals.dailyTargets;
 
-  // Check if user has mandates for proactive tasks
-  const hasMandats = dailyResults.some(r => r.mandatsSigned > 0);
-  const lastMandatDate = useMemo(() => {
-    const mandatResults = dailyResults.filter(r => r.mandatsSigned > 0);
-    if (mandatResults.length === 0) return null;
-    return mandatResults[0].date;
-  }, [dailyResults]);
-  const daysSinceLastMandat = lastMandatDate
-    ? Math.floor((new Date().getTime() - new Date(lastMandatDate).getTime()) / (1000 * 60 * 60 * 24))
-    : 999;
-  // Show proactive mandat tasks starting day after a mandate is signed
-  const showMandatProactif = hasMandats && daysSinceLastMandat <= 7;
-  const showRetours = hasMandats; // Retours uniquement si mandat enregistré
-
-  // Check if inter-cabinets should show (once per week when there are mandates)
-  const showInterCabinets = hasMandats && currentDay % 7 === 3; // Every Wednesday (day 3, 10, 17...)
-
-  
   // Dialog for prospection results
   const [showResultDialog, setShowResultDialog] = useState(false);
   const [pendingActionId, setPendingActionId] = useState<string | null>(null);
@@ -225,6 +206,29 @@ export function DailyActions({
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
   const todayCheckupDone = dailyResults.some(r => r.date === todayStr);
+
+  // Heure locale rafraîchie chaque minute — la bannière « bilan en attente »
+  // n'apparaît qu'à partir de 17 h (variante « série » après 21 h).
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const currentHour = now.getHours();
+
+  // Série de bilans consécutifs (en remontant depuis hier si celui du jour
+  // n'est pas encore fait) — utilisée par la variante après 21 h.
+  const bilanStreak = useMemo(() => {
+    const dates = new Set(dailyResults.map(r => r.date));
+    const d = new Date();
+    if (!dates.has(toLocalDateKey(d))) d.setDate(d.getDate() - 1);
+    let n = 0;
+    while (dates.has(toLocalDateKey(d))) {
+      n++;
+      d.setDate(d.getDate() - 1);
+    }
+    return n;
+  }, [dailyResults]);
 
   // Compteurs d'objectifs du jour (partagés avec Dashboard et le bilan du soir)
   const { counters, increment } = useDailyCounters();
@@ -284,7 +288,7 @@ export function DailyActions({
   // R1 — Description courte + contenu détaillé pour l'accordéon
   const r1Desc = isEs
     ? `Cita de descubrimiento vendedor. Objetivo: comprender el proyecto, cualificar el bien, fijar el R2. NUNCA des el precio en el R1. Escucha 80%, habla 20%. Deja que el vendedor se confíe.`
-    : `Rendez-vous de découverte vendeur. Objectif : comprendre le projet, qualifier le bien, fixer le R2. Ne donne JAMAIS le prix au R1. Écoute 80%, parle 20%. Laisse le vendeur se confier.`;
+    : `Rendez-vous de découverte vendeur. Objectif : comprendre le projet, qualifier le bien, fixer le R2. Ne donne JAMAIS le prix au R1. Écoute 80 %, parle 20 %. Laisse le vendeur se confier.`;
   const r1Tip = isEs
     ? `**Bueno saber para tu R1:**
 → Antes de llegar, prepárate: búsqueda de comparables, conocimiento del sector, preguntas abiertas listas
@@ -367,194 +371,140 @@ N'oublie pas : à chaque appel entrant, demande "Sur quel panneau avez-vous eu m
 Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'origine. C'est comme ça que tes apporteurs sont rémunérés à chaque vente.`,
   ];
 
-  const dailyTasks: any[] = [
-    {
-      id: `prospection-jour-${currentDay}`,
-      type: 'contact' as const,
-      title: action.title,
-      description: action.description,
-      script: action.script,
-      objectif: action.objectif,
-      duree: action.duree,
-      catColor: catInfo.color,
-      catLabel: catInfo.label,
-      catIcon: catInfo.icon,
-      askResult: true,
-      counterKeys: ['conversations', 'contacts'] as CounterKey[],
-    },
-    {
-      id: `admin-jour-${currentDay}`,
-      type: 'admin' as const,
-      title: isEs ? 'Tareas administrativas' : 'Tâches administratives',
-      description: adminDesc[rot],
-      catColor: 'bg-blue-100 text-blue-700 border-blue-200',
-      catLabel: isEs ? 'Administrativo' : 'Administratif',
-      catIcon: '📋',
-      askResult: false,
-    },
-    {
-      id: `r1-jour-${currentDay}`,
-      type: 'r1' as const,
-      title: isEs
-        ? `Hacer ${dailyTargets.rdvR1} R1${dailyTargets.rdvR1 > 1 ? 's' : ''}`
-        : `Effectuer ${dailyTargets.rdvR1} R1${dailyTargets.rdvR1 > 1 ? 's' : ''}`,
-      description: r1Desc,
-      tipContent: r1Tip,
-      hasTip: true,
-      tipTitle: isEs ? 'Bueno saber para tu R1' : 'Bon à savoir pour ton R1',
-      catColor: 'bg-green-100 text-green-700 border-green-200',
-      catLabel: 'R1',
-      catIcon: '📅',
-      askResult: false,
-      counterKeys: ['r1'] as CounterKey[],
-    },
-    {
-      id: `r2-jour-${currentDay}`,
-      type: 'r2' as const,
-      title: isEs
-        ? `Hacer ${dailyTargets.rdvR2} R2${dailyTargets.rdvR2 > 1 ? 's' : ''}`
-        : `Effectuer ${dailyTargets.rdvR2} R2${dailyTargets.rdvR2 > 1 ? 's' : ''}`,
-      description: r2Desc,
-      tipContent: r2Tip,
-      hasTip: true,
-      tipTitle: isEs ? 'Bueno saber para tu R2' : 'Bon à savoir pour ton R2',
-      catColor: 'bg-indigo-100 text-indigo-700 border-indigo-200',
-      catLabel: 'R2',
-      catIcon: '✍️',
-      askResult: false,
-      counterKeys: ['r2'] as CounterKey[],
-    },
-    ...(showRetours ? [{
-      id: `retours-jour-${currentDay}`,
-      type: 'retours' as const,
-      title: isEs ? 'Hacer los retornos de visitas' : 'Faire les retours de visites',
-      description: retoursDesc,
-      tipContent: retoursTip,
-      hasTip: true,
-      tipTitle: isEs ? 'Bueno saber para tus retornos' : 'Bon à savoir pour tes retours',
-      catColor: 'bg-pink-100 text-pink-700 border-pink-200',
-      catLabel: isEs ? 'Retornos' : 'Retours',
-      catIcon: '📞',
-      askResult: false,
-      counterKeys: ['visites'] as CounterKey[],
-    }] : []),
-    {
-      id: `défi-jour-${currentDay}`,
-      type: 'défi' as const,
-      title: isEs ? '🔥 Reto del día — ¡A no perderse!' : '🔥 Défi du jour — À ne pas manquer !',
-      description: (isEs
-        ? 'Tu reto: reintenta tus 5 contactos más antiguos del CRM. Un no de 3 meses puede volverse un sí hoy. ¡El primero que reintenta gana!'
-        : 'Ton défi : relance tes 5 contacts les plus anciens du CRM. Un non de 3 mois peut devenir un oui aujourd\'hui. Le premier qui relance gagne !'),
-      catColor: 'bg-gradient-to-r from-pink-100 to-violet-100 text-violet-700 border-violet-300',
-      catLabel: isEs ? 'Reto' : 'Défi',
-      catIcon: '🏆',
-      askResult: false,
-    },
-    {
-      id: `apporteurs-jour-${currentDay}`,
-      type: 'apporteurs' as const,
-      title: isEs ? 'Registrar 2 nuevos colaboradores de negocios' : 'Enregistrer 2 nouveaux apporteurs d\'affaires',
-      description: apporteursDesc[rot],
-      catColor: 'bg-amber-100 text-amber-700 border-amber-200',
-      catLabel: isEs ? 'Colaboradores' : 'Apporteurs',
-      catIcon: '🤝',
-      askResult: false,
-    },
-    {
-      id: `plateformes-jour-${currentDay}`,
-      type: 'plateformes' as const,
-      title: isEs ? 'Contactar los nuevos bienes en las plataformas inmo' : 'Contacter les nouveaux biens sur les plateformes immo',
-      description: isEs
-        ? 'Tómate 15 a 30 min para escanear Idealista, Fotocasa, Milanuncios y las otras plataformas — ya sea cada mañana durante tu café o cada noche al cerrar la jornada. Cuando veas un nuevo bien en tu sector, envía un mensaje al propietario.\n\nTu estrategia: crea un mensaje tipo que personalices para cada bien. Habla de tu búsqueda comprador — muestra que tienes un VERDADERO comprador serio para quien este bien podría encajar. Un mensaje humano, no comercial.\n\nEjemplo: "Hola, soy asesor inmobiliario en [sector]. Trabajo actualmente con un comprador muy motivado que busca exactamente este tipo de bien. ¿Estaríais abiertos a un intercambio para ver si vuestro bien corresponde a su búsqueda? También puedo aportaros una estimación ofrecida del valor de vuestro patrimonio."\n\nCada mensaje = un potencial mandato.'
-        : 'Prends 15 à 30 min pour scanner Leboncoin, PAP, SeLoger et les autres plateformes — soit chaque matin lors de ton café, soit chaque soir en clôturant la journée. Quand tu vois un nouveau bien sur ton secteur, envoie un message au propriétaire.\n\nTa stratégie : crée un message type que tu personnalises pour chaque bien. Parle de ta recherche acquéreur — montre que tu as un VÉRITABLE acheteur sérieux pour qui ce bien pourrait matcher. Un message humain, pas commercial.\n\nExemple : "Bonjour, je suis conseiller immobilier sur [secteur]. Je travaille actuellement avec un acquéreur très motivé qui cherche exactement ce type de bien. Seriez-vous ouvert à un échange pour voir si votre bien correspond à sa recherche ? Je peux aussi vous apporter une estimation offerte de la valeur de votre patrimoine."\n\nChaque message = un potentiel mandat.',
-      catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-      catLabel: isEs ? 'Plataformas' : 'Plateformes',
-      catIcon: '💻',
-      askResult: false,
-    },
-    ...(isFirstMonth ? [{
-      id: `primo-jour-${currentDay}`,
-      type: 'primo' as const,
-      title: profile.expérienceLevel === 'confirmé'
-        ? (isEs ? 'Reintentar tus antiguos clientes vendedores y compradores' : 'Relancer tes anciens clients vendeurs et acheteurs')
-        : (isEs ? 'Llamar a tu lista primo — Anuncia tu nuevo trabajo' : 'Appeler ta primo liste — Annonce ton nouveau métier'),
-      description: profile.expérienceLevel === 'confirmé'
-        ? (isEs
-          ? 'Como agente confirmado, tu lista primo son tus ANTIGUOS CLIENTES — vendedores y compradores. Llámales hoy: "Hola, soy [Tu nombre], pasaba para tener noticias tuyas. ¿Tu instalación va bien?" Escucha, luego pregunta: "A propósito, he cambiado de agencia / de red — ¿conoces a alguien alrededor de ti que esté pensando en vender o buscar un bien o que simplemente quiera conocer el valor de su patrimonio?" Cada antiguo cliente satisfecho = 2 a 3 recomendaciones naturales.'
-          : 'En tant qu\'agent confirmé, ta primo liste c\'est tes ANCIENS CLIENTS — vendeurs et acheteurs. Appelle-les aujourd\'hui : "Bonjour, c\'est [Ton prénom], je repassais vers vous pour prendre de vos nouvelles. Votre installation se passe bien ?" Écoute, puis demande : "Au fait, j\'ai changé d\'agence / de réseau — qui est-ce que tu connais autour de toi qui envisage de vendre ou de chercher un bien ou qui souhaite simplement connaître la valeur de son patrimoine ?" Chaque ancien client satisfait = 2 à 3 recommandations naturelles.')
-        : (isEs
-          ? '¿Empiezas? Tu fuerza es tu lista primo — tus cercanos, amigos, colegas, antiguos clientes de tu trabajo anterior. Hoy, llama a 5. Tu script: "Tengo una buena noticia, ¿puedes hacerme un favor?" — una vez que dicen "sí": "Me he formado en inmobiliaria y me lanzo en el sector, acompañado y formado. ¿Sabes quién alrededor de ti podría necesitar o querer conocer el valor de su bien inmobiliario? Es la base de mi profesión — bien informar a los propietarios sobre el valor de su patrimonio. Lo piden regularmente el notario, los seguros, o simplemente para saber lo que tenemos en las manos para avanzar en nuestros proyectos futuros."'
-          : 'Tu débutes ? Ta force, c\'est ta primo liste — tes proches, amis, collègues, anciens clients de ton précédent métier. Aujourd\'hui, appelle-en 5. Ton script : "J\'ai une bonne nouvelle, est-ce que tu peux me rendre un service ?" — une fois qu\'ils disent "oui" : "Je me suis formé à l\'immobilier et je me lance dans le domaine, accompagné et formé. Tu sais qui autour de toi pourrait avoir besoin ou envie de connaître la valeur de son bien immobilier ? C\'est la base de mon métier — bien renseigner les propriétaires sur la valeur de leur patrimoine. C\'est régulièrement demandé par le notaire, les assurances, ou simplement pour savoir ce qu\'on a dans les mains pour avancer dans nos projets futurs."'),
-      catColor: 'bg-rose-100 text-rose-700 border-rose-200',
-      catLabel: isEs ? 'Lista primo' : 'Primo liste',
-      catIcon: '❤️',
-      askResult: false,
-    }] : []),
-    ...(showMandatProactif ? [{
-      id: `mandat-proactif-jour-${currentDay}`,
-      type: 'mandat-proactif' as const,
-      title: isEs ? '🚀 Acciones proactivas sobre tu nuevo mandato' : '🚀 Actions proactives sur ton nouveau mandat',
-      description: isEs
-        ? 'Has firmado un mandato recientemente — ¡bravo! Ahora, hay que actuar RÁPIDAMENTE para dar la máxima visibilidad a este bien.\n\n**Acciones a hacer hoy mismo:**\n→ Fotos profesionales en 72h (calidad = visitas)\n→ Puesta en línea en todos los portales inmobiliarios\n→ Post en tus redes sociales (Facebook, Instagram, LinkedIn)\n→ Recogida de todos los documentos para un dossier completo (diagnósticos, título de propiedad, copia de los planos, último IBI, reglamento de propiedad horizontal si es piso)\n→ Previene a tus colaboradores de negocios que hay un nuevo bien disponible\n→ Envía el bien a tu base de compradores registrados\n→ Programa la cita de seguimiento vendedor en 2 semanas\n\nCada día de retraso = un día de venta en menos.'
-        : 'Tu as signé un mandat récemment — bravo ! Maintenant, il faut agir RAPIDEMENT pour donner le maximum de visibilité à ce bien.\n\n**Actions à faire dès aujourd\'hui :**\n→ Photos professionnelles sous 72h (qualité = visites)\n→ Mise en ligne sur tous les portails immobiliers\n→ Post sur tes réseaux sociaux (Facebook, Instagram, LinkedIn)\n→ Collecte de tous les documents pour un dossier complet (diagnostics, titre de propriété, copie des plans, dernier taxe foncière, règlement de copropriété si appartement)\n→ Préviens tes apporteurs d\'affaires qu\'un nouveau bien est disponible\n→ Envoie le bien à ta base d\'acquéreurs enregistrés\n→ Programme le RDV de suivi vendeur dans 2 semaines\n\nChaque jour de retard = un jour de vente en moins.',
-      catColor: 'bg-violet-100 text-violet-700 border-violet-200',
-      catLabel: isEs ? 'Mandato' : 'Mandat',
-      catIcon: '🚀',
-      askResult: false,
-    }] : []),
-    ...(showInterCabinets ? [{
-      id: `inter-cabinets-jour-${currentDay}`,
-      type: 'inter-cabinets' as const,
-      title: isEs ? '🔄 Inter-agencias — Desbloquear tus bienes invendidos' : '🔄 Inter-cabinets — Débloquer tes biens invendus',
-      description: isEs
-        ? 'Hoy: solicita las inter-agencias para ir a buscar visitas sobre los bienes en los que no logras bajar el precio.\n\n**Tu método:**\n1. Haz tu búsqueda en los sitios de anuncios con los mismos criterios objetivos que tu bien\n2. Amplía tu búsqueda a 5km\n3. Encuentra los bienes por debajo del precio del tuyo\n4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables pero no quiere bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."\n5. Espera que los colegas te devuelvan la llamada\n6. Programa las visitas\n\nLa inter-agencia desbloquea las situaciones bloqueadas y te ayuda a trabajar el precio.'
-        : 'Aujourd\'hui : sollicite les inter-cabinets pour aller chercher des visites sur les biens sur lesquels tu n\'arrives pas à baisser le prix.\n\n**Ta méthode :**\n1. Fais ta recherche sur les sites d\'annonces avec les mêmes critères objectifs que ton bien\n2. Élargis ta recherche à 5km\n3. Trouve les biens en dessous du prix de ton bien\n4. Envoie un message aux confrères : "Bonjour, j\'ai un bien similaire au vôtre sur [secteur]. J\'ai des acquéreurs sérieux qui ont visité votre bien ou un similaire. Le propriétaire est ouvert aux offres raisonnables mais ne veut pas baisser le prix public. Seriez-vous ouvert à un inter-cabinet ? 50/50 si vente."\n5. Attends que les confrères te rappellent\n6. Programme les visites\n\nL\'inter-cabinet débloque les situations bloquées et t\'aide à travailler le prix.',
-      catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-      catLabel: isEs ? 'Inter-agencias' : 'Inter-cabinets',
-      catIcon: '🔄',
-      askResult: false,
-    }] : []),
-    ...(currentDay <= 14 ? [{
-      id: `gmb-jour-${currentDay}`,
-      type: 'gmb' as const,
-      title: isEs ? '🌐 Google My Business — Sé el referente de tu sector' : '🌐 Google My Business — Sois LE référent de ton secteur',
-      description: isEs
-        ? '¡Pon en marcha tu ficha Google My Business hoy! Es TU vitrina digital : cuando alguien busca "agente inmobiliario [tu ciudad]", debes aparecer en primer lugar.\n\n**Acciones de hoy:**\n→ Crea o completa tu ficha Google My Business\n→ Añade fotos profesionales de ti y de tu sector\n→ Redacta una descripción clara con tus palabras clave\n→ Pide 3 reseñas a tus primeros contactos (familia, amigos, antiguos clientes)\n\n💡 **Argumento motivador:** Cada euro que inviertes en tu GMB te ahorra cientos en publicidad pagada. Un buen GMB = 3-5 llamadas calientes por semana sin gastar un céntimo. Tu competencia duerme sur ce canal — aprovecha. Si necesitas ayuda, mira el vídeo de formación del tema.'
-        : 'Mets en route ta fiche Google My Business aujourd\'hui ! C\'est TA vitrine digitale : quand quelqu\'un cherche "conseiller immobilier [ta ville]", tu dois apparaître en premier.\n\n**Actions du jour :**\n→ Crée ou complète ta fiche Google My Business\n→ Ajoute des photos professionnelles de toi et de ton secteur\n→ Rédige une description claire avec tes mots-clés\n→ Demande 3 avis à tes premiers contacts (famille, amis, anciens clients)\n\n💡 **Argument motivant :** Chaque euro que tu investis dans ton GMB t\'économise des centaines en pub payante. Un bon GMB = 3-5 appels chauds par semaine sans dépenser un centime. Ta concurrence dort sur ce canal — profites-en. Si tu as besoin d\'aide, revois la vidéo de formation sur le sujet.',
-      catColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
-      catLabel: 'Google Business',
-      catIcon: '🌐',
-      askResult: false,
-    }] : []),
-    {
-      id: `social-jour-${currentDay}`,
-      type: 'social' as const,
-      title: isEs ? '📱 Contenido redes sociales — Idea del día' : '📱 Réseaux sociaux — Idée du jour',
-      description: getSocialContent(currentDay, isEs),
-      catColor: 'bg-fuchsia-100 text-fuchsia-700 border-fuchsia-200',
-      catLabel: isEs ? 'Redes sociales' : 'Réseaux sociaux',
-      catIcon: '📱',
-      askResult: false,
-    },
-  ];
+  // Textes longs rattachés à chaque action du plan partagé (src/lib/goals.ts)
+  const dailyTasks: any[] = goals.dailyActions
+    .filter(def => def.type !== 'crm') // la carte CRM est rendue séparément plus bas
+    .map(def => {
+      switch (def.type) {
+        case 'prospection':
+          return {
+            ...def,
+            // Un seul « défi du jour » : si l'action de prospection s'intitule
+            // « Ton défi du jour » (J1), on l'affiche « Action recommandée » (MOD-19)
+            title: /défi du jour/i.test(action.title)
+              ? action.title.replace(/^(Ton )?défi du jour/i, isEs ? 'Acción recomendada' : 'Action recommandée')
+              : action.title,
+            description: action.description,
+            script: action.script,
+            objectif: action.objectif,
+            duree: action.duree,
+            catColor: catInfo.color,
+            catLabel: catInfo.label,
+            catIcon: catInfo.icon,
+          };
+        case 'admin':
+          return {
+            ...def,
+            title: isEs ? 'Tareas administrativas' : 'Tâches administratives',
+            description: adminDesc[rot],
+          };
+        case 'r1':
+          return {
+            ...def,
+            title: isEs ? `Hacer ${plural(targets.rdvR1, 'R1')}` : `Effectuer ${plural(targets.rdvR1, 'R1')}`,
+            description: r1Desc,
+            tipContent: r1Tip,
+          };
+        case 'r2':
+          return {
+            ...def,
+            title: isEs ? `Hacer ${plural(targets.rdvR2, 'R2')}` : `Effectuer ${plural(targets.rdvR2, 'R2')}`,
+            description: r2Desc,
+            tipContent: r2Tip,
+          };
+        case 'retours':
+          return {
+            ...def,
+            title: isEs ? 'Hacer los retornos de visitas' : 'Faire les retours de visites',
+            description: retoursDesc,
+            tipContent: retoursTip,
+          };
+        case 'défi':
+          return {
+            ...def,
+            title: isEs ? '🔥 Reto del día — ¡A no perderse!' : '🔥 Défi du jour — À ne pas manquer !',
+            description: (isEs
+              ? 'Tu reto: reintenta tus 5 contactos más antiguos del CRM. Un no de 3 meses puede volverse un sí hoy. ¡El primero que reintenta gana!'
+              : 'Ton défi : relance tes 5 contacts les plus anciens du CRM. Un non de 3 mois peut devenir un oui aujourd\'hui. Le premier qui relance gagne !'),
+          };
+        case 'apporteurs':
+          return {
+            ...def,
+            title: isEs ? 'Registrar 2 nuevos colaboradores de negocios' : 'Enregistrer 2 nouveaux apporteurs d\'affaires',
+            description: apporteursDesc[rot],
+          };
+        case 'plateformes':
+          return {
+            ...def,
+            title: isEs ? 'Contactar los nuevos bienes en las plataformas inmo' : 'Contacter les nouveaux biens sur les plateformes immo',
+            description: isEs
+              ? 'Tómate 15 a 30 min para escanear Idealista, Fotocasa, Milanuncios y las otras plataformas — ya sea cada mañana durante tu café o cada noche al cerrar la jornada. Cuando veas un nuevo bien en tu sector, envía un mensaje al propietario.\n\nTu estrategia: crea un mensaje tipo que personalices para cada bien. Habla de tu búsqueda comprador — muestra que tienes un VERDADERO comprador serio para quien este bien podría encajar. Un mensaje humano, no comercial.\n\nEjemplo: "Hola, soy asesor inmobiliario en [sector]. Trabajo actualmente con un comprador muy motivado que busca exactamente este tipo de bien. ¿Estaríais abiertos a un intercambio para ver si vuestro bien corresponde a su búsqueda? También puedo aportaros una estimación ofrecida del valor de vuestro patrimonio."\n\nCada mensaje = un potencial mandato.'
+              : 'Prends 15 à 30 min pour scanner Leboncoin, PAP, SeLoger et les autres plateformes — soit chaque matin lors de ton café, soit chaque soir en clôturant la journée. Quand tu vois un nouveau bien sur ton secteur, envoie un message au propriétaire.\n\nTa stratégie : crée un message type que tu personnalises pour chaque bien. Parle de ta recherche acquéreur — montre que tu as un VÉRITABLE acheteur sérieux pour qui ce bien pourrait matcher. Un message humain, pas commercial.\n\nExemple : "Bonjour, je suis conseiller immobilier sur [secteur]. Je travaille actuellement avec un acquéreur très motivé qui cherche exactement ce type de bien. Seriez-vous ouvert à un échange pour voir si votre bien correspond à sa recherche ? Je peux aussi vous apporter une estimation offerte de la valeur de votre patrimoine."\n\nChaque message = un potentiel mandat.',
+          };
+        case 'primo':
+          return {
+            ...def,
+            title: profile.expérienceLevel === 'confirmé'
+              ? (isEs ? 'Reintentar tus antiguos clientes vendedores y compradores' : 'Relancer tes anciens clients vendeurs et acheteurs')
+              : (isEs ? 'Llamar a tu lista primo — Anuncia tu nuevo trabajo' : 'Appeler ta primo liste — Annonce ton nouveau métier'),
+            description: profile.expérienceLevel === 'confirmé'
+              ? (isEs
+                ? 'Como agente confirmado, tu lista primo son tus ANTIGUOS CLIENTES — vendedores y compradores. Llámales hoy: "Hola, soy [Tu nombre], pasaba para tener noticias tuyas. ¿Tu instalación va bien?" Escucha, luego pregunta: "A propósito, he cambiado de agencia / de red — ¿conoces a alguien alrededor de ti que esté pensando en vender o buscar un bien o que simplemente quiera conocer el valor de su patrimonio?" Cada antiguo cliente satisfecho = 2 a 3 recomendaciones naturales.'
+                : 'En tant qu\'agent confirmé, ta primo liste c\'est tes ANCIENS CLIENTS — vendeurs et acheteurs. Appelle-les aujourd\'hui : "Bonjour, c\'est [Ton prénom], je repassais vers vous pour prendre de vos nouvelles. Votre installation se passe bien ?" Écoute, puis demande : "Au fait, j\'ai changé d\'agence / de réseau — qui est-ce que tu connais autour de toi qui envisage de vendre ou de chercher un bien ou qui souhaite simplement connaître la valeur de son patrimoine ?" Chaque ancien client satisfait = 2 à 3 recommandations naturelles.')
+              : (isEs
+                ? '¿Empiezas? Tu fuerza es tu lista primo — tus cercanos, amigos, colegas, antiguos clientes de tu trabajo anterior. Hoy, llama a 5. Tu script: "Tengo una buena noticia, ¿puedes hacerme un favor?" — una vez que dicen "sí": "Me he formado en inmobiliaria y me lanzo en el sector, acompañado y formado. ¿Sabes quién alrededor de ti podría necesitar o querer conocer el valor de su bien inmobiliario? Es la base de mi profesión — bien informar a los propietarios sobre el valor de su patrimonio. Lo piden regularmente el notario, los seguros, o simplemente para saber lo que tenemos en las manos para avanzar en nuestros proyectos futuros."'
+                : 'Tu débutes ? Ta force, c\'est ta primo liste — tes proches, amis, collègues, anciens clients de ton précédent métier. Aujourd\'hui, appelle-en 5. Ton script : "J\'ai une bonne nouvelle, est-ce que tu peux me rendre un service ?" — une fois qu\'ils disent "oui" : "Je me suis formé à l\'immobilier et je me lance dans le domaine, accompagné et formé. Tu sais qui autour de toi pourrait avoir besoin ou envie de connaître la valeur de son bien immobilier ? C\'est la base de mon métier — bien renseigner les propriétaires sur la valeur de leur patrimoine. C\'est régulièrement demandé par le notaire, les assurances, ou simplement pour savoir ce qu\'on a dans les mains pour avancer dans nos projets futurs."'),
+          };
+        case 'mandat-proactif':
+          return {
+            ...def,
+            title: isEs ? '🚀 Acciones proactivas sobre tu nuevo mandato' : '🚀 Actions proactives sur ton nouveau mandat',
+            description: isEs
+              ? 'Has firmado un mandato recientemente — ¡bravo! Ahora, hay que actuar RÁPIDAMENTE para dar la máxima visibilidad a este bien.\n\n**Acciones a hacer hoy mismo:**\n→ Fotos profesionales en 72h (calidad = visitas)\n→ Puesta en línea en todos los portales inmobiliarios\n→ Post en tus redes sociales (Facebook, Instagram, LinkedIn)\n→ Recogida de todos los documentos para un dossier completo (diagnósticos, título de propiedad, copia de los planos, último IBI, reglamento de propiedad horizontal si es piso)\n→ Previene a tus colaboradores de negocios que hay un nuevo bien disponible\n→ Envía el bien a tu base de compradores registrados\n→ Programa la cita de seguimiento vendedor en 2 semanas\n\nCada día de retraso = un día de venta en menos.'
+              : 'Tu as signé un mandat récemment — bravo ! Maintenant, il faut agir RAPIDEMENT pour donner le maximum de visibilité à ce bien.\n\n**Actions à faire dès aujourd\'hui :**\n→ Photos professionnelles sous 72h (qualité = visites)\n→ Mise en ligne sur tous les portails immobiliers\n→ Post sur tes réseaux sociaux (Facebook, Instagram, LinkedIn)\n→ Collecte de tous les documents pour un dossier complet (diagnostics, titre de propriété, copie des plans, dernier taxe foncière, règlement de copropriété si appartement)\n→ Préviens tes apporteurs d\'affaires qu\'un nouveau bien est disponible\n→ Envoie le bien à ta base d\'acquéreurs enregistrés\n→ Programme le RDV de suivi vendeur dans 2 semaines\n\nChaque jour de retard = un jour de vente en moins.',
+          };
+        case 'inter-cabinets':
+          return {
+            ...def,
+            title: isEs ? '🔄 Inter-agencias — Desbloquear tus bienes invendidos' : '🔄 Inter-cabinets — Débloquer tes biens invendus',
+            description: isEs
+              ? 'Hoy: solicita las inter-agencias para ir a buscar visitas sobre los bienes en los que no logras bajar el precio.\n\n**Tu método:**\n1. Haz tu búsqueda en los sitios de anuncios con los mismos criterios objetivos que tu bien\n2. Amplía tu búsqueda a 5km\n3. Encuentra los bienes por debajo del precio del tuyo\n4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables pero no quiere bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."\n5. Espera que los colegas te devuelvan la llamada\n6. Programa las visitas\n\nLa inter-agencia desbloquea las situaciones bloqueadas y te ayuda a trabajar el precio.'
+              : 'Aujourd\'hui : sollicite les inter-cabinets pour aller chercher des visites sur les biens sur lesquels tu n\'arrives pas à baisser le prix.\n\n**Ta méthode :**\n1. Fais ta recherche sur les sites d\'annonces avec les mêmes critères objectifs que ton bien\n2. Élargis ta recherche à 5km\n3. Trouve les biens en dessous du prix de ton bien\n4. Envoie un message aux confrères : "Bonjour, j\'ai un bien similaire au vôtre sur [secteur]. J\'ai des acquéreurs sérieux qui ont visité votre bien ou un similaire. Le propriétaire est ouvert aux offres raisonnables mais ne veut pas baisser le prix public. Seriez-vous ouvert à un inter-cabinet ? 50/50 si vente."\n5. Attends que les confrères te rappellent\n6. Programme les visites\n\nL\'inter-cabinet débloque les situations bloquées et t\'aide à travailler le prix.',
+          };
+        case 'gmb':
+          return {
+            ...def,
+            title: isEs ? '🌐 Google My Business — Sé el referente de tu sector' : '🌐 Google My Business — Sois LE référent de ton secteur',
+            description: isEs
+              ? '¡Pon en marcha tu ficha Google My Business hoy! Es TU vitrina digital : cuando alguien busca "agente inmobiliario [tu ciudad]", debes aparecer en primer lugar.\n\n**Acciones de hoy:**\n→ Crea o completa tu ficha Google My Business\n→ Añade fotos profesionales de ti y de tu sector\n→ Redacta una descripción clara con tus palabras clave\n→ Pide 3 reseñas a tus primeros contactos (familia, amigos, antiguos clientes)\n\n💡 **Argumento motivador:** Cada euro que inviertes en tu GMB te ahorra cientos en publicidad pagada. Un buen GMB = 3-5 llamadas calientes por semana sin gastar un céntimo. Tu competencia duerme sur ce canal — aprovecha. Si necesitas ayuda, mira el vídeo de formación del tema.'
+              : 'Mets en route ta fiche Google My Business aujourd\'hui ! C\'est TA vitrine digitale : quand quelqu\'un cherche "conseiller immobilier [ta ville]", tu dois apparaître en premier.\n\n**Actions du jour :**\n→ Crée ou complète ta fiche Google My Business\n→ Ajoute des photos professionnelles de toi et de ton secteur\n→ Rédige une description claire avec tes mots-clés\n→ Demande 3 avis à tes premiers contacts (famille, amis, anciens clients)\n\n💡 **Argument motivant :** Chaque euro que tu investis dans ton GMB t\'économise des centaines en pub payante. Un bon GMB = 3-5 appels chauds par semaine sans dépenser un centime. Ta concurrence dort sur ce canal — profites-en. Si tu as besoin d\'aide, revois la vidéo de formation sur le sujet.',
+          };
+        case 'social':
+          return {
+            ...def,
+            title: isEs ? '📱 Contenido redes sociales — Idea del día' : '📱 Réseaux sociaux — Idée du jour',
+            description: getSocialContent(currentDay, isEs),
+          };
+        default:
+          return def;
+      }
+    })
+    // catIcon par défaut = icône du plan (la prospection fournit la sienne via catInfo)
+    .map(task => ({ catIcon: task.icon, ...task }));
 
   // Build task list: all daily tasks
   const allTasks: typeof dailyTasks = [...dailyTasks];
 
   const crmId = 'daily-crm-update';
 
-  const completedCount = allTasks.filter(t => completedDays.includes(t.id)).length + (completedDays.includes(crmId) ? 1 : 0);
-  const totalCount = allTasks.length + 1; // +1 for CRM
+  const completedCount = goals.dailyActions.filter(t => completedDays.includes(t.id)).length;
+  const totalCount = goals.dailyActions.length; // CRM inclus (dernière action du jour)
   const progressPct = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  // Métadonnées d'affichage des compteurs rapides sur les cartes action
-  const counterMeta: Record<CounterKey, { label: string; target: number }> = {
-    conversations: { label: isEs ? 'Conversaciones' : 'Conversations', target: dailyTargets.calls },
-    contacts: { label: isEs ? 'Contactos' : 'Contacts', target: dailyTargets.contactsPhysiques },
-    r1: { label: 'R1', target: dailyTargets.rdvR1 },
-    r2: { label: 'R2', target: dailyTargets.rdvR2 },
-    visites: { label: isEs ? 'Visitas' : 'Visites', target: dailyTargets.visites },
-  };
+  // Métadonnées d'affichage des compteurs rapides sur les cartes action — depuis goals.ts
+  const counterMeta = Object.fromEntries(
+    goals.dailyGoals.map(g => [g.key, { label: g.label, target: g.target }])
+  ) as Record<CounterKey, { label: string; target: number }>;
 
   const handleToggle = (taskId: string, isDone: boolean) => {
     // Cochage direct en 1 tap — la modale de résultat reste disponible
@@ -590,17 +540,29 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
 
   return (
     <div className="space-y-5">
-      {/* Alerte 24h — Bilan non fait */}
-      {!todayCheckupDone && (
-        <Card className="bg-red-50 border-red-300 animate-pulse">
+      {/* Bannière bilan en attente — uniquement à partir de 17 h, ton orange discret */}
+      {!todayCheckupDone && currentHour >= 17 && (
+        <Card className="bg-orange-50 border-orange-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
-              <Bell className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <Bell className="w-5 h-5 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-semibold text-red-800">{isEs ? 'Balance de tu día pendiente' : 'Bilan de ta journée en attente'}</p>
-                <p className="text-xs text-red-600 mt-1">
-                  {isEs ? 'Aún no has hecho el balance de tu día. Tómate 3 minutos para anotar tus resultados y preparar mañana.' : "Tu n'as pas encore fait le bilan de ta journée. Prends 3 minutes pour noter tes résultats et préparer demain."}
-                </p>
+                {currentHour >= 21 ? (
+                  <p className="text-sm font-semibold text-orange-800">
+                    {isEs
+                      ? `¡Última recta para mantener tu racha de ${plural(bilanStreak, 'día')}!`
+                      : `Dernière ligne droite pour garder ta série de ${plural(bilanStreak, 'jour')} !`}
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-sm font-semibold text-orange-800">
+                      {isEs ? 'Tu balance del día te espera — 3 minutos para cerrar tu jornada' : "Ton bilan du jour t'attend — 3 minutes pour clôturer ta journée"}
+                    </p>
+                    <p className="text-xs text-orange-600 mt-1">
+                      {isEs ? 'Anota tus resultados y mantén tu racha 🔥' : 'Note tes résultats et garde ta série 🔥'}
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           </CardContent>
@@ -645,7 +607,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       </div>
 
       {/* Action du jour — message du coach */}
-      <DailyMorningAction currentDay={currentDay} profile={profile} dailyTargets={dailyTargets} dailyResults={dailyResults} />
+      <DailyMorningAction currentDay={currentDay} profile={profile} dailyTargets={targets} dailyResults={dailyResults} />
 
       {/* Liste des actions du jour */}
       <div className="space-y-3">
@@ -694,10 +656,10 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                         ➕ Créer la fiche contact
                       </button>
                     )}
-                    <p className="text-xs text-gray-600 mt-1 leading-relaxed whitespace-pre-line">{task.description}</p>
+                    <p className="text-xs text-gray-600 mt-1 leading-relaxed"><MarkdownText text={task.description} /></p>
                     {task.script && (
                       <div className="mt-2 bg-white/60 rounded-lg p-2.5 border border-gray-200">
-                        <p className="text-xs text-gray-500 italic">{task.script}</p>
+                        <p className="text-xs text-gray-500 italic"><MarkdownText text={task.script} /></p>
                       </div>
                     )}
                     {task.objectif && (
@@ -715,8 +677,8 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                           {isExpanded ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
                         </button>
                         {isExpanded && (
-                          <div className="mt-2 bg-amber-50 rounded-lg p-3 border border-amber-200 text-xs text-amber-800 leading-relaxed whitespace-pre-line">
-                            {task.tipContent || task.description}
+                          <div className="mt-2 bg-amber-50 rounded-lg p-3 border border-amber-200 text-xs text-amber-800 leading-relaxed">
+                            <MarkdownText text={task.tipContent || task.description} />
                           </div>
                         )}
                       </div>

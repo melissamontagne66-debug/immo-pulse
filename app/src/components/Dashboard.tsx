@@ -5,11 +5,12 @@ import { useDailyCounters, type CounterKey } from '@/hooks/useDailyCounters';
 import type { Sale } from '@/hooks/useSales';
 import type { useContacts } from '@/hooks/useContacts';
 import type { UserProfile } from '@/types/profile';
-import { getMonthlyMandatTarget } from '@/types/profile';
+import { getGoals, plural } from '@/lib/goals';
 import type { UserProgress, DailyResults } from '@/types';
 import type { WeekPlan } from '@/types';
 import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknote } from 'lucide-react';
 import { formatEuro, toLocalDateKey } from '@/lib/utils';
+import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
 
 interface DashboardProps {
@@ -18,6 +19,7 @@ interface DashboardProps {
   currentDay: number;
   profile: UserProfile;
   dailyResults: DailyResults[];
+  // Conservée pour compat avec App.tsx — les objectifs sont lus depuis @/lib/goals (MOD-19)
   dailyTargets: { calls: number; contactsPhysiques: number; rdvR1: number; rdvR2: number; mandats: number; visites: number };
   currentWeek: WeekPlan;
   onNavigate: (tab: string) => void;
@@ -26,20 +28,15 @@ interface DashboardProps {
   contactsState: ReturnType<typeof useContacts>;
 }
 
-export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyResults, onNavigate, onSetMonthlyGoal, sales, contactsState }: DashboardProps) {
+export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, sales, contactsState }: DashboardProps) {
   const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak);
   const alertes = insights.filter(i => i.type === 'alerte');
   const isEs = profile.language === 'es';
   const { counters, increment } = useDailyCounters();
 
-  // Objectif mensuel de mandats selon le niveau
-  const monthsSinceStart = useMemo(() => {
-    const start = new Date(profile.startDate);
-    const now = new Date();
-    return (now.getFullYear() - start.getFullYear()) * 12 + (now.getMonth() - start.getMonth());
-  }, [profile.startDate]);
-
-  const monthlyMandatTarget = getMonthlyMandatTarget(profile.expérienceLevel, monthsSinceStart);
+  // Objectifs — source unique : src/lib/goals.ts (MOD-19)
+  const goals = getGoals(profile);
+  const monthlyMandatTarget = goals.monthlyMandats;
 
   // Mandats signés ce mois-ci (depuis le 1er du mois)
   const mandatsThisMonth = useMemo(() => {
@@ -64,18 +61,18 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
   // Contacts à relancer aujourd'hui (ou en retard)
   const dueContacts = contactsState.getDueContacts();
 
-  // Objectifs quotidiens (sans mandat qui est maintenant mensuel)
-  const dailyObjectives: { key: CounterKey; label: string; value: number; icon: any; color: string; bg: string; border: string }[] = [
-    { key: 'conversations', label: isEs ? 'Conversaciones' : 'Conversations', value: dailyTargets.calls, icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
-    { key: 'contacts', label: isEs ? 'Contactos físicos' : 'Contacts physiques', value: dailyTargets.contactsPhysiques, icon: DoorOpen, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
-    { key: 'r1', label: 'R1', value: dailyTargets.rdvR1, icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
-    { key: 'r2', label: 'R2', value: dailyTargets.rdvR2, icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
-    { key: 'visites', label: isEs ? 'Visitas' : 'Visites', value: dailyTargets.visites, icon: Home, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
-  ];
+  // Objectifs quotidiens (sans mandat qui est maintenant mensuel) — depuis goals.ts
+  const objectiveStyle: Record<CounterKey, { icon: any; color: string; bg: string; border: string }> = {
+    conversations: { icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
+    contacts: { icon: DoorOpen, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
+    r1: { icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
+    r2: { icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
+    visites: { icon: Home, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+  };
+  const dailyObjectives = goals.dailyGoals.map(g => ({ key: g.key, label: g.label, value: g.target, ...objectiveStyle[g.key] }));
 
   // Progression mandats par semaine
   const mandatProgressPct = monthlyMandatTarget > 0 ? Math.min(100, Math.round((mandatsThisMonthTotal / monthlyMandatTarget) * 100)) : 0;
-  const weekTarget = Math.ceil(monthlyMandatTarget / 4);
 
   return (
     <div className="space-y-6">
@@ -117,8 +114,8 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
             <div className="h-full bg-purple-500 rounded-full transition-all" style={{ width: `${mandatProgressPct}%` }} />
           </div>
           <div className="flex justify-between mt-1">
-            <p className="text-xs text-purple-600">{mandatProgressPct}% atteint</p>
-            <p className="text-xs text-purple-500">~{weekTarget} mandat{weekTarget > 1 ? 's' : ''}/semaine</p>
+            <p className="text-xs text-purple-600">{mandatProgressPct}&nbsp;% atteint</p>
+            <p className="text-xs text-purple-500">{isEs ? `aprox. ${plural(goals.weeklyMandats, 'mandato')} por semana` : `environ ${plural(goals.weeklyMandats, 'mandat')} par semaine`}</p>
           </div>
         </CardContent>
       </Card>
@@ -194,7 +191,10 @@ export function Dashboard({ progress, currentDay, profile, dailyTargets, dailyRe
                   <p className="text-2xl font-bold text-gray-900">
                     {count}<span className="text-base font-semibold text-gray-400">/{obj.value}</span>
                   </p>
-                  <p className="text-xs text-gray-500 mt-0.5">{obj.label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1">
+                    {obj.label}
+                    {(obj.key === 'r1' || obj.key === 'r2') && <RdvInfoTooltip type={obj.key} isEs={isEs} />}
+                  </p>
                   <div className="flex items-center justify-center gap-2 mt-2">
                     <button
                       onClick={e => { e.stopPropagation(); increment(obj.key, -1); }}

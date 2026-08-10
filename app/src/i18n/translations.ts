@@ -70,7 +70,7 @@ export const translations = {
     prospectionTerrainSlot: 'Prospection terrain (porte à porte) : 11h-13h ou 17h-19h',
     prospectionPIGESlot: 'PIGE Légale (envoi de messages) : 7h-8h30',
     prospectionDailyBlock: '2h de prospection quotidiennes (lundi-vendredi) : terrain + PIGE + réseaux sociaux',
-    prospectionAgendaReminder: '🗓 Bloque 2h de prospection dans ton agenda chaque jour (lundi-vendredi) : terrain porte-à-porte (11h-13h ou 17h-19h) + PIGE Légale (7h-8h30, 30 min) + réseaux sociaux. Alterne les créneaux terrain chaque semaine.',
+    prospectionAgendaReminder: '🗓 Bloque 2h de prospection dans ton agenda chaque jour (lundi-vendredi) : terrain porte-à-porte (11h-13h ou 17h-19h) + PIGE Légale (7h-8h30, 30 min) + réseaux sociaux. Chaque jour ouvré, au créneau de ton choix (11 h – 13 h 30 ou 17 h – 19 h).',
 
     // Daily actions
     dailyAdminTitle: 'Tâches administratives',
@@ -198,7 +198,7 @@ export const translations = {
     prospectionTerrainSlot: 'Prospección terreno (puerta a puerta): 11h-13h o 17h-19h',
     prospectionPIGESlot: 'PIGE Legal (envío de mensajes): 7h-8h30',
     prospectionDailyBlock: '2h de prospección diarias (lunes-viernes): terreno + PIGE + redes sociales',
-    prospectionAgendaReminder: '🗓 Bloquea 2h de prospección en tu agenda cada día (lunes-viernes): terreno puerta a puerta (11h-13h o 17h-19h) + PIGE Legal (7h-8h30, 30 min) + redes sociales. Alterna los horarios de terreno cada semana.',
+    prospectionAgendaReminder: '🗓 Bloquea 2h de prospección en tu agenda cada día (lunes-viernes): terreno puerta a puerta (11h-13h o 17h-19h) + PIGE Legal (7h-8h30, 30 min) + redes sociales. Cada día laborable, en la franja de tu elección (11 h – 13 h 30 o 17 h – 19 h).',
 
     // Daily actions
     dailyAdminTitle: 'Tareas administrativas',

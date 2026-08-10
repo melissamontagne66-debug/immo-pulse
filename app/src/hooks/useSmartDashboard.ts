@@ -105,7 +105,7 @@ export function useSmartDashboard(
           id: 'no-calls',
           type: 'alerte',
           title: 'Pas d\'appels hier',
-          message: `Tu n'as fait aucun appel hier. Ça arrive d'avoir une journée chargée en RDV. Mais aujourd'hui, bloque ton créneau 11h-13h30 pour rattraper. ${profile.expérienceLevel === 'débutant' ? 'Pas de pression, on y va étape par étape.' : 'Les appels sont le carburant de ton business.'}`,
+          message: `Tu n'as fait aucun appel hier. Ça arrive d'avoir une journée chargée en RDV. Mais aujourd'hui, bloque ton créneau 11 h – 13 h 30 pour rattraper. ${profile.expérienceLevel === 'débutant' ? 'Pas de pression, on y va étape par étape.' : 'Les appels sont le carburant de ton business.'}`,
           emoji: '⏰',
           priority: 1,
         });

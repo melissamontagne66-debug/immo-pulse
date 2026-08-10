@@ -120,7 +120,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
               <span>{tab.label}</span>
               {tab.id === 'today' && (
                 <span className="ml-auto text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">
-                  J{currentDay}
+                  Jour {currentDay}
                 </span>
               )}
               {tab.id === 'dashboard' && hasNotification && (
@@ -229,7 +229,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
             <span className="font-bold text-gray-900 text-sm">Immo Pulse</span>
           </div>
           <div className="ml-auto flex items-center gap-2">
-            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">J{currentDay}</span>
+            <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-semibold">Jour {currentDay}</span>
             <div className="flex items-center gap-1 text-xs text-orange-600">
               <Flame className="w-3 h-3" />
               <span>{streak}</span>

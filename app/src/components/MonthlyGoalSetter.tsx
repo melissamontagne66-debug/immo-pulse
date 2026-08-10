@@ -101,7 +101,7 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
             <div className="bg-amber-50 rounded-xl p-4 border border-amber-200">
               <p className="text-sm text-amber-800">
                 <strong>Conseil des tops performers</strong><br />
-                Augmente progressivement tes objectifs. +10 à 20% par mois est un rythme sain et durable.
+                Augmente progressivement tes objectifs. +10 à 20 % par mois est un rythme sain et durable.
               </p>
             </div>
 

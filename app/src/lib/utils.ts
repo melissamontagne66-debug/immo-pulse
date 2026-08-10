@@ -16,6 +16,11 @@ export function formatEuro(value: number, options?: { maximumFractionDigits?: nu
   return formatter.format(value);
 }
 
+// Pourcentage au format français : virgule décimale + espace insécable avant « % » (ex. « 2,2 % »).
+export function formatPercent(value: number, maximumFractionDigits = 1) {
+  return `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits }).format(value)} %`;
+}
+
 export function clampNumber(value: number, min: number, max: number) {
   if (Number.isNaN(value)) return min;
   return Math.min(max, Math.max(min, value));

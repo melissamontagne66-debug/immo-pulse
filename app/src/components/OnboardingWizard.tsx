@@ -7,6 +7,8 @@ import type { UserProfile } from '@/types/profile';
 import { defaultProfile, calculateTargetsFromCA6Months } from '@/types/profile';
 import { getCityPrice, getSuggestedPriceText } from '@/data/cityPrices';
 import { formatEuro } from '@/lib/utils';
+import { getGoals, plural } from '@/lib/goals';
+import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import {
   User, MapPin, ArrowRight, Sparkles, TrendingUp, Euro, Home,
   Lightbulb, Check, PlayCircle, Calendar, GraduationCap, HeartHandshake
@@ -200,7 +202,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
-          <p className="text-gray-500 mt-1">{profile.language === 'es' ? 'Tu acompañamiento personalizado' : 'Ton accompagnement personnalisé'}</p>
+          <p className="text-gray-500 mt-1">{profile.language === 'es' ? 'Tu acompañamiento personalizado' : 'Ton accompagnement quotidien'}</p>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -506,39 +508,35 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 </div>
 
                 {(() => {
+                  // Mêmes chiffres que le dashboard — source unique : src/lib/goals.ts (MOD-19).
+                  // currentMonthGoal n'est appliqué au profil qu'au « C'est parti » : on le
+                  // simule ici avec le même calcul (calculateTargetsFromCA6Months, commission 5 %).
                   const t = calculateTargetsFromCA6Months(profile.ca6MonthsTarget, 5, profile.averagePrice, profile.expérienceLevel, 1);
-                  const dailyCalls = Math.max(10, Math.ceil(t.appelsTarget / 22));
-                  const dailyR1 = Math.max(1, Math.ceil(t.rdvR1Target / 22));
-                  const dailyR2 = Math.max(0, Math.ceil(t.rdvR2Target / 22));
+                  const goals = getGoals({ ...profile, currentMonthGoal: { ...profile.currentMonthGoal, ...t } }, 1, []);
                   return (
                     <>
                       <div className="bg-red-50 rounded-xl p-4 text-center border border-red-200">
                         <p className="text-xs text-red-600 font-medium uppercase tracking-wide">{isEs ? 'TUS OBJETIVOS HOY' : 'TES OBJECTIFS AUJOURD\'HUI'}</p>
                         <div className="grid grid-cols-3 gap-3 mt-3">
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-red-700">{dailyCalls}</p>
-                            <p className="text-xs text-red-600">{isEs ? 'conversaciones/día' : 'conversations/jour'}</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-red-700">{dailyR1}</p>
-                            <p className="text-xs text-red-600">R1/{isEs ? 'día' : 'jour'}</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-2xl font-bold text-red-700">{dailyR2}</p>
-                            <p className="text-xs text-red-600">R2/{isEs ? 'día' : 'jour'}</p>
-                          </div>
+                          {goals.dailyGoals.map(g => (
+                            <div key={g.key} className="text-center">
+                              <p className="text-2xl font-bold text-red-700">{g.target}</p>
+                              <p className="text-xs text-red-600 flex items-center justify-center gap-1">
+                                {g.label}
+                                {(g.key === 'r1' || g.key === 'r2') && <RdvInfoTooltip type={g.key} isEs={isEs} />}
+                              </p>
+                            </div>
+                          ))}
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="bg-blue-50 rounded-xl p-4 text-center">
-                          <p className="text-2xl font-bold text-blue-700">{t.ventesTarget}</p>
-                          <p className="text-xs text-blue-600">{isEs ? 'venta(s) este mes' : 'vente(s) ce mois'}</p>
-                        </div>
-                        <div className="bg-purple-50 rounded-xl p-4 text-center">
-                          <p className="text-2xl font-bold text-purple-700">{t.mandatsTarget}</p>
-                          <p className="text-xs text-purple-600">{isEs ? 'mandato(s) este mes' : 'mandat(s) ce mois'}</p>
-                        </div>
+                      <div className="bg-purple-50 rounded-xl p-4 text-center">
+                        <p className="text-2xl font-bold text-purple-700">{goals.monthlyMandats}</p>
+                        <p className="text-xs text-purple-600">
+                          {isEs
+                            ? `${plural(goals.monthlyMandats, 'mandato')} este mes`
+                            : `${plural(goals.monthlyMandats, 'mandat')} ce mois`}
+                        </p>
                       </div>
                     </>
                   );
