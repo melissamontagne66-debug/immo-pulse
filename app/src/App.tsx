@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useCallback } from 'react';
 // Immo Pulse - App de coaching immobilier
 import { LoginScreen } from '@/components/LoginScreen';
 import { Layout } from '@/components/Layout';
@@ -222,32 +222,45 @@ function App() {
   // ===== SAUVEGARDE CLOUD =====
   const isSyncing = useRef(false);
 
+  const flushSync = useCallback(async () => {
+    if (!isCloudEnabled() || !currentUser) return;
+    if (isSyncing.current) return;
+    isSyncing.current = true;
+    try {
+      await apiSyncSave({
+        // Ne jamais pousser le defaultProfile tant que l'onboarding
+        // n'est pas terminé — sinon le prochain chargement croirait
+        // qu'un profil existe et ferait sauter l'onboarding wizard.
+        profile: hasProfile ? profile : null,
+        progress,
+        visits,
+      });
+    } catch {
+      // Silencieux — si le réseau est down, les données restent en localStorage
+    } finally {
+      isSyncing.current = false;
+    }
+  }, [progress, profile, visits, currentUser, hasProfile]);
+
   useEffect(() => {
     if (!isCloudEnabled() || !currentUser) return;
     if (isSyncing.current) return;
 
-    const syncData = async () => {
-      isSyncing.current = true;
-      try {
-        await apiSyncSave({
-          // Ne jamais pousser le defaultProfile tant que l'onboarding
-          // n'est pas terminé — sinon le prochain chargement croirait
-          // qu'un profil existe et ferait sauter l'onboarding wizard.
-          profile: hasProfile ? profile : null,
-          progress,
-          visits,
-        });
-      } catch {
-        // Silencieux — si le réseau est down, les données restent en localStorage
-      } finally {
-        isSyncing.current = false;
-      }
-    };
-
-    const timeout = setTimeout(syncData, 3000);
+    // Court délai : juste de quoi coalescer des changements simultanés. L'état ne
+    // change que sur des actions ponctuelles (clic), jamais en continu (frappe
+    // clavier), donc pas besoin d'un long debounce — et un délai court réduit la
+    // fenêtre pendant laquelle une fermeture d'onglet ferait perdre la sync.
+    const timeout = setTimeout(() => { flushSync(); }, 500);
     return () => clearTimeout(timeout);
-  }, [progress, profile, visits, currentUser, hasProfile]);
+  }, [progress, profile, visits, currentUser, hasProfile, flushSync]);
   // ===== FIN SAUVEGARDE CLOUD =====
+
+  // Flush pending changes before logging out, so a fast logout can't cancel
+  // an unsaved debounced sync and silently drop data that was never sent to D1.
+  const handleLogout = useCallback(async () => {
+    await flushSync();
+    logout();
+  }, [flushSync, logout]);
 
   // Scroll to top when tab changes
   useLayoutEffect(() => {
@@ -435,7 +448,7 @@ function App() {
         streak={progress.streak}
         profile={profile}
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
-        onLogout={logout}
+        onLogout={handleLogout}
         onOpenCheckup={() => setModalView('checkup')}
         userEmail={currentUser?.email}
         hasNotification={true}
