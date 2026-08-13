@@ -79,21 +79,25 @@ c'est exactement ce qui s'est passé avec le bug de persistance ci-dessus.
 
 ## Tests
 
-Il n'existe **aucun test automatisé** dans ce repo à ce jour (ni `app/`, ni
-`immo-pulse-api/`). C'est une dette, pas un choix — ne pars pas du principe
-que l'absence de tests signifie que ce n'est pas nécessaire.
-
-- Si tu ajoutes ou corriges une fonction pure et critique (hashing de mot
-  de passe, signature/vérification JWT, calculs métier), c'est le bon
-  moment pour poser les bases : ajoute `vitest` et écris au moins un test
-  qui couvre le cas que tu viens de corriger, pour qu'il ne puisse pas
-  régresser silencieusement (exactement comme le bug de sync ci-dessus,
-  qui a été réintroduit une fois faute de garde-fou automatisé).
-- En attendant une vraie suite de tests, tout changement touchant à
-  l'auth, à la sync cloud, ou à la déconnexion doit être vérifié
-  manuellement avant de pousser : créer un compte → remplir un bilan → se
-  déconnecter rapidement → se reconnecter depuis une session vide → les
-  données doivent être là.
+- **`immo-pulse-api/`** — tests unitaires avec `vitest` sur les fonctions
+  pures critiques : hashing de mot de passe (`hashPasswordWithSalt`,
+  `verifyPassword`, migration legacy → v1), JWT (`createJWT`/`verifyJWT` :
+  round-trip, secret invalide, payload trafiqué, token malformé, token
+  expiré), CORS (`corsHeaders`, `getFrontendUrl`), `normalizeEmail`.
+  Lance-les avec `cd immo-pulse-api && npm test`. Si tu ajoutes ou modifies
+  une fonction pure dans `src/index.ts` (surtout tout ce qui touche à
+  l'auth), ajoute ou mets à jour le test correspondant dans
+  `src/index.test.ts` — exporte la fonction (`export function ...`) si elle
+  ne l'est pas déjà, c'est la seule condition pour qu'elle soit testable.
+- **`app/`** — aucun test automatisé pour l'instant (React/UI). C'est une
+  dette, pas un choix. Le point le plus fragile (`flushSync`/`handleLogout`
+  dans `App.tsx`) est un candidat naturel pour un test e2e (prévu plus
+  tard, pas encore en place) plutôt qu'un test unitaire, car son
+  comportement dépend du timing réel entre plusieurs `useEffect` React.
+  En attendant, tout changement touchant à l'auth, à la sync cloud, ou à
+  la déconnexion doit être vérifié manuellement : créer un compte →
+  remplir un bilan → se déconnecter rapidement → se reconnecter depuis une
+  session vide → les données doivent être là.
 - N'invente pas des tests qui passent artificiellement (mocks qui ne
   testent rien de réel) juste pour avoir une case verte — un test qui ne
   peut pas échouer ne sert à rien.
@@ -101,8 +105,10 @@ que l'absence de tests signifie que ce n'est pas nécessaire.
 ## Avant de pousser sur `main`
 
 1. `cd app && npm run build` doit passer sans erreur (et `npm run lint`).
-2. `cd immo-pulse-api && npx tsc --noEmit` doit passer sans erreur.
-3. Si tu touches à l'auth, au sync, ou à la déconnexion : teste
-   manuellement le scénario décrit dans la section Tests ci-dessus.
+2. `cd immo-pulse-api && npx tsc --noEmit -p .` et `npm test` doivent
+   passer sans erreur.
+3. Si tu touches à l'auth, au sync, ou à la déconnexion : teste aussi
+   manuellement le scénario décrit dans la section Tests ci-dessus (côté
+   `app/`, ce n'est pas encore couvert automatiquement).
 4. Le déploiement est automatique sur push vers `main` — un push cassé
    part directement en production, il n'y a pas de filet de sécurité.

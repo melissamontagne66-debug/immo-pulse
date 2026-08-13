@@ -8,10 +8,12 @@
     "dev": "wrangler dev",
     "db:create": "wrangler d1 create immo-pulse-db",
     "db:schema": "wrangler d1 execute immo-pulse-db --file=schema.sql",
-    "db:migrate": "wrangler d1 migrations apply immo-pulse-db"
+    "db:migrate": "wrangler d1 migrations apply immo-pulse-db",
+    "test": "vitest run"
   },
   "devDependencies": {
-    "wrangler": "^3.0.0",
-    "@cloudflare/workers-types": "^4.20231218.0"
+    "@cloudflare/workers-types": "^4.20231218.0",
+    "vitest": "^4.1.10",
+    "wrangler": "^3.0.0"
   }
 }
