@@ -25,6 +25,8 @@ import { useContacts } from '@/hooks/useContacts';
 import { useSales } from '@/hooks/useSales';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
+import { checkStreakOnOpen, getMilestoneMessage } from '@/lib/streak';
+import { toLocalDateKey } from '@/lib/utils';
 import type { DailyResults, NextDayPlan } from '@/types';
 import './App.css';
 
@@ -119,10 +121,33 @@ function App() {
     getCompletionRate,
     getCurrentWeek,
     loadFromCloud: loadProgressFromCloud,
+    applyStreakOpenCheck,
   } = useProgress(userKey);
 
   const { messages, isTyping, sendMessage, clearChat } = useChat(userKey);
   const { profile, hasProfile, setProfile, updateProfile, dailyTargets, loadFromCloud: loadProfileFromCloud } = useProfile(userKey);
+
+  // MOD-22 : vérification de la série à l'ouverture (gel automatique / casse bienveillante).
+  // Une seule fois par utilisateur et par jour.
+  const streakCheckedFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (!isAuthenticated || !userKey) return;
+    const todayKey = toLocalDateKey(new Date());
+    const ref = `${userKey}-${todayKey}`;
+    if (streakCheckedFor.current === ref) return;
+    streakCheckedFor.current = ref;
+    applyStreakOpenCheck(prev => {
+      const { streak, event } = checkStreakOnOpen(prev.streak, todayKey);
+      if (event) {
+        // Toast différé pour laisser l'UI se monter
+        setTimeout(() => {
+          if (event.type === 'freeze-used') toast.info(event.message, { duration: 8000 });
+          else toast(event.message, { duration: 8000 });
+        }, 800);
+      }
+      return { ...prev, streak };
+    });
+  }, [isAuthenticated, userKey, applyStreakOpenCheck]);
 
   useEffect(() => {
     if (hasProfile && showFirstTimeOnboarding) {
@@ -276,9 +301,19 @@ function App() {
   }
 
   const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
-    addDailyResults(results);
+    const registration = addDailyResults(results);
     setModalView('none');
-    toast.success('Bilan enregistré !');
+    // MOD-22 : palier de série > message « sauvée de justesse » > toast standard
+    const milestoneMsg = registration?.milestone ? getMilestoneMessage(registration.milestone) : null;
+    const now = new Date();
+    const savedLate = now.getHours() >= 22;
+    if (milestoneMsg) {
+      toast.success(milestoneMsg, { duration: 8000 });
+    } else if (savedLate && registration?.incremented) {
+      toast.success(`Bilan bouclé à ${now.getHours()} h ${String(now.getMinutes()).padStart(2, '0')} — série sauvée de justesse ! 😅`, { duration: 6000 });
+    } else {
+      toast.success('Bilan enregistré !');
+    }
   };
 
   const handleCloseCheckup = () => {
@@ -432,7 +467,7 @@ function App() {
         onTabChange={setActiveTab}
         currentDay={progress.currentDay}
         completionRate={completionRate}
-        streak={progress.streak}
+        streak={progress.streak.count}
         profile={profile}
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
         onLogout={logout}

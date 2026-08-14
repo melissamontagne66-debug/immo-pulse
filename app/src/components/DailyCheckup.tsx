@@ -9,6 +9,9 @@ import type { UserProfile } from '@/types/profile';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
 import { getDailyActionsForDay, getMonthsSinceStart, plural } from '@/lib/goals';
+import { getDefiForDay } from '@/data/defis';
+import { getTemoignageForUser } from '@/lib/temoignages';
+import { TemoignageCard } from '@/components/TemoignageCard';
 import {
   Phone, Users, Calendar, FileCheck, Home,
   TrendingUp, Clock, Star, Trophy, AlertTriangle,
@@ -81,6 +84,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
 
   const isEs = profile.language === 'es';
   const dailyActions = getDailyActionsForDay(currentDay, profile, dailyResults, isEs);
+
+  // MOD-23/24 : défi de demain (teasing) + témoignage de clôture
+  const defiDemain = getDefiForDay(currentDay + 1);
+  const temoignage = useMemo(() => getTemoignageForUser(profile, { email: userKey }), [profile, userKey]);
 
   // Une action a un statut si elle est cochée dans « Aujourd'hui » ou si son
   // compteur du jour a été incrémenté (R1, R2, visites/retours).
@@ -422,7 +429,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         {/* Welcome message */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <p className="text-sm text-amber-800">
-            <strong>Bilan de ta journée</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
+            <strong>Bilan de ta journée — Jour {currentDay}</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
           </p>
         </div>
 
@@ -750,7 +757,14 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           </div>
           <h3 className="text-xl font-bold text-gray-900 mt-3">Bilan enregistré !</h3>
           <p className="text-gray-500 text-sm mt-1">Passons à la planification de demain.</p>
+          {/* MOD-23 : teasing du défi de demain */}
+          <p className="text-sm text-gray-600 mt-2">
+            {isEs ? `Mañana, tu reto: ${defiDemain.titre} 🚪` : `Demain, ton défi : ${defiDemain.titre} 🚪`}
+          </p>
         </div>
+
+        {/* MOD-24 : témoignage dans l'écran de clôture du bilan */}
+        {temoignage && <TemoignageCard temoignage={temoignage} isEs={isEs} />}
 
         {/* Offer alert */}
         {results.offresWritten > 0 && (

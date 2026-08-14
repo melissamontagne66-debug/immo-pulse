@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import type { UserProgress, DebriefEntry, DailyResults, NextDayPlan } from '@/types';
 import { onboardingPlan } from '@/data/onboardingPlan';
+import { DEFAULT_STREAK, migrateStreak, registerBilan, type BilanRegistration } from '@/lib/streak';
 
 const STORAGE_PREFIX = 'iad-coach-progress';
 
@@ -10,7 +11,7 @@ const defaultProgress: UserProgress = {
   debriefs: [],
   dailyResults: [],
   nextDayPlans: [],
-  streak: 0,
+  streak: DEFAULT_STREAK,
   totalCalls: 0,
   totalRdv: 0,
   totalMandats: 0,
@@ -28,7 +29,10 @@ function loadProgress(userKey: string): UserProgress {
     const stored = localStorage.getItem(getStorageKey(userKey));
     if (stored) {
       const parsed = JSON.parse(stored);
-      return { ...defaultProgress, ...parsed };
+      const merged = { ...defaultProgress, ...parsed };
+      // MOD-22 : migration douce de l'ancien streak (nombre) vers StreakState
+      merged.streak = migrateStreak(parsed.streak, merged.dailyResults);
+      return merged;
     }
   } catch { /* ignore */ }
   return { ...defaultProgress };
@@ -60,6 +64,7 @@ export function useProgress(userKey: string) {
     if (!cloudProgress) return;
     setProgress(prev => {
       const merged = { ...defaultProgress, ...prev, ...cloudProgress };
+      merged.streak = migrateStreak(merged.streak, merged.dailyResults);
       saveProgress(loadedKey.current, merged);
       return merged;
     });
@@ -69,13 +74,13 @@ export function useProgress(userKey: string) {
     setProgress(prev => ({ ...prev, currentDay: day }));
   }, []);
 
+  // MOD-22 : cocher des actions ne touche PAS à la série (elle ne bouge qu'au bilan).
   const completeDay = useCallback((dayId: string) => {
     setProgress((prev: UserProgress) => {
       if (prev.completedDays.includes(dayId)) return prev;
       return {
         ...prev,
         completedDays: [...prev.completedDays, dayId],
-        streak: prev.streak + 1,
       };
     });
   }, []);
@@ -84,7 +89,6 @@ export function useProgress(userKey: string) {
     setProgress(prev => ({
       ...prev,
       completedDays: prev.completedDays.filter(id => id !== dayId),
-      streak: Math.max(0, prev.streak - 1),
     }));
   }, []);
 
@@ -96,21 +100,31 @@ export function useProgress(userKey: string) {
   }, []);
 
   const addDailyResults = useCallback((results: DailyResults) => {
+    // MOD-22 : la série s'incrémente UNIQUEMENT ici (validation du bilan).
+    const registration: { current: BilanRegistration | null } = { current: null };
     setProgress((prev: UserProgress) => {
       const filtered = prev.dailyResults.filter(r => r.date !== results.date);
       const newTotalCalls = filtered.reduce((sum, r) => sum + r.callsMade, 0) + results.callsMade;
       const newTotalRdv = filtered.reduce((sum, r) => sum + r.rdvR1Done + r.rdvR2Done, 0) + results.rdvR1Done + results.rdvR2Done;
       const newTotalMandats = filtered.reduce((sum, r) => sum + r.mandatsSigned, 0) + results.mandatsSigned;
       const newTotalVisites = filtered.reduce((sum, r) => sum + r.visitesDone, 0) + results.visitesDone;
+      registration.current = registerBilan(prev.streak, results.date);
       return {
         ...prev,
         dailyResults: [results, ...filtered],
+        streak: registration.current.streak,
         totalCalls: newTotalCalls,
         totalRdv: newTotalRdv,
         totalMandats: newTotalMandats,
         totalVisites: newTotalVisites,
       };
     });
+    return registration.current;
+  }, []);
+
+  // MOD-22 : applique gel / casse à l'ouverture (appelé une fois par App.tsx).
+  const applyStreakOpenCheck = useCallback((check: (prev: UserProgress) => UserProgress) => {
+    setProgress(prev => check(prev));
   }, []);
 
   const planNextDay = useCallback((plan: NextDayPlan) => {
@@ -162,5 +176,6 @@ export function useProgress(userKey: string) {
     getCurrentWeek,
     getLast7DaysAverages,
     loadFromCloud,
+    applyStreakOpenCheck,
   };
 }

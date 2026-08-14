@@ -61,13 +61,16 @@ export interface ChatMessage {
   timestamp: number;
 }
 
+import type { StreakState } from '@/lib/streak';
+
 export interface UserProgress {
   currentDay: number;
   completedDays: string[];
   debriefs: DebriefEntry[];
   dailyResults: DailyResults[];
   nextDayPlans: NextDayPlan[];
-  streak: number;
+  /** MOD-22 : objet série de bilans (migration douce depuis l'ancien nombre). */
+  streak: StreakState;
   totalCalls: number;
   totalRdv: number;
   totalMandats: number;

@@ -12,6 +12,10 @@ import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknot
 import { formatEuro, toLocalDateKey } from '@/lib/utils';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
+import { getDefiForDay } from '@/data/defis';
+import { DefiCard } from '@/components/DefiCard';
+import { getTemoignageForUser } from '@/lib/temoignages';
+import { TemoignageCard } from '@/components/TemoignageCard';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -29,7 +33,7 @@ interface DashboardProps {
 }
 
 export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, sales, contactsState }: DashboardProps) {
-  const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak);
+  const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak.count);
   const alertes = insights.filter(i => i.type === 'alerte');
   const isEs = profile.language === 'es';
   const { counters, increment } = useDailyCounters();
@@ -60,6 +64,12 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
 
   // Contacts à relancer aujourd'hui (ou en retard)
   const dueContacts = contactsState.getDueContacts();
+
+  // MOD-23 — Défi du jour (déterministe, stable dans la journée)
+  const defi = getDefiForDay(currentDay);
+
+  // MOD-24 — Témoignage personnalisé du jour (1/jour, jamais 2 fois le même sur 7 jours)
+  const temoignage = useMemo(() => getTemoignageForUser(profile), [profile]);
 
   // Objectifs quotidiens (sans mandat qui est maintenant mensuel) — depuis goals.ts
   const objectiveStyle: Record<CounterKey, { icon: any; color: string; bg: string; border: string }> = {
@@ -94,7 +104,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           </button>
           <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg">
             <Flame className="w-5 h-5" />
-            <span className="font-semibold text-sm">{progress.streak} jours</span>
+            <span className="font-semibold text-sm">{plural(progress.streak.count, 'jour')}</span>
           </div>
         </div>
       </div>
@@ -228,6 +238,12 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         Ton action du jour
         <ArrowRight className="w-4 h-4" />
       </button>
+
+      {/* MOD-23 — Défi du jour (carte unique, renvoyée depuis l'onglet Aujourd'hui) */}
+      <DefiCard defi={defi} isEs={isEs} />
+
+      {/* MOD-24 — Témoignage personnalisé du jour */}
+      <TemoignageCard temoignage={temoignage} isEs={isEs} />
 
 
       {/* ALERTES */}

@@ -420,12 +420,14 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             tipContent: retoursTip,
           };
         case 'défi':
+          // MOD-23 — Une seule carte défi dans l'app : celle du tableau de bord
+          // (pool de 12 défis, src/data/defis.ts). Ici, simple renvoi sobre.
           return {
             ...def,
-            title: isEs ? '🔥 Reto del día — ¡A no perderse!' : '🔥 Défi du jour — À ne pas manquer !',
-            description: (isEs
-              ? 'Tu reto: reintenta tus 5 contactos más antiguos del CRM. Un no de 3 meses puede volverse un sí hoy. ¡El primero que reintenta gana!'
-              : 'Ton défi : relance tes 5 contacts les plus anciens du CRM. Un non de 3 mois peut devenir un oui aujourd\'hui. Le premier qui relance gagne !'),
+            title: isEs ? '🏆 Reto del día' : '🏆 Défi du jour',
+            description: isEs
+              ? 'Tu reto del día te espera en el panel de control.'
+              : 'Ton défi du jour t\'attend sur le tableau de bord.',
           };
         case 'apporteurs':
           return {
@@ -560,6 +562,12 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                     </p>
                     <p className="text-xs text-orange-600 mt-1">
                       {isEs ? 'Anota tus resultados y mantén tu racha 🔥' : 'Note tes résultats et garde ta série 🔥'}
+                    </p>
+                    {/* MOD-22.5 : compte à rebours jusqu'à minuit pour garder la série */}
+                    <p className="text-xs text-orange-500 mt-1">
+                      {isEs
+                        ? `Quedan ${23 - currentHour} h para mantener tu racha`
+                        : `Plus que ${plural(23 - currentHour, 'heure')} pour garder ta série`}
                     </p>
                   </>
                 )}
