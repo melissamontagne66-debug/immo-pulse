@@ -18,6 +18,8 @@ import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDa
 import { toLocalDateKey } from '@/lib/utils';
 import { getGoals, plural } from '@/lib/goals';
 import { MarkdownText } from '@/components/MarkdownText';
+import { Celebration } from '@/components/Celebration';
+import { toast } from 'sonner';
 
 interface DailyActionsProps {
   currentDay: number;
@@ -202,6 +204,9 @@ export function DailyActions({
 
   // Expandable tips state
   const [expandedTips, setExpandedTips] = useState<Record<string, boolean>>({});
+
+  // MOD-21 : micro-célébration (burst de confettis) à la coche d'une action
+  const [checkCelebration, setCheckCelebration] = useState(false);
 
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
@@ -515,6 +520,18 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       onUncompleteDay(taskId);
     } else {
       onCompleteDay(taskId);
+      // MOD-21 : micro-célébration à la coche (confettis discrets + toast de progression)
+      const total = goals.dailyActions.length;
+      const done = goals.dailyActions.filter(t => completedDays.includes(t.id)).length + 1; // +1 : celle-ci
+      const remaining = total - done;
+      setCheckCelebration(true);
+      const encouragements = [
+        remaining > 0
+          ? `✅ ${done}/${total} — encore ${plural(remaining, 'action')} pour une journée parfaite !`
+          : `✅ ${done}/${total} — journée parfaite ! 🌟`,
+        `Bien joué ${profile.firstName}, tu avances.`,
+      ];
+      toast.success(encouragements[Math.floor(Math.random() * encouragements.length)], { duration: 3000 });
     }
   };
 
@@ -837,6 +854,16 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* MOD-21 : burst de confettis à la coche d'une action */}
+      <Celebration
+        show={checkCelebration}
+        variant="burst"
+        particleCount={18}
+        autoCloseMs={1800}
+        message=""
+        onClose={() => setCheckCelebration(false)}
+      />
     </div>
   );
 }

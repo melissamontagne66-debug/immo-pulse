@@ -27,6 +27,8 @@ import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { checkStreakOnOpen, getMilestoneMessage } from '@/lib/streak';
 import { toLocalDateKey } from '@/lib/utils';
+import { plural } from '@/lib/goals';
+import { Celebration } from '@/components/Celebration';
 import type { DailyResults, NextDayPlan } from '@/types';
 import './App.css';
 
@@ -45,6 +47,8 @@ function App() {
   const [modalView, setModalView] = useState<ModalView>('none');
   const [showFirstTimeOnboarding, setShowFirstTimeOnboarding] = useState(false);
   const [pendingRedirectToReport, setPendingRedirectToReport] = useState(false);
+  // MOD-21 : célébration plein écran après validation du bilan
+  const [bilanCelebration, setBilanCelebration] = useState<{ message: string; submessage: string; particleCount: number } | null>(null);
 
   // Confirmation avant fermeture du bilan si une saisie est en cours
   const [checkupDirty, setCheckupDirty] = useState(false);
@@ -302,18 +306,36 @@ function App() {
 
   const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
     const registration = addDailyResults(results);
-    setModalView('none');
-    // MOD-22 : palier de série > message « sauvée de justesse » > toast standard
+    // MOD-21 : le modal reste ouvert sur le step 2 (célébration + planification) —
+    // la fermeture se fait via onClose. La célébration plein écran s'affiche par-dessus.
+    const streakCount = registration?.streak.count ?? 0;
     const milestoneMsg = registration?.milestone ? getMilestoneMessage(registration.milestone) : null;
     const now = new Date();
-    const savedLate = now.getHours() >= 22;
-    if (milestoneMsg) {
-      toast.success(milestoneMsg, { duration: 8000 });
-    } else if (savedLate && registration?.incremented) {
-      toast.success(`Bilan bouclé à ${now.getHours()} h ${String(now.getMinutes()).padStart(2, '0')} — série sauvée de justesse ! 😅`, { duration: 6000 });
-    } else {
-      toast.success('Bilan enregistré !');
+    const savedLate = now.getHours() >= 22 && registration?.incremented;
+
+    // Victoire saisie → toast dédié
+    if (results.wins?.trim()) {
+      toast.success(`🏆 Victoire notée : « ${results.wins.trim()} » — c'est comme ça qu'on construit une carrière.`, { duration: 6000 });
     }
+
+    // Récap des chiffres du jour (seulement les valeurs > 0)
+    const recapLines: string[] = [];
+    if (results.callsMade > 0) recapLines.push(`📞 ${plural(results.callsMade, 'conversation')}`);
+    if (results.contactsApproached > 0) recapLines.push(`🤝 ${plural(results.contactsApproached, 'contact physique')}`);
+    if (results.rdvR1Done > 0) recapLines.push(`📅 ${plural(results.rdvR1Done, 'R1')}`);
+    if (results.rdvR2Done > 0) recapLines.push(`✍️ ${plural(results.rdvR2Done, 'R2')}`);
+    if (results.visitesDone > 0) recapLines.push(`🏡 ${plural(results.visitesDone, 'visite')}`);
+    if (results.mandatsSigned > 0) recapLines.push(`📑 ${plural(results.mandatsSigned, 'mandat')}`);
+    if (results.offresWritten > 0) recapLines.push(`💰 ${plural(results.offresWritten, 'offre')}`);
+
+    const sérieLine = `🔥 Série : ${plural(streakCount, 'jour')}. À demain, ${profile.firstName} !`;
+    const lateLine = savedLate ? `\nBilan bouclé à ${now.getHours()} h ${String(now.getMinutes()).padStart(2, '0')} — série sauvée de justesse ! 😅` : '';
+
+    setBilanCelebration({
+      message: milestoneMsg ?? '🎉 Bilan enregistré !',
+      submessage: `${sérieLine}${lateLine}${recapLines.length > 0 ? `\n\n${recapLines.join(' · ')}` : ''}`,
+      particleCount: milestoneMsg ? 48 : 32,
+    });
   };
 
   const handleCloseCheckup = () => {
@@ -322,8 +344,6 @@ function App() {
       setPendingRedirectToReport(false);
       setActiveTab('report');
       toast.info('N\'oublie pas de faire tes comptes rendus de visites !', { duration: 5000 });
-    } else {
-      toast.success('Bilan enregistré ! On passe au jour suivant.');
     }
   };
 
@@ -478,6 +498,18 @@ function App() {
       >
         {renderContent()}
       </Layout>
+
+      {/* MOD-21 : célébration plein écran après validation du bilan */}
+      {bilanCelebration && (
+        <Celebration
+          show={true}
+          message={bilanCelebration.message}
+          submessage={bilanCelebration.submessage}
+          particleCount={bilanCelebration.particleCount}
+          autoCloseMs={6000}
+          onClose={() => setBilanCelebration(null)}
+        />
+      )}
 
       {/* Modal overlay: Daily Checkup — pas de fermeture au clic sur l'overlay :
           l'overlay n'a volontairement aucun onClick. */}
