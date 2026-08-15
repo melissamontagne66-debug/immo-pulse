@@ -15,7 +15,7 @@ export interface Env {
 }
 
 // --- CORS ---
-function corsHeaders(env: Env, request: Request): Record<string, string> {
+export function corsHeaders(env: Env, request: Request): Record<string, string> {
   const origin = request.headers.get('Origin') || '';
   const allowedOrigin = env.FRONTEND_URL || '*';
   const allowedOrigins = allowedOrigin.split(',').map((entry) => entry.trim()).filter(Boolean);
@@ -37,7 +37,7 @@ function json(data: any, status = 200, cors: Record<string, string> = {}): Respo
 }
 
 // --- Password hashing ---
-async function hashPasswordWithSalt(password: string, salt: string): Promise<string> {
+export async function hashPasswordWithSalt(password: string, salt: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password + salt);
   const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -49,7 +49,7 @@ const CURRENT_SALT = 'immo-pulse-salt-v1';
 const LEGACY_SALT = 'immo-pulse-salt';
 const RESET_TOKEN_TTL_SECONDS = 60 * 60; // 1 heure
 
-function normalizeEmail(email: string): string {
+export function normalizeEmail(email: string): string {
   return email.toLowerCase().trim();
 }
 
@@ -57,7 +57,7 @@ function generateResetToken(): string {
   return crypto.randomUUID();
 }
 
-function getFrontendUrl(env: Env, origin?: string): string {
+export function getFrontendUrl(env: Env, origin?: string): string {
   const allowedOrigins = (env.FRONTEND_URL || '').split(',').map((item) => item.trim()).filter(Boolean);
   if (origin && allowedOrigins.includes(origin)) {
     return origin.replace(/\/$/, '');
@@ -118,11 +118,11 @@ async function sendResetEmail(email: string, token: string, frontendUrl: string,
   });
 }
 
-async function hashPassword(password: string): Promise<string> {
+export async function hashPassword(password: string): Promise<string> {
   return hashPasswordWithSalt(password, CURRENT_SALT);
 }
 
-async function verifyPassword(password: string, hash: string): Promise<{ valid: boolean; needsRehash: boolean }> {
+export async function verifyPassword(password: string, hash: string): Promise<{ valid: boolean; needsRehash: boolean }> {
   const currentHash = await hashPasswordWithSalt(password, CURRENT_SALT);
   if (currentHash === hash) return { valid: true, needsRehash: false };
   const legacyHash = await hashPasswordWithSalt(password, LEGACY_SALT);
@@ -131,12 +131,12 @@ async function verifyPassword(password: string, hash: string): Promise<{ valid: 
 }
 
 // --- JWT with real HMAC-SHA256 ---
-async function signHMAC(key: CryptoKey, data: string): Promise<string> {
+export async function signHMAC(key: CryptoKey, data: string): Promise<string> {
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
   return btoa(String.fromCharCode(...new Uint8Array(sig)));
 }
 
-async function importKey(secret: string): Promise<CryptoKey> {
+export async function importKey(secret: string): Promise<CryptoKey> {
   return crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -146,7 +146,7 @@ async function importKey(secret: string): Promise<CryptoKey> {
   );
 }
 
-async function createJWT(userId: string, email: string, env: Env): Promise<string> {
+export async function createJWT(userId: string, email: string, env: Env): Promise<string> {
   const secret = env.JWT_SECRET;
   if (!secret) throw new Error('JWT_SECRET not configured');
   const key = await importKey(secret);
@@ -162,7 +162,7 @@ async function createJWT(userId: string, email: string, env: Env): Promise<strin
   return `${header}.${payload}.${signature}`;
 }
 
-async function verifyJWT(token: string, env: Env): Promise<{ userId: string; email: string } | null> {
+export async function verifyJWT(token: string, env: Env): Promise<{ userId: string; email: string } | null> {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
