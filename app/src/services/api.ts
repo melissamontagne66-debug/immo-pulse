@@ -183,6 +183,45 @@ export async function apiDeleteContact(id: string) {
   return await res.json();
 }
 
+// --- PUSH (MOD-29) ---
+
+export async function apiPushSubscribe(fcmToken: string, userAgent: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/push/subscribe`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ fcmToken, userAgent }),
+  });
+  return await res.json();
+}
+
+export async function apiPushUnsubscribe(fcmToken: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/push/subscribe?fcmToken=${encodeURIComponent(fcmToken)}`, {
+    method: 'DELETE',
+    headers: headers(),
+  });
+  return await res.json();
+}
+
+// --- MILESTONES (MOD-30 : email de félicitations de palier) ---
+
+export async function apiMilestone(kind: string) {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/milestone`, {
+    method: 'POST',
+    headers: headers(),
+    body: JSON.stringify({ kind }),
+  });
+  return await res.json();
+}
+
 // --- UTIL ---
 
 export function isCloudEnabled(): boolean {

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
-import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck } from 'lucide-react';
+import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell } from 'lucide-react';
+import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 
 interface LayoutProps {
   children: ReactNode;
@@ -32,6 +33,11 @@ const getTabs = (lang: 'fr' | 'es') => [
 export function Layout({ children, activeTab, onTabChange, currentDay, completionRate, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
   const tabs = getTabs(profile.language);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  // MOD-29 : état du rappel push (réglage sidebar)
+  const pushAvailable = isPushConfigured();
+  const pushDenied = isPushDenied();
+  const [pushReminderOn, setPushReminderOn] = useState(() => loadPushState(userEmail ?? '').reminderEnabled);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
@@ -183,6 +189,34 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
               <Flame className="w-3 h-3 text-orange-500" />
               <span>Série : <strong className="text-gray-700">{streak} jours</strong></span>
             </div>
+            {/* MOD-29 : réglage du rappel push du bilan à 18 h.
+                Visible seulement si FCM est configuré pour ce build. */}
+            {pushAvailable && (
+              <label className="flex items-center justify-between gap-2 text-xs text-gray-500 cursor-pointer select-none">
+                <span className="flex items-center gap-2">
+                  <Bell className="w-3 h-3 text-blue-500" />
+                  {profile.language === 'es' ? 'Recordatorio del balance (18 h)' : 'Rappel du bilan à 18 h'}
+                </span>
+                <input
+                  type="checkbox"
+                  checked={pushReminderOn}
+                  onChange={async e => {
+                    const enabled = e.target.checked;
+                    setPushReminderOn(enabled);
+                    await setPushReminderEnabled(userEmail ?? '', enabled);
+                    setPushReminderOn(loadPushState(userEmail ?? '').reminderEnabled);
+                  }}
+                  className="accent-red-600"
+                />
+              </label>
+            )}
+            {pushAvailable && pushDenied && (
+              <p className="text-[11px] text-gray-400">
+                {profile.language === 'es'
+                  ? 'Notificaciones bloqueadas por el navegador — actívalas en los ajustes del navegador.'
+                  : 'Notifications bloquées par le navigateur — réactive-les dans les réglages du navigateur.'}
+              </p>
+            )}
             {/* Sélecteur de langue */}
             <div className="flex items-center justify-center gap-1 mt-2">
               <button

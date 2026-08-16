@@ -20,6 +20,7 @@ import { getGoals, plural } from '@/lib/goals';
 import { MarkdownText } from '@/components/MarkdownText';
 import { Celebration } from '@/components/Celebration';
 import { toast } from 'sonner';
+import { shouldPromptForPush, snoozePushPrompt, subscribeToPush, isPushDenied } from '@/lib/push';
 
 interface DailyActionsProps {
   currentDay: number;
@@ -207,6 +208,9 @@ export function DailyActions({
 
   // MOD-21 : micro-célébration (burst de confettis) à la coche d'une action
   const [checkCelebration, setCheckCelebration] = useState(false);
+
+  // MOD-29 : carte douce de proposition des rappels push (jour ≥ 2)
+  const [showPushPrompt, setShowPushPrompt] = useState(false);
 
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
@@ -532,7 +536,27 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         `Bien joué ${profile.firstName}, tu avances.`,
       ];
       toast.success(encouragements[Math.floor(Math.random() * encouragements.length)], { duration: 3000 });
+      // MOD-29 : proposition douce des rappels push au moment de satisfaction
+      // (jour ≥ 2, jamais au 1er lancement, une seule carte non bloquante).
+      if (shouldPromptForPush(userEmail ?? '', currentDay)) {
+        setShowPushPrompt(true);
+      }
     }
+  };
+
+  const handleActivatePush = async () => {
+    setShowPushPrompt(false);
+    const ok = await subscribeToPush(userEmail ?? '');
+    if (ok) {
+      toast.success('🔔 Rappels activés ! On te préviendra à 18 h si ton bilan n\'est pas fait.');
+    } else if (!isPushDenied()) {
+      toast.info('Pas de souci — tu peux activer les rappels plus tard depuis les réglages.');
+    }
+  };
+
+  const handleSnoozePush = () => {
+    snoozePushPrompt(userEmail ?? '');
+    setShowPushPrompt(false);
   };
 
   const openResultDialog = (taskId: string) => {
@@ -559,6 +583,29 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
 
   return (
     <div className="space-y-5">
+      {/* MOD-29 : proposition douce des rappels push — carte non bloquante,
+          affichée après une action cochée (jour ≥ 2), jamais au 1er lancement */}
+      {showPushPrompt && (
+        <Card className="bg-blue-50 border-blue-200">
+          <CardContent className="p-4 flex items-start gap-3">
+            <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-blue-800">
+                {isEs ? '🔔 ¿Un recordatorio a las 18 h para no olvidar tu balance?' : '🔔 Un rappel à 18 h pour ne jamais oublier ton bilan ?'}
+              </p>
+              <div className="flex gap-2 mt-2">
+                <Button size="sm" onClick={handleActivatePush} className="bg-blue-600 hover:bg-blue-700 text-xs">
+                  {isEs ? 'Activar los recordatorios' : 'Activer les rappels'}
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleSnoozePush} className="text-xs">
+                  {isEs ? 'Más tarde' : 'Plus tard'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Bannière bilan en attente — uniquement à partir de 17 h, ton orange discret */}
       {!todayCheckupDone && currentHour >= 17 && (
         <Card className="bg-orange-50 border-orange-200">

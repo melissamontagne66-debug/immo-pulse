@@ -30,6 +30,8 @@ import { evaluateBilan } from '@/lib/antiDecrochage';
 import { toLocalDateKey } from '@/lib/utils';
 import { plural } from '@/lib/goals';
 import { Celebration } from '@/components/Celebration';
+import { registerPushServiceWorker } from '@/lib/push';
+import { apiMilestone } from '@/services/api';
 import type { DailyResults, NextDayPlan } from '@/types';
 import './App.css';
 
@@ -153,6 +155,13 @@ function App() {
       return { ...prev, streak };
     });
   }, [isAuthenticated, userKey, applyStreakOpenCheck]);
+
+  // MOD-29 : enregistrement du service worker push au chargement (sans
+  // demander la permission — la carte douce s'en charge au bon moment).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    registerPushServiceWorker();
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (hasProfile && showFirstTimeOnboarding) {
@@ -354,6 +363,18 @@ function App() {
       submessage: `${sérieLine}${lateLine}${recapLines.length > 0 ? `\n\n${recapLines.join(' · ')}` : ''}`,
       particleCount: milestoneMsg ? 48 : 32,
     });
+
+    // MOD-30 : email de félicitations de palier (anti-doublon côté Worker)
+    if (registration?.milestone && isCloudEnabled()) {
+      apiMilestone(`streak_${registration.milestone}`).catch(() => { /* silencieux */ });
+    }
+    // Premier mandat → palier « first_mandat » (email 3)
+    if (registration?.incremented && results.mandatsSigned > 0) {
+      const totalMandats = progress.dailyResults.reduce((s, r) => s + (r.mandatsSigned || 0), 0);
+      if (totalMandats === 0 && isCloudEnabled()) {
+        apiMilestone('first_mandat').catch(() => { /* silencieux */ });
+      }
+    }
   };
 
   const handleCloseCheckup = () => {

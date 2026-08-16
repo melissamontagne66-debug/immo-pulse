@@ -10,6 +10,7 @@ import { formatEuro, clampNumber } from '@/lib/utils';
 import { Euro, Calculator, TrendingUp, User, Percent, Minus, Equal, Trash2, Save, AlertCircle, HandCoins } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
 import { SaleCelebration } from '@/components/SaleCelebration';
+import { apiMilestone, isCloudEnabled } from '@/services/api';
 
 // Grille de commission-type (degressive) — suggestion par defaut
 function getCommissionRate(price: number): number {
@@ -135,6 +136,11 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
     setMandatDialogOpen(false);
     setNomVente('');
     setCelebration({ net: netFinal });
+    // MOD-30 : paliers « première vente » / « premier mandat » → email de félicitations
+    if (isCloudEnabled()) {
+      if (sales.length === 0) apiMilestone('first_vente').catch(() => { /* silencieux */ });
+      if (countsAsMandat && !sales.some(s => s.countsAsMandat)) apiMilestone('first_mandat').catch(() => { /* silencieux */ });
+    }
   };
 
   return (
