@@ -16,6 +16,7 @@ import { getDefiForDay } from '@/data/defis';
 import { DefiCard } from '@/components/DefiCard';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
+import { getProtocole } from '@/lib/antiDecrochage';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -39,7 +40,12 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   const { counters, increment } = useDailyCounters();
 
   // Objectifs — source unique : src/lib/goals.ts (MOD-19)
-  const goals = getGoals(profile);
+  // MOD-27 : protocole anti-décrochage actif → objectifs allégés 48 h.
+  // Recalculé à chaque rendu (lecture localStorage) : un bilan enregistré
+  // met à jour le dashboard sans rechargement.
+  const protocole = getProtocole();
+  const consolidation = !!protocole;
+  const goals = getGoals(profile, currentDay, dailyResults, { consolidation });
   const monthlyMandatTarget = goals.monthlyMandats;
 
   // Mandats signés ce mois-ci (depuis le 1er du mois)
@@ -69,7 +75,14 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   const defi = getDefiForDay(currentDay);
 
   // MOD-24 — Témoignage personnalisé du jour (1/jour, jamais 2 fois le même sur 7 jours)
-  const temoignage = useMemo(() => getTemoignageForUser(profile), [profile]);
+  // MOD-27 — pendant le protocole, matching « coup-dur » forcé (+5).
+  const temoignage = useMemo(() => getTemoignageForUser(profile, { coupDur: consolidation }), [profile, consolidation]);
+
+  // MOD-27 — objectifs de référence (non allégés) pour la ligne « au lieu de ».
+  const convoAllegee = goals.dailyGoals.find(g => g.key === 'conversations');
+  const convoRef = consolidation
+    ? getGoals(profile, currentDay, dailyResults).dailyGoals.find(g => g.key === 'conversations')
+    : undefined;
 
   // Objectifs quotidiens (sans mandat qui est maintenant mensuel) — depuis goals.ts
   const objectiveStyle: Record<CounterKey, { icon: any; color: string; bg: string; border: string }> = {
@@ -108,6 +121,41 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           </div>
         </div>
       </div>
+
+      {/* MOD-27 — Carte de soutien anti-décrochage (jamais de mention du
+          « protocole » ni de son niveau : ton bienveillant uniquement).
+          Le profil n'a pas de coordonnées de parrain (seulement hasMentor) :
+          la suggestion parrain/manager reste donc une phrase, sans bouton. */}
+      {protocole && (
+        <Card className="bg-emerald-50 border-emerald-200">
+          <CardContent className="p-4">
+            {protocole.level === 1 ? (
+              <p className="text-sm text-emerald-800">
+                {isEs
+                  ? `💚 ${profile.firstName ? `${profile.firstName}, ayer` : 'Ayer'} no fue un día fácil — es normal, este trabajo sacude. Hoy aligeramos: un solo objetivo, el tuyo.`
+                  : `💚 ${profile.firstName ? `${profile.firstName}, hier` : 'Hier'} n'était pas un jour facile — c'est normal, ce métier secoue. Aujourd'hui, on allège : un seul objectif, le tien.`}
+              </p>
+            ) : (
+              <div className="space-y-1">
+                <p className="text-sm text-emerald-800">
+                  {protocole.history[protocole.history.length - 1]?.trigger === 'aucun-mandat-45j'
+                    ? (isEs
+                      ? '💚 El primer mandato se hace esperar — es el tramo más duro del oficio, y es exactamente donde los demás aguantaron. Consolidamos 48 h, juntos.'
+                      : '💚 Le premier mandat se fait attendre — c\'est le passage le plus dur du métier, et c\'est exactement là que les autres ont tenu bon. On consolide 48 h, ensemble.')
+                    : (isEs
+                      ? '💚 Dos días difíciles seguidos: les pasa a todos los que después triunfan. Pasamos a modo consolidación 48 h.'
+                      : '💚 Deux jours difficiles d\'affilée : ça arrive à tous ceux qui réussissent ensuite. On passe en mode consolidation 48 h.')}
+                </p>
+                <p className="text-sm text-emerald-700">
+                  {isEs
+                    ? `¿Y si hablas con ${profile.hasMentor ? 'tu padrino' : 'tu manager'}? Una llamada de 5 minutos cambia una jornada.`
+                    : `Et si tu en parlais à ${profile.hasMentor ? 'ton parrain' : 'ton manager'} ? Un appel de 5 minutes, ça change une journée.`}
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Objectif mensuel de mandats — carte principale */}
       <Card className="bg-purple-50 border-purple-200">
@@ -190,6 +238,13 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
       {/* Objectifs du jour — petites cartes */}
       <div>
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Tes objectifs aujourd'hui</h3>
+        {consolidation && convoRef && convoAllegee && (
+          <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-3">
+            {isEs
+              ? `Modo consolidación: ${convoAllegee.target} conversaciones en lugar de ${convoRef.target} — consolidamos, no soltamos nada.`
+              : `Mode consolidation : ${convoAllegee.target} conversations au lieu de ${convoRef.target} — on consolide, on ne lâche rien.`}
+          </p>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {dailyObjectives.map(obj => {
             const count = counters[obj.key];

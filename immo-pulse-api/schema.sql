@@ -11,7 +11,9 @@ CREATE TABLE IF NOT EXISTS users (
   last_name TEXT,
   experience_level TEXT DEFAULT 'debutant',
   start_date TEXT,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  last_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  email_opt_out INTEGER DEFAULT 0
 );
 
 -- Table des profils (JSON complet)
@@ -94,5 +96,26 @@ CREATE TABLE IF NOT EXISTS completed_actions (
   action_id TEXT NOT NULL,
   completed_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (user_id, action_id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Abonnements aux notifications push (tokens FCM par appareil)
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  fcm_token TEXT UNIQUE NOT NULL,
+  user_agent TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+-- Journal des emails envoyés (anti-doublon + suivi quota Resend)
+-- kind : 'no_bilan' | 'inactive_3d' | 'milestone:<palier>'
+CREATE TABLE IF NOT EXISTS email_log (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  sent_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  status TEXT DEFAULT 'sent',
   FOREIGN KEY (user_id) REFERENCES users(id)
 );

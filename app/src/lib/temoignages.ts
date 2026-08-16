@@ -70,6 +70,12 @@ const CITY_REGION: Record<string, string> = {
   colmar: 'grand-est',
   saintmalo: 'bretagne',
   quimper: 'bretagne',
+  // MOD-26 : villes des témoignages
+  vincennes: 'idf',
+  montreuil: 'idf',
+  roubaix: 'hauts-de-france',
+  saintemilion: 'nouvelle-aquitaine',
+  aubagne: 'paca',
   // Villes espagnoles / suisses : volontairement absentes → région null,
   // le score région est alors simplement ignoré (dégradation propre).
 };

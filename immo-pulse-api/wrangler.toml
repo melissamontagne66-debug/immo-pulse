@@ -25,3 +25,16 @@ FRONTEND_URL = "http://127.0.0.1:4173,http://localhost:4173,https://immo-pulse.p
 # Si Mailgun n'est pas configuré, le backend utilise Resend si RESEND_API_KEY est défini.
 # wrangler secret put RESEND_API_KEY
 # RESEND_FROM_EMAIL = "no-reply@immo-pulse.pages.dev"
+# Emails de relance (cron) — passent par Resend :
+# wrangler secret put RESEND_API_KEY
+# EMAIL_FROM = "Immo Pulse <coach@immo-pulse.pages.dev>"
+# URL publique de ce worker, utilisée pour les liens de désinscription :
+# API_URL = "https://immo-pulse-api.<ton-compte>.workers.dev"
+# Notifications push FCM HTTP v1 : JSON complet du compte de service Google.
+# wrangler secret put FCM_SERVICE_ACCOUNT
+
+# Cron : 7h UTC ≈ 9h Paris (été) ; 16h UTC ≈ 18h Paris (été).
+# Cloudflare ne gère pas les fuseaux horaires : en hiver (UTC+1) les déclenchements
+# arrivent ~1 h plus tôt en heure de Paris (8h et 17h).
+[triggers]
+crons = ["0 7 * * *", "0 16 * * *"]

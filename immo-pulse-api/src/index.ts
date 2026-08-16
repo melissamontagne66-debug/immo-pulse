@@ -12,6 +12,12 @@ export interface Env {
   MAILGUN_FROM_EMAIL?: string;
   RESEND_API_KEY?: string;
   RESEND_FROM_EMAIL?: string;
+  EMAIL_FROM?: string;
+  // URL publique de ce worker (utilisée pour les liens de désinscription
+  // générés hors contexte HTTP, ex. cron). Fallback : FRONTEND_URL.
+  API_URL?: string;
+  // JSON du compte de service Google pour FCM HTTP v1 (secret wrangler).
+  FCM_SERVICE_ACCOUNT?: string;
 }
 
 // --- CORS ---
@@ -116,6 +122,259 @@ async function sendResetEmail(email: string, token: string, frontendUrl: string,
       `.trim(),
     }),
   });
+}
+
+// --- Emails de relance (Resend) + push FCM + cron ---
+
+// Date au format YYYY-MM-DD dans le fuseau Europe/Paris (en-CA formate en ISO).
+export function dateLocalParis(date: Date = new Date()): string {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Paris',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
+}
+
+// Correspondance palier -> contenu de l'email de félicitations.
+export const MILESTONES: Record<string, { palier: string; detail: string; pourcentage: number; prochainJalon: string }> = {
+  streak_3: { palier: '3 jours d\'affilée', detail: '3 jours de bilan d\'affilée', pourcentage: 60, prochainJalon: 'la série de 7 jours' },
+  streak_7: { palier: '7 jours d\'affilée', detail: '7 jours de bilan d\'affilée', pourcentage: 40, prochainJalon: 'la série de 14 jours' },
+  streak_14: { palier: '14 jours d\'affilée', detail: '14 jours de bilan d\'affilée', pourcentage: 25, prochainJalon: 'le mois complet (30 jours)' },
+  streak_30: { palier: '30 jours d\'affilée', detail: '30 jours de bilan d\'affilée', pourcentage: 10, prochainJalon: 'ton premier mandat' },
+  first_mandat: { palier: 'Premier mandat', detail: 'ton premier mandat signé', pourcentage: 30, prochainJalon: 'ta première vente' },
+  first_vente: { palier: 'Première vente', detail: 'ta première vente', pourcentage: 15, prochainJalon: 'le rythme qui dure, mois après mois' },
+};
+
+function emailButton(url: string, label: string): string {
+  return `<p style="margin: 24px 0;"><a href="${url}" style="display: inline-block; background: #f97316; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold;">${label}</a></p>`;
+}
+
+function emailLayout(content: string): string {
+  return `<div style="font-family: Arial, sans-serif; max-width: 560px; margin: 0 auto; color: #1f2937; line-height: 1.6;">${content}</div>`;
+}
+
+function buildNoBilanEmail(env: Env, firstName: string, streak: number | null): { subject: string; html: string } {
+  const appUrl = getFrontendUrl(env);
+  const prenom = firstName || 'champion';
+  // Sans la série (profiles.progress illisible), on omet toute la phrase qui la mentionne.
+  const streakPhrase = streak && streak > 0
+    ? `, et ta série de ${streak} jours tient encore (ton gel de série a peut-être fait son boulot)`
+    : '';
+  return {
+    subject: `Ta série tient encore, ${prenom} 🔥`,
+    html: emailLayout(`
+      <p>Salut ${prenom},</p>
+      <p>Hier soir, pas de bilan — ça arrive. La bonne nouvelle : ta journée d'hier n'est pas perdue${streakPhrase}.</p>
+      <p>Aujourd'hui, une seule chose compte : <strong>ton action du jour</strong>. Elle t'attend, script inclus, 2 heures chrono.</p>
+      ${emailButton(appUrl, 'Voir mon action du jour')}
+      <p>Et ce soir, 3 minutes de bilan pour garder la série. C'est ce que font les meilleurs.</p>
+      <p>À ce soir,<br>Le Coach Immo</p>
+    `.trim()),
+  };
+}
+
+function buildInactiveEmail(env: Env, firstName: string): { subject: string; html: string } {
+  const appUrl = getFrontendUrl(env);
+  const prenom = firstName || 'champion';
+  return {
+    subject: `On te cherche, ${prenom}`,
+    html: emailLayout(`
+      <p>Salut ${prenom},</p>
+      <p>Trois jours sans passer par l'app. Si c'est le moral, sache que c'est le moment le plus fréquent du métier — et le plus trompeur : la plupart des premiers mandats arrivent juste après la période où on a envie de lâcher.</p>
+      <p>On ne te demande pas une grosse journée. <strong>Une seule action, 30 minutes</strong>, aujourd'hui. Ton objectif est allégé à ton retour.</p>
+      ${emailButton(appUrl, 'Reprendre doucement')}
+      <p>Et si tu veux en parler : ton parrain est là pour ça.</p>
+      <p>On compte sur toi,<br>Le Coach Immo</p>
+    `.trim()),
+  };
+}
+
+function buildMilestoneEmail(env: Env, firstName: string, info: { palier: string; detail: string; pourcentage: number; prochainJalon: string }): { subject: string; html: string } {
+  const appUrl = getFrontendUrl(env);
+  const prenom = firstName || 'champion';
+  const detail = info.detail.charAt(0).toUpperCase() + info.detail.slice(1);
+  return {
+    subject: `🏆 ${info.palier} — bravo ${prenom} !`,
+    html: emailLayout(`
+      <p>Bravo ${prenom},</p>
+      <p><strong>${detail}</strong>. Tu fais partie des ${info.pourcentage} % d'agents qui tiennent ce rythme — et ce sont eux qui signent.</p>
+      <p>Prochaine étape : ${info.prochainJalon}.</p>
+      ${emailButton(appUrl, 'Voir mon parcours')}
+      <p>Fier de toi,<br>Le Coach Immo</p>
+    `.trim()),
+  };
+}
+
+// Envoi via Resend + journalisation dans email_log (anti-doublon / suivi quota).
+async function sendEmail(env: Env, to: string, subject: string, html: string, kind: string, userId: string): Promise<boolean> {
+  if (!env.RESEND_API_KEY) {
+    console.log(`[email] RESEND_API_KEY absent — email "${kind}" non envoyé à ${to}`);
+    return false;
+  }
+
+  // Alerte quota Resend : 80 % des 3000 emails/mois de l'offre gratuite.
+  try {
+    const quota = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM email_log WHERE strftime('%Y-%m', sent_at) = strftime('%Y-%m', 'now')`
+    ).first();
+    if (quota && Number(quota.n) > 2400) {
+      console.warn(`[email] Alerte quota Resend : ${quota.n} emails envoyés ce mois-ci (> 2400)`);
+    }
+  } catch (err) {
+    console.error('[email] check quota impossible', err);
+  }
+
+  const from = env.EMAIL_FROM?.trim() || 'Immo Pulse <coach@immo-pulse.pages.dev>';
+  const apiUrl = (env.API_URL || getFrontendUrl(env)).replace(/\/$/, '');
+  const unsubscribeToken = await createJWT(userId, to, env);
+  const unsubscribeUrl = `${apiUrl}/api/emails/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
+  const fullHtml = `${html}<p style="font-family: Arial, sans-serif; margin-top: 32px; font-size: 12px; color: #9ca3af;"><a href="${unsubscribeUrl}" style="color: #9ca3af;">Se désinscrire des emails de relance</a></p>`;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${env.RESEND_API_KEY}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ from, to, subject, html: fullHtml }),
+  });
+  await env.DB.prepare('INSERT INTO email_log (id, user_id, kind, sent_at, status) VALUES (?, ?, ?, datetime("now"), ?)')
+    .bind(crypto.randomUUID(), userId, kind, res.ok ? 'sent' : 'error').run();
+  return res.ok;
+}
+
+// Mis à jour sur chaque appel authentifié : sert à cibler les relances du cron.
+async function touchLastSeen(env: Env, userId: string): Promise<void> {
+  try {
+    await env.DB.prepare('UPDATE users SET last_seen_at = datetime(\'now\') WHERE id = ?').bind(userId).run();
+  } catch (err) {
+    console.error('[last_seen] mise à jour impossible', err);
+  }
+}
+
+// --- Push FCM ---
+// Implémente FCM HTTP v1 (recommandé par Google) avec un compte de service.
+// Option legacy (non implémentée) : endpoint https://fcm.googleapis.com/fcm/send
+// avec l'en-tête `Authorization: key=<FCM_SERVER_KEY>` — API arrêtée par Google.
+
+function base64url(input: string | ArrayBuffer): string {
+  const b64 = typeof input === 'string'
+    ? btoa(input)
+    : btoa(String.fromCharCode(...new Uint8Array(input)));
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function pemToArrayBuffer(pem: string): ArrayBuffer {
+  const b64 = pem.replace(/-----[^-]+-----/g, '').replace(/\s/g, '');
+  const bin = atob(b64);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes.buffer;
+}
+
+// JWT Google signé RS256 (compte de service) échangé contre un access token OAuth2.
+async function getGoogleAccessToken(serviceAccount: { client_email: string; private_key: string }): Promise<string> {
+  const key = await crypto.subtle.importKey(
+    'pkcs8',
+    pemToArrayBuffer(serviceAccount.private_key),
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const now = Math.floor(Date.now() / 1000);
+  const header = base64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
+  const claims = base64url(JSON.stringify({
+    iss: serviceAccount.client_email,
+    scope: 'https://www.googleapis.com/auth/firebase.messaging',
+    aud: 'https://oauth2.googleapis.com/token',
+    iat: now,
+    exp: now + 3600,
+  }));
+  const signature = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', key, new TextEncoder().encode(`${header}.${claims}`));
+  const jwt = `${header}.${claims}.${base64url(signature)}`;
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: `grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Ajwt-bearer&assertion=${jwt}`,
+  });
+  if (!res.ok) throw new Error(`OAuth Google : HTTP ${res.status}`);
+  const data = await res.json() as { access_token: string };
+  return data.access_token;
+}
+
+async function sendFCM(env: Env, fcmToken: string, notification: { title: string; body: string }): Promise<boolean> {
+  if (!env.FCM_SERVICE_ACCOUNT) {
+    console.log('[push] FCM_SERVICE_ACCOUNT absent — notification ignorée');
+    return false;
+  }
+  try {
+    const serviceAccount = JSON.parse(env.FCM_SERVICE_ACCOUNT);
+    const accessToken = await getGoogleAccessToken(serviceAccount);
+    const res = await fetch(`https://fcm.googleapis.com/v1/projects/${serviceAccount.project_id}/messages:send`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: { token: fcmToken, notification } }),
+    });
+    if (!res.ok) console.error(`[push] FCM HTTP ${res.status} : ${await res.text()}`);
+    return res.ok;
+  } catch (err) {
+    console.error('[push] erreur FCM', err);
+    return false;
+  }
+}
+
+// --- Relances déclenchées par le cron ---
+
+async function runMorningRelances(env: Env): Promise<void> {
+  const yesterday = dateLocalParis(new Date(Date.now() - 86400000));
+
+  // 1) « Pas de bilan hier soir » — utilisateur actif récemment, sans bilan à la date d'hier,
+  //    pas déjà relancé aujourd'hui pour ce motif.
+  const noBilan = await env.DB.prepare(`
+    SELECT u.id, u.email, u.first_name, p.progress
+    FROM users u
+    LEFT JOIN profiles p ON p.user_id = u.id
+    WHERE u.last_seen_at >= datetime('now', '-2 days')
+      AND COALESCE(u.email_opt_out, 0) = 0
+      AND NOT EXISTS (SELECT 1 FROM daily_results d WHERE d.user_id = u.id AND d.date = ?)
+      AND NOT EXISTS (SELECT 1 FROM email_log e WHERE e.user_id = u.id AND e.kind = 'no_bilan'
+                       AND date(e.sent_at) = date('now'))
+  `).bind(yesterday).all();
+  for (const u of noBilan.results) {
+    let streak: number | null = null;
+    try {
+      const progress = u.progress ? JSON.parse(u.progress as string) : null;
+      if (progress && typeof progress.streak === 'number') streak = progress.streak;
+    } catch { /* progress illisible -> phrase de série omise */ }
+    const { subject, html } = buildNoBilanEmail(env, (u.first_name as string) || '', streak);
+    await sendEmail(env, u.email as string, subject, html, 'no_bilan', u.id as string);
+  }
+
+  // 2) « Ça fait 3 jours » — dernière connexion entre J-4 et J-3, pas relancé depuis 7 jours.
+  const inactive = await env.DB.prepare(`
+    SELECT id, email, first_name FROM users
+    WHERE last_seen_at BETWEEN datetime('now', '-4 days') AND datetime('now', '-3 days')
+      AND COALESCE(email_opt_out, 0) = 0
+      AND NOT EXISTS (SELECT 1 FROM email_log e WHERE e.user_id = users.id AND e.kind = 'inactive_3d'
+                       AND e.sent_at >= datetime('now', '-7 days'))
+  `).all();
+  for (const u of inactive.results) {
+    const { subject, html } = buildInactiveEmail(env, (u.first_name as string) || '');
+    await sendEmail(env, u.email as string, subject, html, 'inactive_3d', u.id as string);
+  }
+}
+
+async function runEveningReminders(env: Env): Promise<void> {
+  const today = dateLocalParis();
+  const subs = await env.DB.prepare(`
+    SELECT p.fcm_token, u.first_name, u.id AS user_id
+    FROM push_subscriptions p JOIN users u ON u.id = p.user_id
+    WHERE NOT EXISTS (SELECT 1 FROM daily_results d WHERE d.user_id = u.id AND d.date = ?)
+  `).bind(today).all();
+  for (const s of subs.results) {
+    await sendFCM(env, s.fcm_token as string, {
+      title: '📝 Ton bilan t\'attend',
+      body: `3 minutes pour clôturer ta journée, ${(s.first_name as string) || 'champion'} — et garde ta série 🔥`,
+    });
+  }
 }
 
 export async function hashPassword(password: string): Promise<string> {
@@ -325,6 +584,7 @@ export default {
       if (path === '/api/sync' && request.method === 'POST') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         const body = await request.json() as any;
         const { profile, progress, dailyResults, completedDays } = body;
@@ -373,6 +633,7 @@ export default {
       if (path === '/api/sync' && request.method === 'GET') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         // Profile + progress
         const profileRow = await env.DB.prepare('SELECT data, progress FROM profiles WHERE user_id = ?').bind(userId).first();
@@ -457,6 +718,7 @@ export default {
       if (path === '/api/visits' && request.method === 'POST') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         const body = await request.json() as any;
         const id = body.id || `visit-${Date.now()}`;
@@ -480,6 +742,7 @@ export default {
       if (path === '/api/visits' && request.method === 'DELETE') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         const id = url.searchParams.get('id');
         if (!id) return json({ error: 'ID manquant.' }, 400, cors);
@@ -492,6 +755,7 @@ export default {
       if (path === '/api/contacts' && request.method === 'POST') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         const body = await request.json() as any;
         if (!body.name || !String(body.name).trim()) {
@@ -515,6 +779,7 @@ export default {
       if (path === '/api/contacts' && request.method === 'DELETE') {
         const userId = await getUserId(request, env);
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
 
         const id = url.searchParams.get('id');
         if (!id) return json({ error: 'ID manquant.' }, 400, cors);
@@ -523,10 +788,85 @@ export default {
         return json({ success: true }, 200, cors);
       }
 
+      // ===== PUSH: subscribe =====
+      if (path === '/api/push/subscribe' && request.method === 'POST') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
+
+        const body = await request.json() as any;
+        if (!body.fcmToken) return json({ error: 'fcmToken manquant.' }, 400, cors);
+
+        await env.DB.prepare(
+          'INSERT OR REPLACE INTO push_subscriptions (id, user_id, fcm_token, user_agent) VALUES (?, ?, ?, ?)'
+        ).bind(crypto.randomUUID(), userId, String(body.fcmToken), String(body.userAgent || '')).run();
+
+        return json({ success: true }, 200, cors);
+      }
+
+      // ===== PUSH: unsubscribe =====
+      if (path === '/api/push/subscribe' && request.method === 'DELETE') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        await touchLastSeen(env, userId);
+
+        const fcmToken = url.searchParams.get('fcmToken');
+        if (!fcmToken) return json({ error: 'fcmToken manquant.' }, 400, cors);
+
+        await env.DB.prepare('DELETE FROM push_subscriptions WHERE fcm_token = ? AND user_id = ?').bind(fcmToken, userId).run();
+        return json({ success: true }, 200, cors);
+      }
+
+      // ===== EMAILS: désinscription (lien signé en bas de chaque email de relance) =====
+      if (path === '/api/emails/unsubscribe' && request.method === 'GET') {
+        const token = url.searchParams.get('token') || '';
+        const decoded = await verifyJWT(token, env);
+        const htmlHeaders = { 'Content-Type': 'text/html; charset=utf-8' };
+        if (!decoded) {
+          return new Response('<!DOCTYPE html><html lang="fr"><body style="font-family: Arial, sans-serif; text-align: center; padding: 48px;"><p>Ce lien est invalide ou a expiré.</p></body></html>', { status: 400, headers: htmlHeaders });
+        }
+        await env.DB.prepare('UPDATE users SET email_opt_out = 1 WHERE id = ?').bind(decoded.userId).run();
+        return new Response('<!DOCTYPE html><html lang="fr"><body style="font-family: Arial, sans-serif; text-align: center; padding: 48px;"><p>Tu es désinscrit des emails de relance. Tu peux fermer cette page.</p></body></html>', { status: 200, headers: htmlHeaders });
+      }
+
+      // ===== MILESTONE: email de félicitations (un seul envoi par palier) =====
+      if (path === '/api/milestone' && request.method === 'POST') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+
+        const body = await request.json() as any;
+        const info = MILESTONES[body.kind];
+        if (!info) return json({ error: 'Palier inconnu.' }, 400, cors);
+
+        // Anti-doublon : le kind est encodé dans email_log ('milestone:streak_7').
+        const logKind = `milestone:${body.kind}`;
+        const alreadySent = await env.DB.prepare(
+          'SELECT id FROM email_log WHERE user_id = ? AND kind = ?'
+        ).bind(userId, logKind).first();
+        if (alreadySent) return json({ success: true, alreadySent: true }, 200, cors);
+
+        const user = await env.DB.prepare('SELECT email, first_name, email_opt_out FROM users WHERE id = ?').bind(userId).first();
+        if (!user) return json({ error: 'Utilisateur introuvable.' }, 404, cors);
+        if (user.email_opt_out) return json({ success: true, skipped: true }, 200, cors);
+
+        const { subject, html } = buildMilestoneEmail(env, (user.first_name as string) || '', info);
+        const sent = await sendEmail(env, user.email as string, subject, html, logKind, userId);
+        return json({ success: sent }, sent ? 200 : 502, cors);
+      }
+
       return json({ error: 'Route non trouvée.' }, 404, cors);
 
     } catch (err: any) {
       return json({ error: err.message || 'Erreur serveur.' }, 500, cors);
     }
+  },
+
+  // Cron : 7h UTC = relances email du matin, 16h UTC = rappels push du soir.
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    ctx.waitUntil((async () => {
+      const hourUTC = new Date(event.scheduledTime).getUTCHours();
+      if (hourUTC === 7) await runMorningRelances(env);
+      if (hourUTC === 16) await runEveningReminders(env);
+    })());
   }
 };

@@ -26,6 +26,7 @@ import { useSales } from '@/hooks/useSales';
 import { Toaster } from '@/components/ui/sonner';
 import { toast } from 'sonner';
 import { checkStreakOnOpen, getMilestoneMessage } from '@/lib/streak';
+import { evaluateBilan } from '@/lib/antiDecrochage';
 import { toLocalDateKey } from '@/lib/utils';
 import { plural } from '@/lib/goals';
 import { Celebration } from '@/components/Celebration';
@@ -319,6 +320,10 @@ function App() {
 
   const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
     const registration = addDailyResults(results);
+    // MOD-27 : évalue le protocole anti-décrochage (humeur / difficultés du bilan).
+    // Volontairement silencieux ici — la réponse bienveillante s'affiche sur le
+    // dashboard, jamais de mention du « protocole » à l'utilisateur.
+    evaluateBilan(results, profile, progress.dailyResults, userKey);
     // MOD-21 : le modal reste ouvert sur le step 2 (célébration + planification) —
     // la fermeture se fait via onClose. La célébration plein écran s'affiche par-dessus.
     const streakCount = registration?.streak.count ?? 0;

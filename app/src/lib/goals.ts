@@ -174,22 +174,30 @@ export function getDailyActionsForDay(
   ];
 }
 
+export interface GoalsOptions {
+  // MOD-27 : protocole anti-décrochage actif — objectifs du jour allégés
+  // (÷2 arrondi inférieur, min 1) pendant 48 h. Seuls les dailyGoals sont
+  // allégés ; dailyTargets reste intact pour les autres consommateurs.
+  consolidation?: boolean;
+}
+
 // Objet unique d'objectifs, calculé depuis le profil (niveau d'expérience,
 // CA visé, prix moyen, ancienneté). Récap onboarding = dashboard = bilan.
-export function getGoals(profile: UserProfile, day: number = 1, dailyResults: DailyResults[] = []): Goals {
+export function getGoals(profile: UserProfile, day: number = 1, dailyResults: DailyResults[] = [], options: GoalsOptions = {}): Goals {
   const isEs = profile.language === 'es';
   const t = getDailyTargets(profile.currentMonthGoal);
   const monthlyMandats = getMonthlyMandatTarget(profile.expérienceLevel, getMonthsSinceStart(profile.startDate));
+  const allege = (n: number) => (options.consolidation ? Math.max(1, Math.floor(n / 2)) : n);
 
   return {
     monthlyMandats,
     weeklyMandats: Math.ceil(monthlyMandats / 4.33),
     dailyGoals: [
-      { key: 'conversations', target: t.calls, label: isEs ? 'Conversaciones' : 'Conversations' },
-      { key: 'contacts', target: t.contactsPhysiques, label: isEs ? 'Contactos físicos' : 'Contacts physiques' },
-      { key: 'r1', target: t.rdvR1, label: isEs ? 'R1 · Cita descubrimiento' : 'R1 · RDV découverte' },
-      { key: 'r2', target: t.rdvR2, label: isEs ? 'R2 · Cita firma' : 'R2 · RDV signature' },
-      { key: 'visites', target: t.visites, label: isEs ? 'Visitas' : 'Visites' },
+      { key: 'conversations', target: allege(t.calls), label: isEs ? 'Conversaciones' : 'Conversations' },
+      { key: 'contacts', target: allege(t.contactsPhysiques), label: isEs ? 'Contactos físicos' : 'Contacts physiques' },
+      { key: 'r1', target: allege(t.rdvR1), label: isEs ? 'R1 · Cita descubrimiento' : 'R1 · RDV découverte' },
+      { key: 'r2', target: allege(t.rdvR2), label: isEs ? 'R2 · Cita firma' : 'R2 · RDV signature' },
+      { key: 'visites', target: allege(t.visites), label: isEs ? 'Visitas' : 'Visites' },
     ],
     dailyTargets: {
       calls: t.calls,

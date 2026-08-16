@@ -10,6 +10,8 @@ import {
   normalizeEmail,
   getFrontendUrl,
   corsHeaders,
+  dateLocalParis,
+  MILESTONES,
   type Env,
 } from './index';
 
@@ -150,5 +152,43 @@ describe('corsHeaders', () => {
     const env = fakeEnv({ FRONTEND_URL: 'https://immo-pulse.pages.dev' });
     const request = new Request('https://api.example.com', { headers: { Origin: 'https://evil.example.com' } });
     expect(corsHeaders(env, request)['Access-Control-Allow-Origin']).not.toBe('https://evil.example.com');
+  });
+});
+
+describe('dateLocalParis', () => {
+  it('formats as YYYY-MM-DD', () => {
+    expect(dateLocalParis(new Date('2026-03-15T12:00:00Z'))).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it('shifts the date around midnight in winter (UTC+1)', () => {
+    // 23h30 UTC le 15 janvier = 00h30 le 16 janvier à Paris.
+    expect(dateLocalParis(new Date('2026-01-15T23:30:00Z'))).toBe('2026-01-16');
+  });
+
+  it('shifts the date around midnight in summer (UTC+2)', () => {
+    // 22h30 UTC le 15 juillet = 00h30 le 16 juillet à Paris.
+    expect(dateLocalParis(new Date('2026-07-15T22:30:00Z'))).toBe('2026-07-16');
+  });
+});
+
+describe('MILESTONES', () => {
+  it('covers exactly the 6 kinds accepted by POST /api/milestone', () => {
+    expect(Object.keys(MILESTONES).sort()).toEqual([
+      'first_mandat',
+      'first_vente',
+      'streak_14',
+      'streak_3',
+      'streak_30',
+      'streak_7',
+    ]);
+  });
+
+  it('provides palier, detail, pourcentage and prochainJalon for each kind', () => {
+    for (const info of Object.values(MILESTONES)) {
+      expect(info.palier.length).toBeGreaterThan(0);
+      expect(info.detail.length).toBeGreaterThan(0);
+      expect(info.pourcentage).toBeGreaterThan(0);
+      expect(info.prochainJalon.length).toBeGreaterThan(0);
+    }
   });
 });
