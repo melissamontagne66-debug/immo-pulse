@@ -854,6 +854,31 @@ export default {
         return json({ success: sent }, sent ? 200 : 502, cors);
       }
 
+      // ===== ACCOUNT: suppression de compte (droit à l'oubli, RGPD) =====
+      // Supprime toutes les données de l'utilisateur, dans l'ordre des
+      // dépendances, puis le compte lui-même. Irréversible.
+      if (path === '/api/account' && request.method === 'DELETE') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+
+        const tables = [
+          'push_subscriptions',
+          'email_log',
+          'contacts',
+          'completed_actions',
+          'visit_reports',
+          'daily_results',
+          'profiles',
+          'password_resets',
+        ];
+        for (const table of tables) {
+          await env.DB.prepare(`DELETE FROM ${table} WHERE user_id = ?`).bind(userId).run();
+        }
+        await env.DB.prepare('DELETE FROM users WHERE id = ?').bind(userId).run();
+
+        return json({ success: true, message: 'Compte et données supprimés.' }, 200, cors);
+      }
+
       return json({ error: 'Route non trouvée.' }, 404, cors);
 
     } catch (err: any) {

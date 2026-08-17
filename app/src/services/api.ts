@@ -222,6 +222,19 @@ export async function apiMilestone(kind: string) {
   return await res.json();
 }
 
+// --- ACCOUNT (droit à l'oubli RGPD) ---
+
+export async function apiDeleteAccount() {
+  if (IS_PLACEHOLDER) {
+    throw new Error('API not configured');
+  }
+  const res = await fetchWithTimeout(`${API_URL}/api/account`, {
+    method: 'DELETE',
+    headers: headers(),
+  });
+  return await res.json();
+}
+
 // --- UTIL ---
 
 export function isCloudEnabled(): boolean {

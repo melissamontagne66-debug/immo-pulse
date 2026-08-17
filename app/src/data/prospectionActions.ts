@@ -70,12 +70,14 @@ Sélectionne 2 biens en vente sur ton outil interne, va taper aux portes de ces 
 Toque aux biens ciblés + 10 voisins.
 
 **À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et prends le RDV pour une première visite, puis une fois que tu as posé de nombreuses questions pour bien vérifier si ça correspond à ce que tes acheteurs cherchent : "Je vous propose qu'on fasse un premier rdv, je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez. Donc pour prendre l'ensemble des détails techniques et en parler aux acheteurs, et rapidement les amener en visite vous préférez le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
 **Chez les voisins (les 10 portes autour) :**
-Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. Ça sert toujours, même sans projet immédiat : pour des assurances, une succession, un projet d'avenir.
+Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. C'est un avis de valeur indicatif — il n'a pas de valeur opposable pour une assurance ou une succession (seule une expertise certifiée en a), mais il aide à y voir clair, même sans projet immédiat.
 
 Pas de fichier ancien ? Pas de problème. Chaque porte toquée aujourd'hui = un contact à relancer sous 3 à 6 mois. Ce que tu construis aujourd'hui, tu le récolteras dans 6 mois.
 
@@ -96,7 +98,7 @@ Chaque ancien client satisfait = 2 à 3 recommandations naturelles.`,
     day: 2,
     category: 'apporteurs',
     title: 'Apporteurs — Sélectionne et pose tes panneaux "Estimation offerte"',
-    description: `Aujourd\'hui : sélectionne 2 à 3 apporteurs d\'affaires Bien placés sur ton secteur, avec du passage, et à qui tu vas proposer de mettre un panneau "Estimation offerte".\n\nLe panneau se met à leur fenêtre, visible depuis la rue.\n\nLe deal est simple :\n→ Tu l\'enregistres en apporteur d\'affaires officiel\n→ Dès qu\'il y a un appel entrant, tu demandes sur quel panneau ils ont eu tes coordonnées, et tu transmets l\'info à l\'apporteur pour qu\'il l\'enregistre sur l\'application et qu\'il soit rémunéré s'il y a une vente\n\nChaque panneau posé = un apporteur qui travaille pour toi 24h/24.\n\n**Méthodologie** : Pose le panneau pour qu\'il soit bien en vue, enregistre-le en apporteur d\'affaires officiel et prends une photo à publier sur tes réseaux sociaux.`,
+    description: `Aujourd\'hui : sélectionne 2 à 3 apporteurs d\'affaires Bien placés sur ton secteur, avec du passage, et à qui tu vas proposer de mettre un panneau "Estimation offerte".\n\nLe panneau se met à leur fenêtre, visible depuis la rue.\n\nLe deal est simple :\n→ Tu l\'enregistres en apporteur d\'affaires officiel\n→ Dès qu\'il y a un appel entrant, tu demandes sur quel panneau ils ont eu tes coordonnées, et tu transmets l\'info à l\'apporteur dans le cadre du programme de recommandation de ton réseau — c\'est lui qui gère la contrepartie prévue, dans les règles (loi Hoguet). Ne promets jamais de rémunération directe à un particulier\n\nChaque panneau posé = un apporteur qui travaille pour toi 24h/24.\n\n**Méthodologie** : Pose le panneau pour qu\'il soit bien en vue, enregistre-le en apporteur d\'affaires officiel et prends une photo à publier sur tes réseaux sociaux.`,
     script: 'Conseil méthodo — Tes scripts et mémos de formation sont à ta disposition pour aborder tes apporteurs. Choisis des emplacements stratégiques : rue passante, angle de rue, proximité d\'arrêt de bus. La visibilité = l\'efficacité.',
     objectif: '🎯 2-3 apporteurs sélectionnés et approchés, 2 panneaux "Estimation offerte" posés minimum, 2 apporteurs enregistrés dans ton CRM',
     duree: '10h-12h',
@@ -130,12 +132,14 @@ Chaque ancien client satisfait = 2 à 3 recommandations naturelles.`,
     category: 'picking',
     title: 'Contact terrain — Conquête d\'une rue entière',
     description: `Choisis une rue que tu ne connais pas bien. Sélectionne 2 biens en vente sur ton outil interne dans cette rue ou très proche. Toque au bien + aux 8 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et prends le RDV pour une première visite, puis une fois que tu as posé de nombreuses questions pour bien vérifier si ça correspond à ce que tes acheteurs cherchent : "Je vous propose qu'on fasse un premier rdv, je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez. Donc pour prendre l'ensemble des détails techniques et en parler aux acheteurs, et rapidement les amener en visite vous préférez le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
 **Chez les voisins (les 10 portes autour) :**
-Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. Ça sert toujours, même sans projet immédiat : pour des assurances, une succession, un projet d'avenir.\n\nL\'objectif n\'est pas de vendre aujourd\'hui — c\'est d\'obtenir un RDV d\'estimation patrimoniale offerte.\n\nChaque R1 obtenu = un mandat potentiel dans 30-90 jours ou une recommandation pour leur entourage, puisqu\'ils savent ton sérieux, tes méthodes et qu\'ils t\'ont vu à l\'œuvre.`,
+Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. C'est un avis de valeur indicatif — il n'a pas de valeur opposable pour une assurance ou une succession (seule une expertise certifiée en a), mais il aide à y voir clair, même sans projet immédiat.\n\nL\'objectif n\'est pas de vendre aujourd\'hui — c\'est d\'obtenir un RDV d\'estimation patrimoniale offerte.\n\nChaque R1 obtenu = un mandat potentiel dans 30-90 jours ou une recommandation pour leur entourage, puisqu\'ils savent ton sérieux, tes méthodes et qu\'ils t\'ont vu à l\'œuvre.`,
     script: 'Conseil méthodo — Conquiers une rue entière : toque au bien + 8 voisins. Chaque porte toquée = un contact enregistré dans le CRM. Propose systématiquement une estimation patrimoniale — c\'est ta mission première. Idéalement, présente-toi avec un seul flyer.',
     objectif: '🎯 2 biens en vente ciblés sur ton outil, 10 portes voisines, 1 R1 estimation minimum',
     duree: '11h-13h ou 17h-19h',
@@ -302,7 +306,9 @@ Chaque relance = un R1 potentiel. Ton fichier est ton actif numéro 1.`,
     category: 'picking',
     title: 'Contact terrain — Conquête d\'une zone inexplorée',
     description: `Choisis une rue ou un quartier où tu n\'es JAMAIS allé.\n\nSélectionne 3 biens en vente sur ton outil dans cette zone ou très proche.\n\nToque au bien + aux 10 voisins.\n\nTon angle : **À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et finis par dire qu'effectivement ça a l'air de coller avec la recherche de tes acheteurs. Prends le RDV pour une première visite : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -370,7 +376,9 @@ Les vendeurs rappellent dans la journée — sois prêt.`,
     category: 'picking',
     title: 'Contact terrain — Cibler les rues avec panneaux concurrents',
     description: `Cible les rues où tes concurrents ont des panneaux "À vendre".\n\nSélectionne 2 biens en vente sur ton outil dans cette rue ou très proche.\n\nToque au bien + aux 8 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et prends le RDV : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -391,7 +399,9 @@ Là, tu passes à l'estimation patrimoniale offerte.\n\n**Question magique** : "
 **Ta méthode :**
 1. Prends ton rapport local déjà détaillé (pas besoin de le régénérer !)
 2. Sélectionne 2-3 biens en vente sur ton outil interne dans une rue ou très proche
-3. Toque au bien + 10 voisins avec ta recherche acquéreur : "Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+3. Toque au bien + 10 voisins avec ta recherche acquéreur : "Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 4. Si c'est la bonne porte, prends le RDV visite technique : "Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 5. Chez les voisins, propose ton rapport local : "Je viens de publier un rapport très complet sur l'évolution des prix dans votre quartier. Si vous me laissez votre email, je vous l'envoie immédiatement."
 6. Profite de l'échange pour proposer une estimation patrimoniale ou enregistrer l'apporteur.
@@ -551,7 +561,9 @@ Si un apporteur a posé un panneau et que tu n'as rien eu en retour depuis 2 moi
     category: 'picking',
     title: 'Contact terrain — Conquête complète d\'une rue',
     description: `Choisis une rue que tu ne connais pas bien. Sélectionne 3 biens en vente sur ton outil dans cette rue ou très proche.\n\nToque au bien + aux 10 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et finis par dire qu'effectivement ça a l'air de coller avec la recherche de tes acheteurs. Prends le RDV pour une première visite : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -712,7 +724,9 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'picking',
     title: 'Contact terrain — Expansion sur zone adjacente',
     description: `Tu maîtrises ton secteur principal. Il est temps d\'étendre ton territoire.\n\nChoisis une zone adjacente où tu n\'es pas encore allé.\n\nSélectionne 3 biens en vente sur ton outil dans cette zone ou très proche.\n\nToque au bien + aux 10 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et finis par dire qu'effectivement ça a l'air de coller avec la recherche de tes acheteurs. Prends le RDV pour une première visite : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -1065,7 +1079,9 @@ PIGE Légale avec ciblage avancé basé sur tes résultats des 10 semaines préc
     category: 'picking',
     title: 'Contact terrain — Rue inexplorée (T2)',
     description: `Nouveau trimestre, nouvelles rues à conquérir.\n\nChoisis une rue où tu n\'es pas encore allé ce trimestre.\n\nSélectionne 3 biens en vente sur ton outil dans cette rue ou très proche.\n\nToque au bien + aux 10 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et finis par dire qu'effectivement ça a l'air de coller avec la recherche de tes acheteurs. Prends le RDV pour une première visite : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -1220,7 +1236,9 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     category: 'picking',
     title: 'Contact terrain — Rue entière (T2-S5)',
     description: `Conquête d\'une rue entière.\n\nSélectionne 3 biens en vente sur ton outil dans cette rue ou très proche.\n\nToque au bien + aux 10 voisins.\n\n**À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et finis par dire qu'effectivement ça a l'air de coller avec la recherche de tes acheteurs. Prends le RDV pour une première visite : "Je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez — pour prendre l'ensemble des détails techniques et en parler aux acheteurs, pour rapidement les amener en visite. Plutôt le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
@@ -1313,12 +1331,14 @@ export function getProspectionActionForDay(currentDay: number, level?: string, l
         title: 'Action adaptée à ton profil — Terrain classique pour débutant',
         description: `Tu débutes et ton fichier est encore petit — parfait, c\'est normal. Aujourd\'hui : du terrain classique.\n\nSélectionne 2 biens en vente sur ton outil interne, va taper aux portes de ces biens puis chez les voisins dans cette rue ou très proche.
 Toque aux biens ciblés + 10 voisins. **À l'adresse exacte du bien en vente :**
-"Je suis en recherche très active pour des acquéreurs qui cherchent absolument CE secteur, XX chambres, et XX m². J'ai entendu dire qu'il y a un bien actuellement en vente dans cette rue qui pourrait correspondre, vous sauriez de laquelle il s'agit ?"
+"Bonjour, je me permets de vous appeler : je suis [Ton prénom], conseiller immobilier sur [ton secteur]. Je viens de voir votre annonce. J'accompagne plusieurs acquéreurs sur ce type de bien — accepteriez-vous que je vous pose deux ou trois questions pour voir si ça peut matcher ?"
+
+✅ Toujours déclarer ta qualité de professionnel dès le premier contact : c'est la loi, et c'est aussi ce qui te différencie des démarcheurs douteux.
 
 Si c'est la bonne porte, pose des questions ouvertes sur le bien, parle du prix, et prends le RDV pour une première visite, puis une fois que tu as posé de nombreuses questions pour bien vérifier si ça correspond à ce que tes acheteurs cherchent : "Je vous propose qu'on fasse un premier rdv, je ne peux décemment pas découvrir le bien en même temps que mes acheteurs, vous le comprenez. Donc pour prendre l'ensemble des détails techniques et en parler aux acheteurs, et rapidement les amener en visite vous préférez le matin ou l'après-midi, qu'est-ce qui vous va le mieux ?"
 
 **Chez les voisins (les 10 portes autour) :**
-Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. Ça sert toujours, même sans projet immédiat : pour des assurances, une succession, un projet d'avenir.\n\nPas de fichier ancien ? Pas de problème. Chaque porte toquée aujourd\'hui = un contact à relancer sous 3 à 6 mois. Ce que tu construis aujourd\'hui, tu le récolteras dans 6 mois. C\'est comme ça que ça marche.\n\n**Question magique** : "Qui connaissez-vous dans votre entourage qui souhaite vendre ou simplement avoir un avis précis sur la valeur de son bien ?"`,
+Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre — tu apportes une info fiable sur la valeur de leur patrimoine. C'est un avis de valeur indicatif — il n'a pas de valeur opposable pour une assurance ou une succession (seule une expertise certifiée en a), mais il aide à y voir clair, même sans projet immédiat.\n\nPas de fichier ancien ? Pas de problème. Chaque porte toquée aujourd\'hui = un contact à relancer sous 3 à 6 mois. Ce que tu construis aujourd\'hui, tu le récolteras dans 6 mois. C\'est comme ça que ça marche.\n\n**Question magique** : "Qui connaissez-vous dans votre entourage qui souhaite vendre ou simplement avoir un avis précis sur la valeur de son bien ?"`,
         objectif: '🎯 2 biens en vente ciblés, 10 portes toquées, 1 R1 estimation minimum',
       };
     }

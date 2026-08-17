@@ -432,6 +432,19 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       <div>
                         <p className="text-sm font-medium text-blue-800">{isEs ? 'Estimación para' : 'Estimation pour'} {profile.city}</p>
                         <p className="text-sm text-blue-700 mt-1">{getSuggestedPriceText(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france', isEs ? 'es' : 'fr')}</p>
+                        {estimatedPrice !== null && (
+                          <p className="text-sm text-blue-700 mt-1">
+                            {isEs
+                              ? `Horquilla orientativa : ${formatEuro(Math.round(estimatedPrice * 0.85 / 10000) * 10000)} – ${formatEuro(Math.round(estimatedPrice * 1.15 / 10000) * 10000)}.`
+                              : `Fourchette indicative : ${formatEuro(Math.round(estimatedPrice * 0.85 / 10000) * 10000)} – ${formatEuro(Math.round(estimatedPrice * 1.15 / 10000) * 10000)}.`}
+                          </p>
+                        )}
+                        {/* 5.6 — cadrage honnête de l'estimation */}
+                        <p className="text-xs text-blue-500 mt-1">
+                          {isEs
+                            ? `Estimación indicativa, fuente: medias de mercado ${new Date().getFullYear()} — a afinar con tus comparables locales.`
+                            : `Estimation indicative, source : moyennes de marché ${new Date().getFullYear()} — à affiner avec tes comparables locaux.`}
+                        </p>
                         {estimatedPrice !== null && profile.averagePrice !== estimatedPrice && (
                           <button
                             onClick={() => update('averagePrice', estimatedPrice)}

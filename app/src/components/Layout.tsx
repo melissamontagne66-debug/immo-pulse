@@ -5,6 +5,7 @@ import type { UserProfile } from '@/types/profile';
 import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell } from 'lucide-react';
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 import { getSemaineProgramme } from '@/lib/jalons';
+import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 
 interface LayoutProps {
   children: ReactNode;
@@ -41,6 +42,31 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
   const pushAvailable = isPushConfigured();
   const pushDenied = isPushDenied();
   const [pushReminderOn, setPushReminderOn] = useState(() => loadPushState(userEmail ?? '').reminderEnabled);
+
+  // 5.5 — Suppression de compte (droit à l'oubli) : état de la double confirmation
+  const [deleteAccountStep, setDeleteAccountStep] = useState(0);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    setDeletingAccount(true);
+    try {
+      if (isCloudEnabled()) {
+        await apiDeleteAccount();
+      }
+    } catch { /* on purge le local quoi qu'il arrive */ }
+    // Purge du localStorage (toutes les clés de l'app) puis retour à la connexion
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('iad-coach-') || key.startsWith('immo-pulse-'))) {
+          keysToRemove.push(key);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch { /* ignore */ }
+    window.location.reload();
+  };
 
   // MOD-31 : semaine du programme (remplace le « Progression % » opaque)
   const semaineProgramme = getSemaineProgramme(profile.startDate);
@@ -263,9 +289,78 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               <LogOut className="w-3 h-3" />
               {profile.language === 'es' ? 'Cerrar sesión' : 'Se déconnecter'}
             </button>
+            {/* 5.5 — Droit à l'oubli : suppression du compte (double confirmation) */}
+            <button
+              onClick={() => setDeleteAccountStep(1)}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-[11px] text-gray-300 hover:text-red-500 transition-all"
+            >
+              {profile.language === 'es' ? 'Eliminar mi cuenta' : 'Supprimer mon compte'}
+            </button>
           </div>
         </div>
       </aside>
+
+      {/* Modale de suppression de compte — double confirmation */}
+      {deleteAccountStep > 0 && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
+            {deleteAccountStep === 1 ? (
+              <>
+                <h3 className="text-base font-bold text-gray-900">
+                  {profile.language === 'es' ? '¿Eliminar tu cuenta?' : 'Supprimer ton compte ?'}
+                </h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {profile.language === 'es'
+                    ? 'Esta acción elimina definitivamente tu cuenta y todos tus datos: balances, contactos, visitas, ventas. Es irreversible.'
+                    : 'Cette action supprime définitivement ton compte et toutes tes données : bilans, contacts, visites, ventes. Elle est irréversible.'}
+                </p>
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => setDeleteAccountStep(0)}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+                  >
+                    {profile.language === 'es' ? 'Cancelar' : 'Annuler'}
+                  </button>
+                  <button
+                    onClick={() => setDeleteAccountStep(2)}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+                  >
+                    {profile.language === 'es' ? 'Continuar' : 'Continuer'}
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <h3 className="text-base font-bold text-red-700">
+                  {profile.language === 'es' ? 'Última confirmación' : 'Dernière confirmation'}
+                </h3>
+                <p className="text-sm text-gray-600 mt-2">
+                  {profile.language === 'es'
+                    ? 'Confirma la eliminación definitiva. No hay vuelta atrás.'
+                    : 'Confirme la suppression définitive. Il n\'y a pas de retour en arrière.'}
+                </p>
+                <div className="flex gap-3 mt-5">
+                  <button
+                    onClick={() => setDeleteAccountStep(0)}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+                  >
+                    {profile.language === 'es' ? 'Cancelar' : 'Annuler'}
+                  </button>
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={deletingAccount}
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-red-700 hover:bg-red-800 text-white text-sm font-medium disabled:opacity-50"
+                  >
+                    {deletingAccount
+                      ? (profile.language === 'es' ? 'Eliminación…' : 'Suppression…')
+                      : (profile.language === 'es' ? 'Eliminar definitivamente' : 'Supprimer définitivement')}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto min-w-0">
