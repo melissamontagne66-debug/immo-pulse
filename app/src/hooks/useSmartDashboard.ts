@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
+import { getPlanificationAdaptative } from '@/lib/planificationAdaptative';
 
 export type InsightType = 'encouragement' | 'conseil' | 'alerte' | 'admin' | 'picking' | 'défi' | 'suivi';
 
@@ -99,17 +100,20 @@ export function useSmartDashboard(
         });
       }
 
-      // Si appels = 0
-      if (yesterday.callsMade === 0) {
+      // MOD-35 — messages adaptatifs du lendemain (règles déterministes, module
+      // src/lib/planificationAdaptative.ts). La règle « 0 conversation hier »
+      // remplace l'ancienne alerte « ⏰ Pas d'appels hier » par un message
+      // d'encouragement (« 📞 On remet le compteur en route aujourd'hui »).
+      getPlanificationAdaptative(yesterday).forEach(a => {
         insights.push({
-          id: 'no-calls',
+          id: a.id,
           type: 'alerte',
-          title: 'Pas d\'appels hier',
-          message: `Tu n'as fait aucun appel hier. Ça arrive d'avoir une journée chargée en RDV. Mais aujourd'hui, bloque ton créneau 11 h – 13 h 30 pour rattraper. ${profile.expérienceLevel === 'débutant' ? 'Pas de pression, on y va étape par étape.' : 'Les appels sont le carburant de ton business.'}`,
-          emoji: '⏰',
+          title: a.title,
+          message: a.message,
+          emoji: a.emoji,
           priority: 1,
         });
-      }
+      });
 
       // Si contacts physiques = 0
       if (yesterday.contactsApproached === 0) {

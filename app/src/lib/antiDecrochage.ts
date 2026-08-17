@@ -7,6 +7,7 @@
 
 import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
+import { toLocalDateKey } from '@/lib/utils';
 
 const STORAGE_PREFIX = 'iad-coach-anti-decrochage';
 
@@ -160,4 +161,18 @@ export function evaluateBilan(
 
   saveState(email, state);
   return state;
+}
+
+// MOD-33 — Réaffichage anti-décrochage : une victoire passée, rappelée sur la
+// carte de soutien du dashboard. Choix stable dans la journée (hash de la date
+// du jour + email) : la victoire ne change pas à chaque rendu.
+export function getVictoireAleatoire(dailyResults: DailyResults[], email?: string): { date: string; texte: string } | null {
+  const victoires = dailyResults
+    .filter(r => r.wins?.trim())
+    .map(r => ({ date: r.date, texte: r.wins.trim() }));
+  if (victoires.length === 0) return null;
+  const seed = `${toLocalDateKey(new Date())}-${resolveEmail(email)}`;
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return victoires[h % victoires.length];
 }

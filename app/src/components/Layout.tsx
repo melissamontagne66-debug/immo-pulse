@@ -4,13 +4,15 @@ import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
 import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell } from 'lucide-react';
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
+import { getSemaineProgramme } from '@/lib/jalons';
 
 interface LayoutProps {
   children: ReactNode;
   activeTab: string;
   onTabChange: (tab: string) => void;
   currentDay: number;
-  completionRate: number;
+  /** MOD-31 : niveau de carrière affiché dans le footer (ex. « 🌿 Confirmé »). */
+  niveauLabel?: string;
   streak: number;
   profile: UserProfile;
   onSetMonthlyGoal: () => void;
@@ -23,6 +25,7 @@ interface LayoutProps {
 
 const getTabs = (lang: 'fr' | 'es') => [
   { id: 'dashboard', label: lang === 'es' ? 'Objetivos' : 'Objectifs du jour', icon: '🎯' },
+  { id: 'parcours', label: lang === 'es' ? 'Mi recorrido' : 'Mon parcours', icon: '🏆' },
   { id: 'today', label: lang === 'es' ? 'Hoy' : "Aujourd'hui", icon: '✅' },
   { id: 'report', label: lang === 'es' ? 'Informe' : 'Compte rendu', icon: '📝' },
   { id: 'commission', label: lang === 'es' ? 'Comisión' : 'Commission', icon: '💰' },
@@ -30,7 +33,7 @@ const getTabs = (lang: 'fr' | 'es') => [
   { id: 'history', label: lang === 'es' ? 'Historial' : 'Historique', icon: '📊' },
 ];
 
-export function Layout({ children, activeTab, onTabChange, currentDay, completionRate, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
+export function Layout({ children, activeTab, onTabChange, currentDay, niveauLabel, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
   const tabs = getTabs(profile.language);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -38,6 +41,9 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
   const pushAvailable = isPushConfigured();
   const pushDenied = isPushDenied();
   const [pushReminderOn, setPushReminderOn] = useState(() => loadPushState(userEmail ?? '').reminderEnabled);
+
+  // MOD-31 : semaine du programme (remplace le « Progression % » opaque)
+  const semaineProgramme = getSemaineProgramme(profile.startDate);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
@@ -177,14 +183,21 @@ export function Layout({ children, activeTab, onTabChange, currentDay, completio
         <div className="p-4 border-t border-gray-100">
           <div className="space-y-3">
             <div>
-              <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Progression</span>
-                <span className="font-medium">{completionRate}%</span>
-              </div>
-              <div className="w-full bg-gray-100 rounded-full h-2">
-                <div className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-500" style={{ width: `${completionRate}%` }} />
+              <div title={profile.language === 'es' ? 'Basado en tus balances completados y tus hitos.' : 'Basé sur tes bilans complétés et tes jalons.'}>
+                <div className="flex justify-between text-xs text-gray-500 mb-1">
+                  <span>{profile.language === 'es' ? 'Programa 6 meses' : 'Programme 6 mois'}</span>
+                  <span className="font-medium">{profile.language === 'es' ? `semana ${semaineProgramme}/26` : `semaine ${semaineProgramme}/26`}</span>
+                </div>
+                <div className="w-full bg-gray-100 rounded-full h-2">
+                  <div className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.round((semaineProgramme / 26) * 100)}%` }} />
+                </div>
               </div>
             </div>
+            {niveauLabel && (
+              <div className="flex items-center gap-2 text-xs text-gray-500">
+                <span>{profile.language === 'es' ? 'Nivel' : 'Niveau'} : <strong className="text-gray-700">{niveauLabel}</strong></span>
+              </div>
+            )}
             <div className="flex items-center gap-2 text-xs text-gray-500">
               <Flame className="w-3 h-3 text-orange-500" />
               <span>Série : <strong className="text-gray-700">{streak} jours</strong></span>

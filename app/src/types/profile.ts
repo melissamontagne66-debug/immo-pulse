@@ -30,6 +30,9 @@ export interface UserProfile {
   watchedNetworkVideos: boolean;     // A vu toutes les vidéos du réseau
   watchedTerrainVideos: boolean; // A vu toutes les vidéos formation terrain
   hasMentor: boolean;            // A-t-il un parrain/mentor
+  // MOD-32 — Coordonnées du parrain (demandées une fois au premier bilan clôturé)
+  parrain?: { prenom: string; contact: string }; // contact = email ou téléphone
+  parrainAsked?: boolean;        // true = ne plus redemander les coordonnées du parrain
   lastMonthMandates?: number;    // Mandats rentrés le mois dernier (pour ajuster les objectifs)
   primoListeCalled: boolean;     // A appelé toute sa primo liste (amis, famille, répertoire + réseaux sociaux)
 

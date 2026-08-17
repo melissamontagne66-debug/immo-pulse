@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { DebriefEntry } from '@/types';
+import type { NextDayPlan } from '@/types';
 import type { UserProfile } from '@/types/profile';
 import {
   CheckCircle2, Circle, ClipboardCheck,
@@ -37,6 +38,8 @@ interface DailyActionsProps {
   onNavigate?: (tab: string) => void;
   userEmail?: string;
   onCreateContact?: (contexte: string) => void;
+  // MOD-35 — plan du jour issu du bilan de la veille (tâches reportées, badge « Reporté d'hier »)
+  nextDayPlan?: NextDayPlan;
 }
 
 // Idées de contenu réseaux sociaux — une par jour, cycle de 30 idées
@@ -189,6 +192,7 @@ export function DailyActions({
   onNavigate,
   userEmail,
   onCreateContact,
+  nextDayPlan,
 }: DailyActionsProps) {
   const isAdmin = userEmail === 'melissa.montagne66@gmail.com';
 
@@ -683,6 +687,27 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
 
       {/* Liste des actions du jour */}
       <div className="space-y-3">
+        {/* MOD-35 : tâches reportées de la veille — EN TÊTE de liste, badge « Reporté d'hier » */}
+        {nextDayPlan && nextDayPlan.actions.length > 0 && (
+          <Card className="border-2 border-orange-200 bg-orange-50/50">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-orange-800 mb-2">
+                {isEs ? '📋 Aplazado de ayer — en prioridad hoy' : '📋 Reporté d\'hier — en priorité aujourd\'hui'}
+              </p>
+              <div className="space-y-2">
+                {nextDayPlan.actions.map((task, i) => (
+                  <div key={i} className="flex items-start gap-2">
+                    <ClipboardCheck className="w-4 h-4 text-orange-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-orange-700 flex-1">{task.replace(/^\[Reporté\]\s*/, '')}</p>
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-orange-100 text-orange-700 border border-orange-200 flex-shrink-0">
+                      {isEs ? 'Aplazado de ayer' : 'Reporté d\'hier'}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
         {allTasks.map(task => {
           const isDone = completedDays.includes(task.id);
           const isExpanded = expandedTips[task.id];

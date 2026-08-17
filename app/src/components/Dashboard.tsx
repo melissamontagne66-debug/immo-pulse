@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSmartDashboard } from '@/hooks/useSmartDashboard';
 import { useDailyCounters, type CounterKey } from '@/hooks/useDailyCounters';
@@ -9,14 +9,16 @@ import { getGoals, plural } from '@/lib/goals';
 import type { UserProgress, DailyResults } from '@/types';
 import type { WeekPlan } from '@/types';
 import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknote } from 'lucide-react';
-import { formatEuro, toLocalDateKey } from '@/lib/utils';
+import { formatEuro, toLocalDateKey, parseLocalDateKey } from '@/lib/utils';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
 import { getDefiForDay } from '@/data/defis';
 import { DefiCard } from '@/components/DefiCard';
+import { ConseilDuJour } from '@/components/ConseilDuJour';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
-import { getProtocole } from '@/lib/antiDecrochage';
+import { getProtocole, getVictoireAleatoire } from '@/lib/antiDecrochage';
+import { getJoursDepuisDerniereOuverture, getNiveau, getSemaineProgramme, touchLastOpen } from '@/lib/jalons';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -44,7 +46,21 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   // Recalculé à chaque rendu (lecture localStorage) : un bilan enregistré
   // met à jour le dashboard sans rechargement.
   const protocole = getProtocole();
-  const consolidation = !!protocole;
+
+  // MOD-31 — retour après absence (≥ 3 jours sans ouverture) : carte de
+  // bienvenue + objectifs allégés ce jour-là (même mécanisme que MOD-27).
+  // Lecture pure dans useState (StrictMode-safe), écriture dans useEffect.
+  const [joursAbsence] = useState(() => getJoursDepuisDerniereOuverture(progress.streak.lastBilanDate));
+  useEffect(() => { touchLastOpen(); }, []);
+
+  // MOD-31 — niveau de carrière + semaine de programme (header).
+  const niveau = getNiveau(progress, sales);
+  const semaine = getSemaineProgramme(profile.startDate);
+
+  // MOD-33 — victoire passée rappelée sur la carte de soutien.
+  const victoireSouvenir = useMemo(() => getVictoireAleatoire(dailyResults), [dailyResults]);
+
+  const consolidation = !!protocole || joursAbsence > 0;
   const goals = getGoals(profile, currentDay, dailyResults, { consolidation });
   const monthlyMandatTarget = goals.monthlyMandats;
 
@@ -105,7 +121,12 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           <h2 className="text-2xl font-bold text-gray-900">
             {profile.firstName ? `Bienvenue ${profile.firstName} !` : 'Objectifs du jour'}
           </h2>
-          <p className="text-gray-500 mt-1">Jour {currentDay}</p>
+          <p
+            className="text-gray-500 mt-1"
+            title={isEs ? 'Basado en tus balances completados y tus hitos.' : 'Basé sur tes bilans complétés et tes jalons.'}
+          >
+            Jour {currentDay} · {isEs ? `Programa 6 meses — semana ${semaine}/26` : `Programme 6 mois — semaine ${semaine}/26`}
+          </p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -114,6 +135,13 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           >
             <Target className="w-4 h-4" />
             Objectif du mois : {formatEuro(Math.round(profile.ca6MonthsTarget / 6))} ({formatEuro(profile.ca6MonthsTarget)} sur 6 mois)
+          </button>
+          <button
+            onClick={() => onNavigate('parcours')}
+            className="flex items-center gap-2 bg-violet-50 text-violet-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-violet-100 transition-colors"
+            title={isEs ? 'Ver tu recorrido' : 'Voir ton parcours'}
+          >
+            {niveau.emoji} {isEs ? niveau.labelEs : niveau.label}
           </button>
           <div className="flex items-center gap-2 bg-orange-50 text-orange-700 px-4 py-2 rounded-lg">
             <Flame className="w-5 h-5" />
@@ -153,6 +181,33 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
                 </p>
               </div>
             )}
+            {/* MOD-33 — rappel d'une victoire passée sur la carte de soutien */}
+            {victoireSouvenir && (
+              <p className="text-sm text-emerald-700 mt-1">
+                {isEs
+                  ? `Recuerda: ${parseLocalDateKey(victoireSouvenir.date).toLocaleDateString('es-ES')} — ${victoireSouvenir.texte}.`
+                  : `Souviens-toi\u00A0: ${parseLocalDateKey(victoireSouvenir.date).toLocaleDateString('fr-FR')} — ${victoireSouvenir.texte}.`}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* MOD-31 — Carte de retour après absence (≥ 3 jours sans ouverture) */}
+      {joursAbsence > 0 && (
+        <Card className="bg-sky-50 border-sky-200">
+          <CardContent className="p-4 flex items-center justify-between gap-3">
+            <p className="text-sm text-sky-800">
+              {isEs
+                ? `👋 ¡Qué bueno verte de nuevo${profile.firstName ? `, ${profile.firstName}` : ''}! Han pasado ${plural(joursAbsence, 'día')}. Retomamos con calma: una sola acción hoy, aquí está.`
+                : `👋 Content de te revoir${profile.firstName ? `, ${profile.firstName}` : ''}\u00A0! Ça fait ${plural(joursAbsence, 'jour')}. On repart doucement\u00A0: 1 seule action aujourd'hui, la voici.`}
+            </p>
+            <button
+              onClick={() => onNavigate('today')}
+              className="flex-shrink-0 px-3 py-2 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs font-medium transition-colors"
+            >
+              {isEs ? 'Mi acción de hoy' : 'Mon action du jour'}
+            </button>
           </CardContent>
         </Card>
       )}
@@ -293,6 +348,9 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         Ton action du jour
         <ArrowRight className="w-4 h-4" />
       </button>
+
+      {/* MOD-34 — Conseil du jour (déterministe, pool de 15, src/data/conseils.ts) */}
+      <ConseilDuJour day={currentDay} isEs={isEs} />
 
       {/* MOD-23 — Défi du jour (carte unique, renvoyée depuis l'onglet Aujourd'hui) */}
       <DefiCard defi={defi} isEs={isEs} />

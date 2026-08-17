@@ -12,11 +12,13 @@ import { getDailyActionsForDay, getMonthsSinceStart, plural } from '@/lib/goals'
 import { getDefiForDay } from '@/data/defis';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
+import { ShareVictoryButtons } from '@/components/ShareVictoryButtons';
 import {
   Phone, Users, Calendar, FileCheck, Home,
   TrendingUp, Clock, Star, Trophy, AlertTriangle,
   CalendarPlus, ArrowRight, PlayCircle, CheckCircle, XCircle,
-  Database, ClipboardCheck, Lightbulb, ChevronDown, ChevronUp
+  Database, ClipboardCheck, Lightbulb, ChevronDown, ChevronUp,
+  HeartHandshake
 } from 'lucide-react';
 
 const CHECKUP_DRAFT_PREFIX = 'iad-coach-checkup-draft';
@@ -69,12 +71,14 @@ interface DailyCheckupProps {
   onRequestClose?: () => void;
   onDirtyChange?: (dirty: boolean) => void;
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
+  // MOD-35 — persiste les tâches reportées (affichées en tête de « Aujourd'hui » le lendemain)
+  onPlanNextDay?: (tasks: string[]) => void;
 }
 
 // Liste des actions du jour à vérifier — source unique partagée avec l'écran
 // « Aujourd'hui » : getDailyActionsForDay dans src/lib/goals.ts (MOD-19).
 
-export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile }: DailyCheckupProps) {
+export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile, onPlanNextDay }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
 
   // Compteurs d'objectifs du jour (partagés avec Dashboard / Aujourd'hui)
@@ -174,6 +178,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   // Next day planning state
   const [nextDayTasks, setNextDayTasks] = useState<string[]>(() => draft?.nextDayTasks ?? []);
 
+  // MOD-32 — saisie des coordonnées du parrain (demandées une seule fois, au step 2)
+  const [parrainPrenom, setParrainPrenom] = useState('');
+  const [parrainContact, setParrainContact] = useState('');
+
   // Persist draft while the user is filling the checkup
   useEffect(() => {
     saveDraft(userKey, currentDay, {
@@ -258,6 +266,9 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
       reportedTasks.push('🔴 Prévoir un créneau de visite pour demain (obligatoire)');
     }
     setNextDayTasks(reportedTasks);
+    // MOD-35 : les tâches reportées sont persistées pour réapparaître demain
+    // en tête de l'écran « Aujourd'hui » (badge « Reporté d'hier »).
+    onPlanNextDay?.(reportedTasks);
     setStep(2);
   };
 
@@ -765,6 +776,74 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
 
         {/* MOD-24 : témoignage dans l'écran de clôture du bilan */}
         {temoignage && <TemoignageCard temoignage={temoignage} isEs={isEs} />}
+
+        {/* MOD-32 : coordonnées du parrain — demandées UNE FOIS (optionnel),
+            « Plus tard » est définitif (parrainAsked persiste le choix) */}
+        {profile.hasMentor && !profile.parrain && !profile.parrainAsked && onUpdateProfile && (
+          <Card className="bg-violet-50 border-violet-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <HeartHandshake className="w-4 h-4 text-violet-600" />
+                <p className="text-sm font-semibold text-violet-800">Partage tes victoires avec ton parrain</p>
+              </div>
+              <p className="text-xs text-violet-600 mb-3">
+                Tu as indiqué avoir un parrain ou une personne qui t'accompagne. Laisse ses coordonnées pour lui envoyer tes victoires en un clic — c'est facultatif, et on ne te le redemandera plus.
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <Label className="text-xs text-violet-800">Son prénom</Label>
+                  <Input
+                    value={parrainPrenom}
+                    onChange={e => setParrainPrenom(e.target.value)}
+                    placeholder="Ex : Karim"
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div>
+                  <Label className="text-xs text-violet-800">Son email ou son téléphone</Label>
+                  <Input
+                    value={parrainContact}
+                    onChange={e => setParrainContact(e.target.value)}
+                    placeholder="Ex : karim@email.com ou 06 12 34 56 78"
+                    className="mt-1 bg-white"
+                  />
+                </div>
+                <div className="flex gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    disabled={!parrainPrenom.trim() || !parrainContact.trim()}
+                    onClick={() => onUpdateProfile({ parrain: { prenom: parrainPrenom.trim(), contact: parrainContact.trim() } })}
+                    className="flex-1 bg-violet-600 hover:bg-violet-700 text-xs disabled:opacity-50"
+                  >
+                    Enregistrer
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => onUpdateProfile({ parrainAsked: true })}
+                    className="flex-1 text-xs"
+                  >
+                    Plus tard
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* MOD-32 : partage de la victoire du jour (parrain si déclaré, sinon destinataire libre) */}
+        {results.wins.trim() && (
+          <Card className="bg-yellow-50 border-yellow-200">
+            <CardContent className="p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Trophy className="w-4 h-4 text-yellow-600" />
+                <p className="text-sm font-semibold text-yellow-800">Ta victoire du jour</p>
+              </div>
+              <p className="text-sm text-gray-700 italic mb-3">« {results.wins.trim()} »</p>
+              <ShareVictoryButtons victoire={results.wins} profile={profile} />
+            </CardContent>
+          </Card>
+        )}
 
         {/* Offer alert */}
         {results.offresWritten > 0 && (

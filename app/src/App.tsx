@@ -30,6 +30,9 @@ import { evaluateBilan } from '@/lib/antiDecrochage';
 import { toLocalDateKey } from '@/lib/utils';
 import { plural } from '@/lib/goals';
 import { Celebration } from '@/components/Celebration';
+import { MonParcours } from '@/components/MonParcours';
+import { useJalons } from '@/hooks/useJalons';
+import { getNiveau } from '@/lib/jalons';
 import { registerPushServiceWorker } from '@/lib/push';
 import { apiMilestone } from '@/services/api';
 import type { DailyResults, NextDayPlan } from '@/types';
@@ -133,6 +136,9 @@ function App() {
 
   const { messages, isTyping, sendMessage, clearChat } = useChat(userKey);
   const { profile, hasProfile, setProfile, updateProfile, dailyTargets, loadFromCloud: loadProfileFromCloud } = useProfile(userKey);
+
+  // MOD-31 : jalons de carrière — célébration plein écran à la 1ère occurrence
+  const { newJalon, dismissJalon } = useJalons(progress, sales, currentUser?.email);
 
   // MOD-22 : vérification de la série à l'ouverture (gel automatique / casse bienveillante).
   // Une seule fois par utilisateur et par jour.
@@ -429,6 +435,9 @@ function App() {
 
   const completionRate = getCompletionRate();
   const currentWeek = getCurrentWeek();
+  // MOD-31 : niveau de carrière affiché dans la sidebar
+  const niveau = getNiveau(progress, sales);
+  const niveauLabel = `${niveau.emoji} ${profile.language === 'es' ? niveau.labelEs : niveau.label}`;
 
   const renderContent = () => {
     switch (activeTab) {
@@ -468,6 +477,7 @@ function App() {
               contactsState.addContact({ nom: '', telephone: '', contexte: note, origine: 'Action du jour', dateRelance: '', statut: 'chaud' });
               setActiveTab('contacts');
             }}
+            nextDayPlan={progress.nextDayPlans.find(p => p.date === toLocalDateKey(new Date()))}
           />
         );
       case 'chat':
@@ -500,6 +510,14 @@ function App() {
         return <CommissionCalculator userKey={userKey} country={profile.country} averagePrice={profile.averagePrice} />;
       case 'contacts':
         return <ContactsView userKey={userKey} state={contactsState} />;
+      case 'parcours':
+        return (
+          <MonParcours
+            progress={progress}
+            sales={sales}
+            profile={profile}
+          />
+        );
       default:
         return (
           <Dashboard
@@ -525,7 +543,7 @@ function App() {
         activeTab={activeTab}
         onTabChange={setActiveTab}
         currentDay={progress.currentDay}
-        completionRate={completionRate}
+        niveauLabel={niveauLabel}
         streak={progress.streak.count}
         profile={profile}
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
@@ -547,6 +565,18 @@ function App() {
           particleCount={bilanCelebration.particleCount}
           autoCloseMs={6000}
           onClose={() => setBilanCelebration(null)}
+        />
+      )}
+
+      {/* MOD-31 : célébration plein écran d'un nouveau jalon de carrière */}
+      {newJalon && (
+        <Celebration
+          show={true}
+          message={`🎉 ${newJalon.titre} !`}
+          submessage={newJalon.sub}
+          particleCount={48}
+          autoCloseMs={6000}
+          onClose={dismissJalon}
         />
       )}
 
@@ -574,6 +604,12 @@ function App() {
                 onRequestClose={requestCloseCheckup}
                 onDirtyChange={setCheckupDirty}
                 onUpdateProfile={updateProfile}
+                onPlanNextDay={(tasks) => planNextDay({
+                  date: toLocalDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)),
+                  actions: tasks,
+                  validated: true,
+                  skippedActions: [],
+                })}
               />
             </div>
           </div>
