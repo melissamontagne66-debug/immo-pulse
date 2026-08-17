@@ -154,7 +154,7 @@ export function getDailyActionsForDay(
     }] : []),
     ...(day <= 14 ? [{
       id: `gmb-jour-${day}`, type: 'gmb' as const,
-      label: 'Google My Business', icon: '🌐',
+      label: 'Google Business Profile', icon: '🌐',
       catLabel: 'Google Business',
       catColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
       askResult: false,

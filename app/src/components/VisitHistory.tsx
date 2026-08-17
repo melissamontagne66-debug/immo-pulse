@@ -62,7 +62,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
           <CardContent className="p-5">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-red-500" />
-              Arguments qui rêviennent le plus chez les acheteurs
+              Arguments qui reviennent le plus chez les acheteurs
             </h3>
             <p className="text-xs text-gray-500 mb-4">Utilise ces stats lors de tes RDV de suivi avec les vendeurs pour justifier des ajustements.</p>
             <div className="space-y-3">

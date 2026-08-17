@@ -22,7 +22,7 @@ const adminReminders: string[] = [
   "Relance tes contacts de J+7 aujourd'hui. Le fichier mort = de l'argent qui dort.",
   "Vérifie que tes panneaux 'Estimation offerte' sont toujours bien en place chez tes apporteurs.",
   "As-tu posté un contenu sur tes réseaux sociaux aujourd'hui ? Un post = une visibilité gratuite.",
-  "Pense à mettre à jour ton Google My Business avec les nouveaux avis clients.",
+  "Pense à mettre à jour ta fiche Google Business Profile avec les nouveaux avis clients.",
   "As-tu relu tes offres en cours ? Un acheteur chaud peut se cacher dans ton fichier.",
   "Vérifie que tes diagnostics pour les mandats en cours sont à jour.",
   "Ton compte pro est-il à jour ? Photos, bio, coordonnées — tout doit être pro.",
@@ -173,7 +173,7 @@ export function useSmartDashboard(
             id: 'progression',
             type: 'encouragement',
             title: 'Tu progresses !',
-            message: `Ta productivité est en hausse : hier tu as fait plus qu'avant-hier. Garde ce rythme, c'est exactement comme ça que les tops performers construisent leurs résultats.`,
+            message: `Ta productivité est en hausse : hier tu as fait plus qu'avant-hier. Garde ce rythme, c'est exactement comme ça que les meilleurs construisent leurs résultats.`,
             emoji: '📈',
             priority: 3,
           });

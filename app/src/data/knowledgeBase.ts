@@ -823,7 +823,7 @@ STRATÉGIE:
   },
   {
     id: "réseau-social",
-    title: "Google My Business & Réseaux Sociaux",
+    title: "Google Business Profile & Réseaux Sociaux",
     category: "prospection",
     content: `80 % des parcours de vente commencent par une recherche locale.
 

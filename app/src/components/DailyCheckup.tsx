@@ -911,7 +911,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             </div>
             <div className="mt-3 bg-white/60 rounded-lg p-3 border border-blue-200">
               <p className="text-xs text-blue-600">
-                💡 <strong>Conseil :</strong> Les tops performers planifient leur lendemain le soir même. Note 3 actions prioritaires dans ton agenda.
+                💡 <strong>Conseil :</strong> Les meilleurs planifient leur lendemain le soir même. Note 3 actions prioritaires dans ton agenda.
               </p>
             </div>
           </CardContent>

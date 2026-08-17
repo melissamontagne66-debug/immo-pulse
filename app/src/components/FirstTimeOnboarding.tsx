@@ -41,7 +41,7 @@ const steps = [
     color: 'text-orange-600',
     bg: 'bg-orange-50',
     title: 'Bilan du soir',
-    description: 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les tops. Ça débloque le lendemain !',
+    description: 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les meilleurs. Ça débloque le lendemain !',
   },
 ];
 
