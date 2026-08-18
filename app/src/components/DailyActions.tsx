@@ -718,7 +718,11 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                 <div className="flex items-start gap-3">
                   <button
                     onClick={() => handleToggle(task.id, isDone)}
-                    className="mt-0.5 flex-shrink-0"
+                    aria-label={isDone
+                      ? `Marquer « ${task.title} » comme non faite`
+                      : `Marquer « ${task.title} » comme faite`}
+                    aria-pressed={isDone}
+                    className="mt-0.5 flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center -m-2 rounded-lg focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
                   >
                     {isDone
                       ? <CheckCircle2 className="w-6 h-6 text-green-500" />
@@ -808,7 +812,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                               onClick={() => increment(k, -1)}
                               disabled={counters[k] <= 0}
                               aria-label={isEs ? `Quitar 1 ${counterMeta[k].label}` : `Retirer 1 ${counterMeta[k].label}`}
-                              className="w-5 h-5 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                              className="w-8 h-8 rounded-full border border-gray-300 text-gray-500 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
                             >
                               <Minus className="w-3 h-3" />
                             </button>
@@ -818,7 +822,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                             <button
                               onClick={() => increment(k, 1)}
                               aria-label={isEs ? `Añadir 1 ${counterMeta[k].label}` : `Ajouter 1 ${counterMeta[k].label}`}
-                              className="w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                              className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
                             >
                               <Plus className="w-3 h-3" />
                             </button>

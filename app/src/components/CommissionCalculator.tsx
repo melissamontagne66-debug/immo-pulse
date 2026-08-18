@@ -198,6 +198,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                 type="text"
                 inputMode="numeric"
                 aria-label={isSpain ? 'Precio de venta del bien (€)' : 'Prix de vente du bien (€)'}
+                className="mt-1 text-lg max-sm:text-xl max-sm:py-6"
                 value={prixVenteInput}
                 onChange={e => {
                   const raw = e.target.value;
@@ -227,7 +228,6 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                   }
                   setPrixVenteError(null);
                 }}
-                className="mt-1"
               />
               {prixVenteError && <p className="text-xs text-red-600 mt-1">{prixVenteError}</p>}
             </div>

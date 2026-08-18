@@ -315,7 +315,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
                 <CardContent className="p-4 text-center">
                   <obj.icon className={`w-6 h-6 ${done ? 'text-green-600' : obj.color} mx-auto mb-2`} />
                   <p className="text-2xl font-bold text-gray-900">
-                    {count}<span className="text-base font-semibold text-gray-400">/{obj.value}</span>
+                    {count}<span className="text-base font-semibold text-gray-500">/{obj.value}</span>
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1">
                     {obj.label}
@@ -326,14 +326,14 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
                       onClick={e => { e.stopPropagation(); increment(obj.key, -1); }}
                       disabled={count <= 0}
                       aria-label={isEs ? `Quitar 1 ${obj.label}` : `Retirer 1 ${obj.label}`}
-                      className="w-7 h-7 rounded-full bg-white/80 border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+                      className="w-11 h-11 rounded-full bg-white/80 border border-gray-300 text-gray-600 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
                     <button
                       onClick={e => { e.stopPropagation(); increment(obj.key, 1); }}
                       aria-label={isEs ? `Añadir 1 ${obj.label}` : `Ajouter 1 ${obj.label}`}
-                      className="w-7 h-7 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700"
+                      className="w-11 h-11 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

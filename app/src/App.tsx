@@ -594,10 +594,11 @@ function App() {
       )}
 
       {/* Modal overlay: Daily Checkup — pas de fermeture au clic sur l'overlay :
-          l'overlay n'a volontairement aucun onClick. */}
+          l'overlay n'a volontairement aucun onClick.
+          6.2 : plein écran sur mobile (usage terrain au pouce). */}
       {modalView === 'checkup' && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8 px-4">
-          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden my-auto">
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-start justify-center overflow-y-auto py-8 px-4 max-sm:py-0 max-sm:px-0">
+          <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden my-auto max-sm:rounded-none max-sm:border-0 max-sm:min-h-screen max-sm:my-0">
             <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-bold text-white">Bilan de ta journée — Jour {progress.currentDay}</h2>
@@ -605,7 +606,7 @@ function App() {
               </div>
               <button onClick={requestCloseCheckup} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto">
               <DailyCheckup
                 userKey={userKey}
                 profile={profile}
@@ -669,7 +670,7 @@ function App() {
               </div>
               <button onClick={() => setModalView('none')} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-6 max-h-[70vh] overflow-y-auto">
+            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto">
               <NextDayPlanner
                 currentDay={progress.currentDay}
                 onPlan={handlePlanNextDay}
