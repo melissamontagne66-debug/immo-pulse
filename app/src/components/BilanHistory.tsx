@@ -282,16 +282,19 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
                   { label: 'Mandat → Visite', num: stats.visitesDone, den: stats.mandatsSigned, color: 'text-teal-600', bg: 'bg-teal-50' },
                   { label: 'Visite → Offre', num: stats.offresWritten, den: stats.visitesDone, color: 'text-orange-600', bg: 'bg-orange-50' },
                   { label: 'Conversations → Contact', num: stats.contactsApproached, den: stats.callsMade, color: 'text-blue-600', bg: 'bg-blue-50' },
-                ].map(conv => {
-                  const rate = conv.den > 0 ? Math.round((conv.num / conv.den) * 100) : 0;
-                  return (
-                    <div key={conv.label} className={`${conv.bg} rounded-xl p-3 text-center`}>
-                      <p className="text-xs text-gray-500">{conv.label}</p>
-                      <p className={`text-2xl font-bold ${conv.color}`}>{rate}%</p>
-                      <p className="text-[10px] text-gray-400">{conv.num} / {conv.den}</p>
-                    </div>
-                  );
-                })}
+                ]
+                  // Ratios sans dénominateur (0) masqués : « 0 % (1/0) » n'a pas de sens
+                  .filter(conv => conv.den > 0)
+                  .map(conv => {
+                    const rate = Math.round((conv.num / conv.den) * 100);
+                    return (
+                      <div key={conv.label} className={`${conv.bg} rounded-xl p-3 text-center`}>
+                        <p className="text-xs text-gray-500">{conv.label}</p>
+                        <p className={`text-2xl font-bold ${conv.color}`}>{rate} %</p>
+                        <p className="text-[10px] text-gray-400">{conv.num} / {conv.den}</p>
+                      </div>
+                    );
+                  })}
               </div>
             </CardContent>
           </Card>

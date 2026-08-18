@@ -215,8 +215,10 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-gray-400" />
           </div>
-          <h3 className="text-xl font-bold text-gray-900">Aucun contact pour l'instant</h3>
-          <p className="text-gray-500 mt-2">Ajoute tes prospects chauds pour ne jamais oublier une relance.</p>
+          <p className="text-gray-500">Ton fichier démarre ici&nbsp;: ajoute ton premier contact chaud.</p>
+          <Button onClick={openAddForm} className="mt-4 bg-red-600 hover:bg-red-700">
+            <Plus className="w-4 h-4 mr-2" /> Ajouter un contact
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">

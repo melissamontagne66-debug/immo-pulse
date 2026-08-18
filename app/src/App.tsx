@@ -48,7 +48,20 @@ function App() {
   const contactsState = useContacts(userKey);
   const { sales } = useSales(userKey);
 
-  const [activeTab, setActiveTab] = useState('dashboard');
+  // 6.7 — Persistance de la vue : l'écran courant survit au rechargement (F5).
+  const [activeTab, setActiveTabState] = useState(() => {
+    try {
+      return localStorage.getItem('immo-pulse-active-tab') || 'dashboard';
+    } catch {
+      return 'dashboard';
+    }
+  });
+  const setActiveTab = (tab: string) => {
+    setActiveTabState(tab);
+    try {
+      localStorage.setItem('immo-pulse-active-tab', tab);
+    } catch { /* ignore */ }
+  };
   const [showGoalSetter, setShowGoalSetter] = useState(false);
   const [modalView, setModalView] = useState<ModalView>('none');
   const [showFirstTimeOnboarding, setShowFirstTimeOnboarding] = useState(false);

@@ -26,7 +26,7 @@ export function HistoryView({ dailyResults, profile: _profile, sales }: HistoryV
         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
           <ClipboardCheck className="w-8 h-8 text-gray-400" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Aucun bilan encore</h3>
+        <h3 className="text-xl font-bold text-gray-900">Aucun bilan pour le moment</h3>
         <p className="text-gray-500 mt-2">Remplis ton premier bilan de journée pour voir ton historique ici.</p>
         <p className="text-sm text-gray-400 mt-1">Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.</p>
       </div>
@@ -52,7 +52,7 @@ export function HistoryView({ dailyResults, profile: _profile, sales }: HistoryV
       {/* Summary stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Appels total', value: dailyResults.reduce((s, r) => s + r.callsMade, 0), icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Conversations', value: dailyResults.reduce((s, r) => s + r.callsMade, 0), icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50' },
           { label: 'R1 faits', value: dailyResults.reduce((s, r) => s + r.rdvR1Done, 0), icon: Calendar, color: 'text-green-600', bg: 'bg-green-50' },
           { label: 'R2 faits', value: dailyResults.reduce((s, r) => s + r.rdvR2Done, 0), icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50' },
           { label: 'Mandats', value: dailyResults.reduce((s, r) => s + r.mandatsSigned, 0), icon: FileCheck, color: 'text-purple-600', bg: 'bg-purple-50' },
@@ -84,7 +84,7 @@ export function HistoryView({ dailyResults, profile: _profile, sales }: HistoryV
               <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mb-4">
                 <div className="text-center p-2 bg-blue-50 rounded-lg">
                   <p className="text-lg font-bold text-blue-700">{result.callsMade}</p>
-                  <p className="text-xs text-blue-500">Appels</p>
+                  <p className="text-xs text-blue-500">Conversations</p>
                 </div>
                 <div className="text-center p-2 bg-green-50 rounded-lg">
                   <p className="text-lg font-bold text-green-700">{result.contactsApproached}</p>

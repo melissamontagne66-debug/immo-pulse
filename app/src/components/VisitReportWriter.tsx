@@ -64,28 +64,37 @@ function readAgentInfo(): AgentInfo {
   return info;
 }
 
-// Reformulation diplomatique des notes brutes : quelques règles par mots-clés,
-// puis une reformulation générique adoucie en fallback.
+// Reformulation diplomatique des notes brutes : règles par mots-clés,
+// puis un encadrage neutre en fallback (la note brute n'est jamais
+// recopiée telle quelle sans enrobage).
 const DIPLOMATIC_RULES: { pattern: RegExp; replacement: string }[] = [
   {
     pattern: /trop cher|prix\s+(jugé\s+)?(trop\s+)?(élevé|haut)|hors de prix|surestimé|au-dessus du marché/i,
-    replacement: 'Le prix a été perçu comme au-dessus de son budget / du marché',
+    replacement: "Le prix a été perçu comme au-dessus de son budget et des références récentes du secteur",
   },
   {
     pattern: /cuisine.{0,30}(rénover|refaire|vieille|vétuste|vieillotte)|(rénover|refaire).{0,30}cuisine/i,
-    replacement: 'Des travaux de rafraîchissement sont à prévoir (cuisine)',
+    replacement: 'Des travaux de rafraîchissement sont à prévoir côté cuisine',
   },
   {
     pattern: /salle de bain.{0,30}(refaire|vieille|vétuste|vieillotte)|(refaire|rénover).{0,30}salle de bain/i,
-    replacement: 'Des travaux de rafraîchissement sont à prévoir (salle de bain)',
+    replacement: 'Des travaux de rafraîchissement sont à prévoir côté salle de bain',
   },
   {
     pattern: /bruyant|trop de bruit|bruit\s+(de la\s+)?(rue|route|voisin)/i,
-    replacement: "L'environnement sonore a été noté comme un point d'attention",
+    replacement: "L'environnement sonore a fait partie de ses réserves",
   },
   {
     pattern: /trop (petit|sombre)|exigu|manque de (place|lumière)|sombre/i,
-    replacement: "La surface ou la luminosité a été perçue comme juste par rapport à ses attentes",
+    replacement: "La surface ou la luminosité lui a semblé juste au regard de son projet",
+  },
+  {
+    pattern: /jardin.{0,30}(petit|petite)|pas de jardin/i,
+    replacement: "L'extérieur ne correspond pas tout à fait à ce qu'il recherche",
+  },
+  {
+    pattern: /loin|excentré|transport|éloigné/i,
+    replacement: "La localisation l'a interrogé par rapport à ses habitudes",
   },
   {
     pattern: /travaux|à rénover|vétuste|rafraîchir/i,
@@ -102,7 +111,10 @@ function diplomatize(raw: string): string {
   for (const rule of DIPLOMATIC_RULES) {
     if (rule.pattern.test(trimmed)) return rule.replacement;
   }
-  return `Un point d'attention a été relevé : ${trimmed}`;
+  // Fallback : on encadre la réserve sans recracher la note brute.
+  // Minuscule en tête si la note commence par une majuscule non nécessaire.
+  const note = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
+  return `Il a émis une réserve sur ce point : « ${note} »`;
 }
 
 // Découpe une note en lignes/puces exploitables
@@ -180,30 +192,30 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
     }
 
     if (positiveLines.length === 0) {
-      positiveLines.push("L'acquéreur a découvert votre bien avec intérêt.");
+      positiveLines.push("Votre bien a retenu toute l'attention de l'acquéreur pendant la visite.");
     }
     if (vigilanceLines.length === 0) {
-      vigilanceLines.push("Aucun point de vigilance particulier n'a été soulevé.");
+      vigilanceLines.push("Aucune réserve particulière n'a été exprimée.");
     }
 
     // Prochaine étape selon le statut
     let nextStep = '';
     if (visitStatus === 'intéressé') {
-      nextStep = "Je reste en contact rapproché avec l'acquéreur pour faire avancer le dossier. Je vous tiens informé dès qu'il y a du nouveau.";
+      nextStep = "L'acquéreur est intéressé : je reste en contact rapproché avec lui pour faire avancer le dossier, et je vous tiens informé en temps réel.";
     } else if (visitStatus === 'réflexion') {
-      nextStep = "L'acquéreur réfléchit et compare. Je fais un suivi sous 48 h pour l'accompagner dans sa décision.";
+      nextStep = "L'acquéreur prend le temps de la réflexion — c'est bon signe. Je le relance sous 48 h pour répondre à ses questions et l'accompagner dans sa décision.";
     } else if (visitStatus === 'négatif') {
-      nextStep = "Ce retour m'aide à affiner ma stratégie. Je vais cibler davantage les prochains visiteurs pour vous trouver le bon acquéreur.";
+      nextStep = "Ce retour est précieux : il m'aide à affiner le profil des prochains visiteurs pour vous présenter uniquement des acquéreurs vraiment en phase avec votre bien.";
     } else if (visitStatus === 'offre') {
-      nextStep = "Excellente nouvelle ! Je prépare l'offre avec l'acquéreur et vous contacte très vite avec les détails.";
+      nextStep = "Très bonne nouvelle : l'acquéreur souhaite faire une offre. Je la prépare avec lui et je reviens vers vous très rapidement avec tous les détails.";
     }
 
     const greeting = sellerName.trim()
       ? `Bonjour ${sellerCivility} ${sellerName.trim()},`
       : 'Bonjour,';
     const visitLine = buyerName.trim()
-      ? `Suite à la visite de votre bien du ${date} avec ${buyerName.trim()}, voici mon retour.`
-      : `Suite à la visite de votre bien du ${date}, voici mon retour.`;
+      ? `Je reviens vers vous suite à la visite de votre bien du ${date} avec ${buyerName.trim()}.`
+      : `Je reviens vers vous suite à la visite de votre bien du ${date}.`;
 
     const signatureLines: string[] = [];
     const fullName = `${agent.firstName} ${agent.lastName}`.trim();
@@ -212,17 +224,19 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
 
     const msg = `${greeting}
 
-${visitLine}
+${visitLine} Voici mon retour, en toute transparence.
 
 Statut de l'acquéreur : ${statusLabel}
 
-Points positifs :
+Ce que l'acquéreur a retenu :
 ${positiveLines.map(l => `• ${l}`).join('\n')}
 
-Points de vigilance :
+Ses réserves :
 ${vigilanceLines.map(l => `• ${l}`).join('\n')}
 
-Prochaine étape : ${nextStep}
+La suite : ${nextStep}
+
+N'hésitez pas si vous avez la moindre question — je suis joignable directement.
 
 Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : ''}`;
 

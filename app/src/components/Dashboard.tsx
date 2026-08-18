@@ -19,6 +19,7 @@ import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
 import { getProtocole, getVictoireAleatoire } from '@/lib/antiDecrochage';
 import { getJoursDepuisDerniereOuverture, getNiveau, getSemaineProgramme, touchLastOpen } from '@/lib/jalons';
+import { RdvList } from '@/components/RdvList';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -112,6 +113,47 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
 
   // Progression mandats par semaine
   const mandatProgressPct = monthlyMandatTarget > 0 ? Math.min(100, Math.round((mandatsThisMonthTotal / monthlyMandatTarget) * 100)) : 0;
+
+  // Relances de contacts dues aujourd'hui (ou en retard) — carte partagée :
+  // affichée seule dans le flux sur mobile, reprise dans le panneau
+  // « Aujourd'hui en un coup d'œil » sur desktop (sans duplication visuelle).
+  const relancesCard = dueContacts.length > 0 ? (
+    <Card className="bg-amber-50 border-amber-200">
+      <CardContent className="p-4 space-y-2">
+        <p className="text-sm font-semibold text-amber-800">📞 À relancer aujourd'hui&nbsp;:</p>
+        {dueContacts.map(c => (
+          <div key={c.id} className="flex items-center justify-between gap-3 bg-white/70 rounded-lg px-3 py-2">
+            <p className="text-sm text-gray-800 min-w-0 truncate">
+              <span className="font-medium">{c.nom || 'Sans nom'}</span>
+              {c.contexte && <> — {c.contexte.length > 60 ? `${c.contexte.slice(0, 60)}…` : c.contexte}</>}
+            </p>
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              {c.telephone && (
+                <a
+                  href={`tel:${c.telephone.replace(/\s+/g, '')}`}
+                  className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                >
+                  Appeler
+                </a>
+              )}
+              <button
+                onClick={() => contactsState.postponeContact(c.id)}
+                className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-medium transition-colors"
+              >
+                Repousser
+              </button>
+              <button
+                onClick={() => contactsState.updateContact(c.id, { dateRelance: '' })}
+                className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+              >
+                Fait
+              </button>
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  ) : null;
 
   return (
     <div className="space-y-6">
@@ -251,44 +293,8 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         </CardContent>
       </Card>
 
-      {/* Relances de contacts dues aujourd'hui (ou en retard) */}
-      {dueContacts.length > 0 && (
-        <Card className="bg-amber-50 border-amber-200">
-          <CardContent className="p-4 space-y-2">
-            <p className="text-sm font-semibold text-amber-800">📞 À relancer aujourd'hui&nbsp;:</p>
-            {dueContacts.map(c => (
-              <div key={c.id} className="flex items-center justify-between gap-3 bg-white/70 rounded-lg px-3 py-2">
-                <p className="text-sm text-gray-800 min-w-0 truncate">
-                  <span className="font-medium">{c.nom || 'Sans nom'}</span>
-                  {c.contexte && <> — {c.contexte.length > 60 ? `${c.contexte.slice(0, 60)}…` : c.contexte}</>}
-                </p>
-                <div className="flex items-center gap-1.5 flex-shrink-0">
-                  {c.telephone && (
-                    <a
-                      href={`tel:${c.telephone.replace(/\s+/g, '')}`}
-                      className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
-                    >
-                      Appeler
-                    </a>
-                  )}
-                  <button
-                    onClick={() => contactsState.postponeContact(c.id)}
-                    className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Repousser
-                  </button>
-                  <button
-                    onClick={() => contactsState.updateContact(c.id, { dateRelance: '' })}
-                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    Fait
-                  </button>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      )}
+      {/* Relances — version mobile (sur desktop, la carte est dans le panneau du bas) */}
+      {relancesCard && <div className="lg:hidden">{relancesCard}</div>}
 
       {/* Objectifs du jour — petites cartes */}
       <div>
@@ -349,6 +355,11 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         <ArrowRight className="w-4 h-4" />
       </button>
 
+      {/* Mini-agenda — version mobile (sur desktop, il est dans le panneau du bas) */}
+      <div className="lg:hidden">
+        <RdvList />
+      </div>
+
       {/* MOD-34 — Conseil du jour (déterministe, pool de 15, src/data/conseils.ts) */}
       <ConseilDuJour day={currentDay} isEs={isEs} />
 
@@ -377,6 +388,34 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           ))}
         </div>
       )}
+
+      {/* Panneau « Aujourd'hui en un coup d'œil » — desktop uniquement (≥ 1024 px) :
+          réutilise l'espace vide en bas du dashboard sans rien changer au flux mobile. */}
+      <section className="hidden lg:block">
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Aujourd'hui en un coup d'œil</h3>
+        <div className="grid grid-cols-2 gap-4 items-start">
+          <RdvList />
+          <div className="space-y-4">
+            {relancesCard}
+            {/* Récap compact des 5 compteurs du jour (synthèse, distinct des tuiles) */}
+            <Card>
+              <CardContent className="p-4">
+                <p className="text-sm font-semibold text-gray-900 mb-2">⚡ Progression du jour</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  {dailyObjectives.map(obj => {
+                    const done = counters[obj.key] >= obj.value;
+                    return (
+                      <span key={obj.key} className={`text-sm ${done ? 'text-green-600 font-semibold' : 'text-gray-600'}`}>
+                        {obj.label}&nbsp;: {counters[obj.key]}/{obj.value}
+                      </span>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

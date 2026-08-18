@@ -541,6 +541,13 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       </Card>
 
       {/* Ventes enregistrées */}
+      {sales.length === 0 && (
+        <p className="text-sm text-gray-400 text-center py-4">
+          {isSpain
+            ? 'Ninguna venta guardada por el momento — tu primera simulación guardada aparecerá aquí.'
+            : 'Aucune vente enregistrée pour le moment — ta première simulation sauvegardée apparaîtra ici.'}
+        </p>
+      )}
       {sales.length > 0 && (
         <div>
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">

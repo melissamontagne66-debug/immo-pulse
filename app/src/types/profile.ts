@@ -27,6 +27,7 @@ export interface UserProfile {
 
   // Parcours & expérience
   expérienceLevel: 'débutant' | 'quelques-semaines' | 'quelques-mois' | 'confirmé';
+  réseau?: string;                 // 6.7 — réseau de l'utilisateur (iad, SAFTI, autre…) — optionnel
   watchedNetworkVideos: boolean;     // A vu toutes les vidéos du réseau
   watchedTerrainVideos: boolean; // A vu toutes les vidéos formation terrain
   hasMentor: boolean;            // A-t-il un parrain/mentor

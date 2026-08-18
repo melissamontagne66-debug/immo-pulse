@@ -189,7 +189,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
             >
               <span>📝</span>
-              <span>Mémo</span>
+              <span>Mes mémos</span>
               <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
             </a>
             <a
@@ -199,7 +199,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
             >
               <span>📚</span>
-              <span>Formations</span>
+              <span>Formations <span className="text-xs text-gray-400">(compte formation requis)</span></span>
               <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
             </a>
           </div>

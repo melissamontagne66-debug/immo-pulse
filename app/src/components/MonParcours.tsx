@@ -179,8 +179,8 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
           {mur.length === 0 ? (
             <p className="text-sm text-gray-400">
               {isEs
-                ? 'Tus victorias aparecerán aquí — anótalas en tu balance de la noche.'
-                : 'Tes victoires apparaîtront ici — note-les dans ton bilan du soir.'}
+                ? 'Tu primera victoria llegará pronto — aparecerá aquí.'
+                : 'Ta première victoire arrivera vite — elle s\'affichera ici.'}
             </p>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto pr-1">

@@ -294,7 +294,22 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 </div>
 
                 <div>
-                  <Label className="flex items-center gap-2 mb-3"><PlayCircle className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has visto todos los vídeos de la red?' : 'As-tu vu toutes les vidéos du réseau ?'}</Label>
+                  <Label className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /> {isEs ? 'Tu red (iad, SAFTI, otra…)' : 'Ton réseau (iad, SAFTI, autre…)'}</Label>
+                  <Input
+                    value={profile.réseau ?? ''}
+                    onChange={e => update('réseau', e.target.value)}
+                    placeholder={isEs ? 'Opcional — ej. iad' : 'Optionnel — ex. iad'}
+                    className="mt-1"
+                  />
+                  <p className="text-xs text-gray-400 mt-1.5">
+                    {isEs
+                      ? 'Se usará para personalizar los textos (« tu red », « tu herramienta interna »).'
+                      : 'Il servira à personnaliser les textes (« ton réseau », « ton outil interne »).'}
+                  </p>
+                </div>
+
+                <div>
+                  <Label className="flex items-center gap-2 mb-3"><PlayCircle className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has visto todos los vídeos de la red?' : `As-tu vu toutes les vidéos ${profile.réseau?.trim() ? `de ${profile.réseau.trim()}` : 'du réseau'} ?`}</Label>
                   <div className="flex gap-2">
                     {[
                       { val: true, label: isEs ? 'Sí, todos' : 'Oui, toutes', color: 'green' },
@@ -382,7 +397,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   </div>
                 </div>
 
-                {profile.expérienceLevel === 'débutant' && (
+                {(profile.expérienceLevel === 'débutant' || profile.expérienceLevel === 'quelques-semaines') && (
                   <div className="bg-green-50 rounded-xl p-4 border border-green-200">
                     <p className="text-sm text-green-800">
                       {isEs ? (
