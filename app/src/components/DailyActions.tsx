@@ -13,6 +13,7 @@ import {
   ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil
 } from 'lucide-react';
 import { getProspectionActionForDay, getProspectionCategoryInfo } from '@/data/prospectionActions';
+import { getDefiForDay } from '@/data/defis';
 import { DailyMorningAction } from '@/components/DailyMorningAction';
 import type { DailyResults } from '@/types';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
@@ -406,6 +407,16 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             catIcon: catInfo.icon,
           };
         case 'admin':
+          // J1 : mise en place des blocs récurrents (terrain + administratif)
+          if (def.id === 'blocs-agenda-jour-1') {
+            return {
+              ...def,
+              title: isEs ? '🗓️ Bloquea tus franjas importantes en la agenda' : '🗓️ Bloque tes créneaux importants dans ton agenda',
+              description: isEs
+                ? 'Hoy, prepara tu semana: bloquea cada día 1 h de terreno + 1 h de administrativo en tu agenda.\n\nEstas franjas son sagradas: no pongas citas encima. Si una cita es inevitable, mueve inmediatamente la franja a otro momento del mismo día — nunca la elimines.'
+                : 'Aujourd\'hui, prépare ta semaine : bloque chaque jour 1 h de terrain + 1 h d\'administratif dans ton agenda.\n\nCes blocs sont sacrés : tu ne poses pas de RDV dessus. Et si un RDV est inévitable, tu recales immédiatement le bloc concerné à un autre moment de la même journée — tu ne le supprimes jamais.',
+            };
+          }
           return {
             ...def,
             title: isEs ? 'Tareas administrativas' : 'Tâches administratives',
@@ -432,16 +443,16 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             description: retoursDesc,
             tipContent: retoursTip,
           };
-        case 'défi':
-          // MOD-23 — Une seule carte défi dans l'app : celle du tableau de bord
-          // (pool de 12 défis, src/data/defis.ts). Ici, simple renvoi sobre.
+        case 'défi': {
+          // Le défi du jour est AFFICHÉ dans la liste et LIÉ à la carte du
+          // tableau de bord : coché ici = coché là-bas (même id dans completedDays).
+          const defi = getDefiForDay(currentDay);
           return {
             ...def,
-            title: isEs ? '🏆 Reto del día' : '🏆 Défi du jour',
-            description: isEs
-              ? 'Tu reto del día te espera en el panel de control.'
-              : 'Ton défi du jour t\'attend sur le tableau de bord.',
+            title: `🏆 ${defi.titre}`,
+            description: `${defi.description}\n\n🎯 ${defi.objectif}`,
           };
+        }
         case 'apporteurs':
           return {
             ...def,

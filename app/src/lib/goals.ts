@@ -76,6 +76,22 @@ export function getDailyActionsForDay(
   const isFirstMonth = getMonthsSinceStart(profile.startDate) < 1 && !profile.primoListeCalled;
 
   return [
+    // La veille des nouveaux biens est la 1ʳᵉ tâche chaque jour (demande client)
+    {
+      id: `plateformes-jour-${day}`, type: 'plateformes',
+      label: isEs ? 'Contactar bienes en plataformas' : 'Contacter les nouveaux biens sur les plateformes', icon: '💻',
+      catLabel: isEs ? 'Plataformas' : 'Plateformes',
+      catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
+      askResult: false,
+    },
+    // J1 : mise en place des blocs récurrents dans l'agenda
+    ...(day === 1 ? [{
+      id: `blocs-agenda-jour-1`, type: 'admin' as const,
+      label: isEs ? 'Bloquear tus franjas importantes en la agenda' : 'Bloquer tes créneaux importants dans ton agenda', icon: '🗓️',
+      catLabel: isEs ? 'Administrativo' : 'Administratif',
+      catColor: 'bg-blue-100 text-blue-700 border-blue-200',
+      askResult: false,
+    }] : []),
     {
       id: `prospection-jour-${day}`, type: 'prospection',
       label: isEs ? 'Acción de prospección' : 'Action de prospection', icon: '🚪',
@@ -122,13 +138,6 @@ export function getDailyActionsForDay(
       label: isEs ? 'Registrar colaboradores' : 'Enregistrer tes apporteurs', icon: '🤝',
       catLabel: isEs ? 'Colaboradores' : 'Apporteurs',
       catColor: 'bg-amber-100 text-amber-700 border-amber-200',
-      askResult: false,
-    },
-    {
-      id: `plateformes-jour-${day}`, type: 'plateformes',
-      label: isEs ? 'Contactar bienes en plataformas' : 'Contacter les nouveaux biens sur les plateformes', icon: '💻',
-      catLabel: isEs ? 'Plataformas' : 'Plateformes',
-      catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
       askResult: false,
     },
     ...(isFirstMonth ? [{

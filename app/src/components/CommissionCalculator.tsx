@@ -10,6 +10,7 @@ import { formatEuro, clampNumber } from '@/lib/utils';
 import { Euro, Calculator, TrendingUp, User, Percent, Minus, Equal, Trash2, Save, AlertCircle, HandCoins } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
 import { SaleCelebration } from '@/components/SaleCelebration';
+import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { apiMilestone, isCloudEnabled } from '@/services/api';
 
 // Grille de commission-type (degressive) — suggestion par defaut
@@ -76,7 +77,9 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   const [tauxCommissionManual, setTauxCommissionManual] = useState<number | null>(null);
   const [tauxCommissionInput, setTauxCommissionInput] = useState('');
   const [commissionError, setCommissionError] = useState<string | null>(null);
-  const [apporteurMontant, setApporteurMontant] = useState(0);
+  const [apporteurMode, setApporteurMode] = useState<'euro' | 'pct'>('euro');
+  const [apporteurEuro, setApporteurEuro] = useState(0);
+  const [apporteurPct, setApporteurPct] = useState(0);
   const [fraisNotaire, setFraisNotaire] = useState(0);
   const [impotPourcent, setImpotPourcent] = useState(2.2); // defaut impot liberatoire
   const [impotInput, setImpotInput] = useState('2.2');
@@ -113,6 +116,10 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   // Charges et impôt s'appliquent sur ce que le conseiller encaisse
   const chargesSociales = Math.round(netAvecPallier * (chargesPourcent / 100));
   const impotLiberatoire = Math.round(netAvecPallier * (impotPourcent / 100));
+  // Apporteur d'affaires : montant en € direct, ou % de la commission HT
+  const apporteurMontant = apporteurMode === 'euro'
+    ? apporteurEuro
+    : Math.round(commissionHT * (apporteurPct / 100));
   const netFinal = netAvecPallier - chargesSociales - impotLiberatoire - apporteurMontant - fraisNotaire;
 
   // Clic sur « Enregistrer » : on demande d'abord si le bien est aussi un mandat signé
@@ -308,7 +315,12 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
             <div className="flex items-center gap-3">
               <HandCoins className="w-5 h-5 text-indigo-600 flex-shrink-0" />
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{isSpain ? 'Impuesto liberatorio (%)' : 'Impôt libératoire (%)'}</p>
+                <p className="text-sm font-medium text-gray-900 flex items-center gap-1.5">
+                  {isSpain ? 'Impuesto liberatorio (%)' : 'Impôt libératoire (%)'}
+                  <RdvInfoTooltip type="custom" isEs={isSpain} text={isSpain
+                    ? 'El impuesto liberatorio es una opción fiscal: en lugar de declarar tus ingresos en el IRPF, pagas un porcentaje fijo sobre tu facturación cada trimestre. Para un agente autónomo en prestación de servicios, suele ser el 2,2 %. Si no sabes qué es, probablemente no has elegido esta opción — déjalo al valor por defecto y habla con tu gestor.'
+                    : 'L\'impôt libératoire est une option fiscale : au lieu de déclarer tes revenus au barème de l\'impôt sur le revenu, tu paies un pourcentage fixe sur ton chiffre d\'affaires chaque mois ou trimestre. Pour un agent mandataire en prestations de services, c\'est en général 2,2 %. Si tu ne sais pas ce que c\'est, tu n\'as probablement pas choisi cette option — laisse la valeur par défaut et demande à ton comptable ou à ton réseau.'} />
+                </p>
                 <p className="text-xs text-gray-500">{isSpain ? 'Introduce el % de impuesto liberatorio que se aplica a tu situación' : 'Renseigne le % d\'impôt libératoire qui s\'applique à ta situation'}</p>
               </div>
               <div className="flex items-center gap-2">
@@ -445,8 +457,28 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
           {/* Apporteur + Frais */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <Label className="flex items-center gap-2"><User className="w-4 h-4 text-orange-500" /> {isSpain ? 'Colaborador de negocios (€)' : "Apporteur d'affaires (€)"}</Label>
-              <Input type="number" value={apporteurMontant || ''} onChange={e => setApporteurMontant(clampNumber(Number(e.target.value), 0, 1000000))} placeholder="0" className="mt-1" />
+              <Label className="flex items-center gap-2"><User className="w-4 h-4 text-orange-500" /> {isSpain ? 'Colaborador de negocios' : "Apporteur d'affaires"}</Label>
+              {/* Choix : montant en € ou % de la commission HT */}
+              <div className="flex gap-1 mt-1 mb-1.5">
+                {(['euro', 'pct'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    type="button"
+                    onClick={() => setApporteurMode(mode)}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${apporteurMode === mode ? 'bg-orange-100 text-orange-700 border border-orange-300' : 'text-gray-400 hover:text-gray-600 border border-gray-200'}`}
+                  >
+                    {mode === 'euro' ? '€' : '% du HT'}
+                  </button>
+                ))}
+              </div>
+              {apporteurMode === 'euro' ? (
+                <Input type="number" value={apporteurEuro || ''} onChange={e => setApporteurEuro(clampNumber(Number(e.target.value), 0, 1000000))} placeholder="0" />
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input type="number" step="0.1" value={apporteurPct || ''} onChange={e => setApporteurPct(clampNumber(Number(e.target.value), 0, 100))} placeholder="0" aria-label={isSpain ? 'Porcentaje del HT para el colaborador' : 'Pourcentage du HT pour l\'apporteur'} />
+                  <span className="text-xs text-gray-500 whitespace-nowrap">= {formatEuro(apporteurMontant)}</span>
+                </div>
+              )}
             </div>
             <div>
               <Label className="flex items-center gap-2"><Minus className="w-4 h-4 text-gray-400" /> {isSpain ? 'Otros gastos (€)' : 'Autres frais (€)'}</Label>

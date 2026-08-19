@@ -210,9 +210,7 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
     const date = new Date().toLocaleDateString(isEs ? 'es-ES' : 'fr-FR');
     const statusLabel = statusText(visitStatus);
 
-    // Points positifs : points d'appui + retours catégorisés positifs
-    const positiveLines: string[] = [...splitLines(strongPoints)];
-    // Points de vigilance : points faibles + retours catégorisés négatifs/neutres
+    // Points de retour : points faibles + retours catégorisés négatifs/neutres
     const vigilanceLines: string[] = splitLines(weakPoints).map(l => diplomatize(l, isEs));
 
     const categories: { label: string; value: string }[] = [
@@ -223,19 +221,12 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
     ];
     for (const cat of categories) {
       for (const line of splitLines(cat.value)) {
-        if (POSITIVE_PATTERN.test(line)) {
-          positiveLines.push(line);
-        } else {
+        if (!POSITIVE_PATTERN.test(line)) {
           vigilanceLines.push(diplomatize(line, isEs));
         }
       }
     }
 
-    if (positiveLines.length === 0) {
-      positiveLines.push(isEs
-        ? 'Su inmueble ha captado toda la atención del comprador durante la visita.'
-        : "Votre bien a retenu toute l'attention de l'acquéreur pendant la visite.");
-    }
     if (vigilanceLines.length === 0) {
       vigilanceLines.push(isEs
         ? 'No se ha expresado ninguna reserva en particular.'
@@ -272,11 +263,11 @@ ${visitLine} Voici mon retour, en toute transparence.
 
 Statut de l'acquéreur : ${statusLabel}
 
-Ce que l'acquéreur a retenu :
-${positiveLines.map(l => `• ${l}`).join('\n')}
-
-Ses réserves :
+Points de retour :
 ${vigilanceLines.map(l => `• ${l}`).join('\n')}
+
+Les points faibles qui ont été soulevés sont :
+${splitLines(weakPoints).length > 0 ? splitLines(weakPoints).map(l => `• ${l}`).join('\n') : '• Aucun'}
 
 La suite : ${nextStep}
 
@@ -466,6 +457,13 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
         <CardContent className="p-5 space-y-4">
           <h3 className="font-semibold text-gray-900 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-blue-500" /> Retours de l'acheteur — Dès qu'un sujet est abordé, note-le ici</h3>
 
+          {/* Note : chaque retour prépare la future négociation */}
+          <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-200">
+            <p className="text-xs text-indigo-800 leading-relaxed">
+              💡 Chaque retour que tu notes fait état de la visite, mais il prépare aussi la future négociation — avec ces acheteurs ou un autre. Appuie en priorité sur les points problématiques et les questions de prix : ils te serviront pour la suite.
+            </p>
+          </div>
+
           <div className="space-y-3">
             <div>
               <Label className="text-xs text-gray-500 font-medium">💰 Retour sur le PRIX</Label>
@@ -513,12 +511,6 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
         <Textarea value={weakPoints} onChange={e => setWeakPoints(e.target.value)} placeholder="Ce qui a posé question, les inquiétudes, les objections..." className="mt-1" rows={2} />
       </div>
 
-      {/* Points sur lesquels appuyer dans le message */}
-      <div>
-        <Label className="text-sm font-medium text-gray-700 flex items-center gap-2"><TrendingUp className="w-4 h-4 text-green-500" /> Points sur lesquels appuyer dans le message</Label>
-        <Textarea value={strongPoints} onChange={e => setStrongPoints(e.target.value)} placeholder="Les atouts du bien à mettre en avant dans ton retour au vendeur..." className="mt-1" rows={2} />
-      </div>
-
       {/* Notes */}
       <div>
         <Label className="text-sm font-medium text-gray-700">Notes privées (pas dans le message)</Label>
@@ -533,7 +525,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
             <h3 className="font-semibold text-blue-800">Message type pour le vendeur</h3>
           </div>
           <p className="text-sm text-blue-600 mb-3">
-            Génère un message récapitulatif prêt à envoyer à ton vendeur. Il reprend le statut de l&apos;acquéreur, les points positifs, les points de vigilance et la prochaine étape.
+            Génère un message récapitulatif prêt à envoyer à ton vendeur. Il reprend le statut de l&apos;acquéreur, les points de retour, les points faibles soulevés et la prochaine étape.
           </p>
           <Button
             onClick={generateMessage}

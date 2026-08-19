@@ -364,7 +364,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
       <ConseilDuJour day={currentDay} isEs={isEs} />
 
       {/* MOD-23 — Défi du jour (carte unique, renvoyée depuis l'onglet Aujourd'hui) */}
-      <DefiCard defi={defi} isEs={isEs} />
+      <DefiCard defi={defi} isEs={isEs} done={progress.completedDays.includes(`défi-jour-${currentDay}`)} />
 
       {/* MOD-24 — Témoignage personnalisé du jour */}
       <TemoignageCard temoignage={temoignage} isEs={isEs} />

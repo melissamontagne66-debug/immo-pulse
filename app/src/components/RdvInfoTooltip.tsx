@@ -16,22 +16,23 @@ const TEXTS = {
   },
 };
 
-export function RdvInfoTooltip({ type, isEs = false }: { type: 'r1' | 'r2'; isEs?: boolean }) {
+export function RdvInfoTooltip({ type, isEs = false, text }: { type: 'r1' | 'r2' | 'custom'; isEs?: boolean; text?: string }) {
   const [open, setOpen] = useState(false);
+  const content = type === 'custom' ? (text ?? '') : TEXTS[type][isEs ? 'es' : 'fr'];
   return (
     <Tooltip open={open} onOpenChange={setOpen}>
       <TooltipTrigger asChild>
         <button
           type="button"
           onClick={e => { e.stopPropagation(); setOpen(o => !o); }}
-          aria-label={isEs ? `¿Qué es un ${type.toUpperCase()} ?` : `C'est quoi un ${type.toUpperCase()} ?`}
+          aria-label={isEs ? 'Más información' : 'Plus d\'information'}
           className="inline-flex align-middle text-gray-400 hover:text-gray-600 transition-colors"
         >
           <Info className="w-3.5 h-3.5" />
         </button>
       </TooltipTrigger>
       <TooltipContent side="top" className="max-w-64 text-left leading-relaxed">
-        {TEXTS[type][isEs ? 'es' : 'fr']}
+        {content}
       </TooltipContent>
     </Tooltip>
   );

@@ -12,6 +12,7 @@ import { getDailyActionsForDay, getMonthsSinceStart, plural } from '@/lib/goals'
 import { getDefiForDay } from '@/data/defis';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
+import { useRdv } from '@/hooks/useRdv';
 import { ShareVictoryButtons } from '@/components/ShareVictoryButtons';
 import {
   Phone, Users, Calendar, FileCheck, Home,
@@ -60,6 +61,30 @@ function clearDraft(userKey: string, day: number) {
   }
 }
 
+// Tracfin en attente — clé localStorage par utilisateur.
+// Persiste tant que le conseiller n'a pas répondu (fait / annulé / n'aboutit pas).
+function getTracfinKey(userKey: string) {
+  return `iad-coach-tracfin-pending-${userKey}`;
+}
+
+function loadTracfinPending(userKey: string): { type: 'mandat' | 'offre'; since: string } | null {
+  try {
+    const raw = localStorage.getItem(getTracfinKey(userKey));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if ((parsed?.type === 'mandat' || parsed?.type === 'offre') && typeof parsed?.since === 'string') {
+      return parsed;
+    }
+  } catch { /* ignore */ }
+  return null;
+}
+
+function saveTracfinPending(userKey: string, pending: { type: 'mandat' | 'offre'; since: string }) {
+  try {
+    localStorage.setItem(getTracfinKey(userKey), JSON.stringify(pending));
+  } catch { /* ignore */ }
+}
+
 interface DailyCheckupProps {
   userKey: string;
   profile: UserProfile;
@@ -92,6 +117,8 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   // MOD-23/24 : défi de demain (teasing) + témoignage de clôture
   const defiDemain = getDefiForDay(currentDay + 1);
   const temoignage = useMemo(() => getTemoignageForUser(profile, { email: userKey }), [profile, userKey]);
+  // Actions prévues demain — affichées en fin de bilan pour préparer la journée
+  const actionsDemain = getDailyActionsForDay(currentDay + 1, profile, dailyResults, isEs);
 
   // Une action a un statut si elle est cochée dans « Aujourd'hui » ou si son
   // compteur du jour a été incrémenté (R1, R2, visites/retours).
@@ -173,10 +200,24 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     watchedNetworkVideosToday: false as boolean | null,
     crmUpdated: false as boolean | null,
     primoListeChecked: undefined as boolean | undefined,
+    primoListeRestant: undefined as boolean | undefined,
+    r1EstimationBloquee: undefined as boolean | undefined,
   });
 
   // Next day planning state
   const [nextDayTasks, setNextDayTasks] = useState<string[]>(() => draft?.nextDayTasks ?? []);
+
+  // Mini-agenda (ajout direct du créneau tracfin / estimation depuis le bilan)
+  const { addRdv } = useRdv(userKey);
+
+  // Tracfin en attente : persiste tant que le conseiller n'a pas répondu
+  // (fait, ou mandat annulé / offre n'aboutit pas).
+  const [tracfinPending, setTracfinPending] = useState<{ type: 'mandat' | 'offre'; since: string } | null>(() => loadTracfinPending(userKey));
+  const [tracfinRdvAjoute, setTracfinRdvAjoute] = useState(false);
+  const clearTracfin = () => {
+    try { localStorage.removeItem(getTracfinKey(userKey)); } catch { /* ignore */ }
+    setTracfinPending(null);
+  };
 
   // MOD-32 — saisie des coordonnées du parrain (demandées une seule fois, au step 2)
   const [parrainPrenom, setParrainPrenom] = useState('');
@@ -260,10 +301,27 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         }
       }
     });
-    // If offer written, add tracfin and visit slot
-    if (results.offresWritten > 0) {
-      reportedTasks.push('🔴 Faire le tracfin de l\'offre');
-      reportedTasks.push('🔴 Prévoir un créneau de visite pour demain (obligatoire)');
+    // Tracfin : dès qu'un mandat ou une offre est enregistré, la tâche est créée
+    // pour demain ET persiste (redondance) tant que le conseiller n'a pas répondu
+    // « fait » ou « mandat annulé / offre n'aboutit pas ».
+    if (results.mandatsSigned > 0 || results.offresWritten > 0) {
+      const pending = {
+        type: (results.mandatsSigned > 0 ? 'mandat' : 'offre') as 'mandat' | 'offre',
+        since: toLocalDateKey(new Date()),
+      };
+      saveTracfinPending(userKey, pending);
+      setTracfinPending(pending);
+      reportedTasks.push(`🔴 Faire le tracfin ${pending.type === 'mandat' ? 'du mandat' : 'de l\'offre'} (30 min)`);
+      if (results.offresWritten > 0) {
+        reportedTasks.push('🔴 Prévoir un créneau de visite pour demain (obligatoire)');
+      }
+    } else if (tracfinPending) {
+      // Redondance : tracfin toujours en attente → reporté à demain
+      reportedTasks.push(`🔴 Faire le tracfin ${tracfinPending.type === 'mandat' ? 'du mandat' : 'de l\'offre'} (en retard — 30 min)`);
+    }
+    // R1 fait mais créneau estimation non bloqué → tâche pour demain
+    if (results.rdvR1Done > 0 && results.r1EstimationBloquee !== true) {
+      reportedTasks.push('📅 Bloquer 1 à 2 h pour l\'analyse et le dossier d\'estimation (avis de valeur)');
     }
     setNextDayTasks(reportedTasks);
     // MOD-35 : les tâches reportées sont persistées pour réapparaître demain
@@ -674,6 +732,105 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           </div>
         )}
 
+        {/* Question R1 → blocage du créneau estimation pour demain */}
+        {results.rdvR1Done > 0 && (
+          <Card className="bg-indigo-50 border-indigo-200">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-indigo-800 mb-2">
+                📅 Tu as fait {plural(results.rdvR1Done, 'R1')} aujourd'hui — as-tu bloqué dès demain 1 à 2 h pour l'analyse et le dossier d'estimation ?
+              </p>
+              <p className="text-xs text-indigo-600 mb-3">
+                Selon ta maîtrise de l'outil d'avis de valeur, prévois 1 h à 2 h. C'est ce qui transforme un R1 en mandat.
+              </p>
+              <div className="flex gap-2">
+                {[
+                  { val: true, label: 'Oui, c\'est bloqué' },
+                  { val: false, label: 'Pas encore' },
+                ].map(opt => (
+                  <button
+                    key={String(opt.val)}
+                    onClick={() => update('r1EstimationBloquee', opt.val)}
+                    className={`flex-1 p-2 rounded-lg border text-sm font-medium transition-all ${
+                      results.r1EstimationBloquee === opt.val
+                        ? opt.val
+                          ? 'border-green-500 bg-green-50 text-green-700'
+                          : 'border-orange-500 bg-orange-50 text-orange-700'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tracfin — mandat ou offre : rappel + proposition d'ajout à l'agenda */}
+        {(results.mandatsSigned > 0 || results.offresWritten > 0) && (
+          <Card className="bg-red-50 border-red-300">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-red-800 mb-1">
+                🔴 Tracfin obligatoire {results.mandatsSigned > 0 ? 'pour ton mandat' : 'pour ton offre'}
+              </p>
+              <p className="text-xs text-red-600 mb-3">
+                Il sera ajouté à tes tâches de demain et te sera rappelé chaque jour tant qu'il n'est pas fait.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  const demain = new Date();
+                  demain.setDate(demain.getDate() + 1);
+                  const dateKey = toLocalDateKey(demain);
+                  addRdv({
+                    titre: `Tracfin ${results.mandatsSigned > 0 ? 'du mandat' : 'de l\'offre'} (30 min)`,
+                    dateHeure: `${dateKey}T09:00`,
+                    lieu: '',
+                  });
+                  setTracfinRdvAjoute(true);
+                }}
+                disabled={tracfinRdvAjoute}
+                className="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-green-600 text-white rounded-lg text-xs font-medium transition-colors"
+              >
+                {tracfinRdvAjoute ? '✓ Ajouté à ton agenda pour demain 9 h' : '📅 Ajouter 30 min à mon agenda demain'}
+              </button>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Rappel tracfin en attente (jours précédents) */}
+        {tracfinPending && results.mandatsSigned === 0 && results.offresWritten === 0 && (
+          <Card className="bg-red-50 border-red-300">
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-red-800 mb-1">
+                🔴 Tracfin en attente depuis le {tracfinPending.since}
+              </p>
+              <p className="text-xs text-red-600 mb-3">
+                As-tu fait le tracfin {tracfinPending.type === 'mandat' ? 'de ton mandat' : 'de ton offre'} ?
+              </p>
+              <div className="flex gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => clearTracfin()}
+                  className="px-3 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium"
+                >
+                  ✓ Fait
+                </button>
+                <button
+                  type="button"
+                  onClick={() => clearTracfin()}
+                  className="px-3 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg text-xs font-medium"
+                >
+                  Mandat annulé / offre n'aboutit pas
+                </button>
+              </div>
+              <p className="text-[11px] text-red-500 mt-2">
+                Sans réponse, il sera reporté à demain.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Wins */}
         <div>
           <Label className="flex items-center gap-2 text-sm font-medium"><Trophy className="w-4 h-4 text-yellow-500" /> Tes victoires du jour</Label>
@@ -745,6 +902,46 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                 <p className="text-xs text-green-600 mt-2">
                   ✅ Parfait ! La primo liste ne te sera plus proposée au quotidien. Tu pourras te concentrer sur les autres actions.
                 </p>
+              )}
+              {/* 2e niveau : si « Pas encore tous » → reste-t-il du monde à contacter ?
+                  Si non → on arrête de la mettre au planning du jour. */}
+              {results.primoListeChecked === false && (
+                <div className="mt-3 pt-3 border-t border-rose-200">
+                  <p className="text-xs text-rose-700 font-medium mb-2">
+                    Est-ce qu'il reste du monde à contacter dans ta primo liste ?
+                  </p>
+                  <div className="flex gap-2">
+                    {[
+                      { val: true, label: 'Oui, il en reste' },
+                      { val: false, label: 'Non, liste épuisée' },
+                    ].map(opt => (
+                      <button
+                        key={String(opt.val)}
+                        onClick={() => {
+                          if (!opt.val && onUpdateProfile) {
+                            // Liste épuisée → on ne la propose plus au planning du jour
+                            onUpdateProfile({ primoListeCalled: true });
+                          }
+                          update('primoListeRestant', opt.val);
+                        }}
+                        className={`flex-1 p-2 rounded-lg border text-xs font-medium transition-all ${
+                          results.primoListeRestant === opt.val
+                            ? opt.val
+                              ? 'border-blue-500 bg-blue-50 text-blue-700'
+                              : 'border-green-500 bg-green-50 text-green-700'
+                            : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                  {results.primoListeRestant === false && (
+                    <p className="text-xs text-green-600 mt-2">
+                      ✅ Compris — la primo liste ne te sera plus proposée dans les actions du jour.
+                    </p>
+                  )}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -896,22 +1093,28 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           </Card>
         )}
 
-        {/* Planning help */}
+        {/* Planning help — actions prévues pour demain */}
         <Card className="bg-blue-50 border-blue-200">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb className="w-5 h-5 text-blue-600" />
-              <p className="text-sm font-semibold text-blue-800">Planification pour demain — Jour {currentDay + 1}</p>
+              <p className="text-sm font-semibold text-blue-800">Prépare ta journée de demain — Jour {currentDay + 1}</p>
             </div>
-            <div className="space-y-2 text-sm text-blue-700">
-              <p>1. 🎯 Vérifie tes RDV confirmés pour demain</p>
-              <p>2. 📞 Prépare ta liste de relances téléphoniques</p>
-              <p>3. 🚪 Sélectionne les biens pour ton terrain</p>
-              <p>4. 📱 Mets à jour tes réseaux sociaux</p>
+            <p className="text-sm text-blue-700 mb-3">
+              Regarde les actions prévues pour demain et finis d'organiser ton planning maintenant, pendant que ta journée est encore fraîche en tête.
+            </p>
+            <p className="text-xs font-semibold text-blue-800 mb-1.5">📋 Prévu demain :</p>
+            <div className="space-y-1.5">
+              {actionsDemain.map(a => (
+                <div key={a.id} className="flex items-center gap-2 text-sm text-blue-700">
+                  <span>{a.icon}</span>
+                  <span>{a.label}</span>
+                </div>
+              ))}
             </div>
             <div className="mt-3 bg-white/60 rounded-lg p-3 border border-blue-200">
               <p className="text-xs text-blue-600">
-                💡 <strong>Conseil :</strong> Les meilleurs planifient leur lendemain le soir même. Note 3 actions prioritaires dans ton agenda.
+                💡 <strong>Conseil :</strong> Les meilleurs planifient leur lendemain le soir même. Note tes RDV et tes 3 priorités dans ton agenda.
               </p>
             </div>
           </CardContent>
