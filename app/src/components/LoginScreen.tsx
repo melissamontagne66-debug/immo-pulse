@@ -17,7 +17,24 @@ function isValidEmail(value: string) {
   return value.trim().length > 0 && value.includes('@');
 }
 
+// Langue lue depuis la session (iad-coach-session) puis le profil local
+// (iad-coach-profile-{email}) — l'écran de connexion ne reçoit pas le profil.
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
+
 export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
+  const isEs = readIsEs();
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,18 +58,18 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!email.trim() || !password.trim()) {
-      setError('Renseigne ton email et ton mot de passe.');
+      setError(isEs ? 'Introduzca su email y su contraseña.' : 'Renseigne ton email et ton mot de passe.');
       return;
     }
     if (!isValidEmail(email)) {
-      setError('Saisis une adresse email valide.');
+      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisis une adresse email valide.');
       return;
     }
     setLoading(true);
     const result = await onLogin(email.trim(), password);
     setLoading(false);
     if (!result.success) {
-      setError(result.error || 'Erreur de connexion.');
+      setError(result.error || (isEs ? 'Error al iniciar sesión.' : 'Erreur de connexion.'));
     }
   };
 
@@ -60,26 +77,26 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!email.trim() || !password.trim() || !firstName.trim() || !lastName.trim()) {
-      setError('Renseigne tous les champs.');
+      setError(isEs ? 'Rellene todos los campos.' : 'Renseigne tous les champs.');
       return;
     }
     if (!isValidEmail(email)) {
-      setError('Saisis une adresse email valide.');
+      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisis une adresse email valide.');
       return;
     }
     if (password.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.');
+      setError(isEs ? 'La contraseña debe contener al menos 6 caracteres.' : 'Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     if (!onRegister) {
-      setError('L\'inscription n\'est pas disponible.');
+      setError(isEs ? 'El registro no está disponible.' : 'L\'inscription n\'est pas disponible.');
       return;
     }
     setLoading(true);
     const result = await onRegister(email.trim(), password, firstName.trim(), lastName.trim());
     setLoading(false);
     if (!result.success) {
-      setError(result.error || 'Erreur lors de l\'inscription.');
+      setError(result.error || (isEs ? 'Error durante el registro.' : 'Erreur lors de l\'inscription.'));
     }
   };
 
@@ -96,21 +113,21 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!isValidEmail(resetEmail)) {
-      setError('Saisis une adresse email valide.');
+      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisis une adresse email valide.');
       return;
     }
     if (!isApiConfigured()) {
-      setError('La réinitialisation n’est pas disponible en mode local.');
+      setError(isEs ? 'El restablecimiento no está disponible en modo local.' : 'La réinitialisation n’est pas disponible en mode local.');
       return;
     }
     setLoading(true);
     try {
       const data = await apiForgotPassword(resetEmail.trim());
       setLoading(false);
-      setInfo(data.message || 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.');
+      setInfo(data.message || (isEs ? 'Si existe una cuenta con este email, se acaba de enviar un enlace de restablecimiento.' : 'Si un compte existe avec cet email, un lien de réinitialisation vient d\'être envoyé.'));
     } catch {
       setLoading(false);
-      setError('Impossible de demander la réinitialisation pour le moment.');
+      setError(isEs ? 'No se puede solicitar el restablecimiento en este momento.' : 'Impossible de demander la réinitialisation pour le moment.');
     }
   };
 
@@ -118,23 +135,23 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!resetToken.trim()) {
-      setError('Le lien de réinitialisation est invalide.');
+      setError(isEs ? 'El enlace de restablecimiento no es válido.' : 'Le lien de réinitialisation est invalide.');
       return;
     }
     if (!newPassword.trim() || !confirmPassword.trim()) {
-      setError('Renseigne tous les champs.');
+      setError(isEs ? 'Rellene todos los campos.' : 'Renseigne tous les champs.');
       return;
     }
     if (newPassword.length < 6) {
-      setError('Le mot de passe doit contenir au moins 6 caractères.');
+      setError(isEs ? 'La contraseña debe contener al menos 6 caracteres.' : 'Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
     if (newPassword !== confirmPassword) {
-      setError('Les mots de passe ne correspondent pas.');
+      setError(isEs ? 'Las contraseñas no coinciden.' : 'Les mots de passe ne correspondent pas.');
       return;
     }
     if (!isApiConfigured()) {
-      setError('La réinitialisation n’est pas disponible en mode local.');
+      setError(isEs ? 'El restablecimiento no está disponible en modo local.' : 'La réinitialisation n’est pas disponible en mode local.');
       return;
     }
     setLoading(true);
@@ -142,7 +159,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       const data = await apiResetPassword(resetToken.trim(), newPassword);
       setLoading(false);
       if (data.success) {
-        setInfo('Ton mot de passe a été mis à jour. Tu peux te connecter.');
+        setInfo(isEs ? 'Su contraseña se ha actualizado. Ya puede iniciar sesión.' : 'Ton mot de passe a été mis à jour. Tu peux te connecter.');
         setMode('login');
         setPassword('');
         setResetToken('');
@@ -152,11 +169,11 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
         url.searchParams.delete('reset');
         window.history.replaceState({}, '', url.toString());
       } else {
-        setError(data.error || 'La réinitialisation a échoué.');
+        setError(data.error || (isEs ? 'El restablecimiento ha fallado.' : 'La réinitialisation a échoué.'));
       }
     } catch {
       setLoading(false);
-      setError('Impossible de réinitialiser le mot de passe pour le moment.');
+      setError(isEs ? 'No se puede restablecer la contraseña en este momento.' : 'Impossible de réinitialiser le mot de passe pour le moment.');
     }
   };
 
@@ -173,19 +190,19 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
-          <p className="text-gray-500 mt-1">Ton accompagnement quotidien</p>
+          <p className="text-gray-500 mt-1">{isEs ? 'Su acompañamiento diario' : 'Ton accompagnement quotidien'}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
           <div className="flex items-center justify-center gap-2 mb-6">
             {mode === 'login' ? (
-              <><LogIn className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">Connexion</h2></>
+              <><LogIn className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">{isEs ? 'Iniciar sesión' : 'Connexion'}</h2></>
             ) : mode === 'register' ? (
-              <><UserPlus className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">Inscription</h2></>
+              <><UserPlus className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">{isEs ? 'Registro' : 'Inscription'}</h2></>
             ) : mode === 'forgot' ? (
-              <><Key className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">Mot de passe oublié</h2></>
+              <><Key className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">{isEs ? 'Contraseña olvidada' : 'Mot de passe oublié'}</h2></>
             ) : (
-              <><Key className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">Réinitialiser le mot de passe</h2></>
+              <><Key className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">{isEs ? 'Restablecer la contraseña' : 'Réinitialiser le mot de passe'}</h2></>
             )}
           </div>
 
@@ -206,21 +223,21 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
                 <Label className="flex items-center gap-2 text-gray-700">
                   <Mail className="w-4 h-4 text-gray-400" /> Email
                 </Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" className="mt-1" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700">
-                  <Lock className="w-4 h-4 text-gray-400" /> Mot de passe
+                  <Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Contraseña' : 'Mot de passe'}
                 </Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Ton mot de passe" className="mt-1" required />
+                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Su contraseña' : 'Ton mot de passe'} className="mt-1" required />
               </div>
               <div className="text-right">
                 <button type="button" onClick={() => switchMode('forgot')} className="text-sm text-red-600 hover:text-red-700 font-medium">
-                  Mot de passe oublié ?
+                  {isEs ? '¿Ha olvidado su contraseña?' : 'Mot de passe oublié ?'}
                 </button>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
-                {loading ? 'Connexion...' : <>Se connecter <ArrowRight className="w-4 h-4 ml-2" /></>}
+                {loading ? (isEs ? 'Conectando...' : 'Connexion...') : <>{isEs ? 'Iniciar sesión' : 'Se connecter'} <ArrowRight className="w-4 h-4 ml-2" /></>}
               </Button>
             </form>
           )}
@@ -229,27 +246,29 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <form onSubmit={handleRegister} className="space-y-4" noValidate>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label className="text-gray-700">Prénom</Label>
-                  <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder="Prénom" className="mt-1" required />
+                  <Label className="text-gray-700">{isEs ? 'Nombre' : 'Prénom'}</Label>
+                  <Input value={firstName} onChange={e => setFirstName(e.target.value)} placeholder={isEs ? 'Nombre' : 'Prénom'} className="mt-1" required />
                 </div>
                 <div>
-                  <Label className="text-gray-700">Nom</Label>
-                  <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder="Nom" className="mt-1" required />
+                  <Label className="text-gray-700">{isEs ? 'Apellidos' : 'Nom'}</Label>
+                  <Input value={lastName} onChange={e => setLastName(e.target.value)} placeholder={isEs ? 'Apellidos' : 'Nom'} className="mt-1" required />
                 </div>
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="ton@email.com" className="mt-1" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
               </div>
               <div>
-                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> Mot de passe</Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="6 caractères minimum" className="mt-1" required />
+                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Contraseña' : 'Mot de passe'}</Label>
+                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Mínimo 6 caracteres' : '6 caractères minimum'} className="mt-1" required />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
-                {loading ? 'Inscription...' : <>S'inscrire <ArrowRight className="w-4 h-4 ml-2" /></>}
+                {loading ? (isEs ? 'Registrando...' : 'Inscription...') : <>{isEs ? 'Registrarse' : 'S\'inscrire'} <ArrowRight className="w-4 h-4 ml-2" /></>}
               </Button>
               <p className="text-xs text-gray-500 leading-relaxed">
-                En créant un compte, tu acceptes que tes données de coaching (profil, bilans, résultats) soient stockées pour faire fonctionner le service. Les contacts que tu notes (prospects, vendeurs) relèvent de ta responsabilité professionnelle&nbsp;: informe-les et supprime leurs données dès qu'elles ne sont plus utiles. Tu peux supprimer ton compte et toutes tes données à tout moment depuis les réglages.
+                {isEs
+                  ? 'Al crear una cuenta, acepta que sus datos de coaching (perfil, balances, resultados) se almacenen para que el servicio funcione. Los contactos que anota (clientes potenciales, vendedores) son de su responsabilidad profesional: infórmeles y elimine sus datos en cuanto dejen de ser útiles. Puede eliminar su cuenta y todos sus datos en cualquier momento desde los ajustes.'
+                  : 'En créant un compte, tu acceptes que tes données de coaching (profil, bilans, résultats) soient stockées pour faire fonctionner le service. Les contacts que tu notes (prospects, vendeurs) relèvent de ta responsabilité professionnelle\u00a0: informe-les et supprime leurs données dès qu\'elles ne sont plus utiles. Tu peux supprimer ton compte et toutes tes données à tout moment depuis les réglages.'}
               </p>
             </form>
           )}
@@ -258,14 +277,14 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
-                <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder="ton@email.com" className="mt-1" required />
+                <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
-                {loading ? 'Envoi...' : 'Envoyer le lien de réinitialisation'}
+                {loading ? (isEs ? 'Enviando...' : 'Envoi...') : (isEs ? 'Enviar el enlace de restablecimiento' : 'Envoyer le lien de réinitialisation')}
               </Button>
               <div className="text-center">
                 <button type="button" onClick={() => switchMode('login')} className="text-sm text-red-600 hover:text-red-700 font-medium">
-                  Retour à la connexion
+                  {isEs ? 'Volver al inicio de sesión' : 'Retour à la connexion'}
                 </button>
               </div>
             </form>
@@ -275,24 +294,24 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <form onSubmit={handleResetPassword} className="space-y-4" noValidate>
               {!resetToken && (
                 <div>
-                  <Label className="flex items-center gap-2 text-gray-700"><Key className="w-4 h-4 text-gray-400" /> Code de réinitialisation</Label>
-                  <Input value={resetToken} onChange={e => setResetToken(e.target.value)} placeholder="Code reçu par email" className="mt-1" />
+                  <Label className="flex items-center gap-2 text-gray-700"><Key className="w-4 h-4 text-gray-400" /> {isEs ? 'Código de restablecimiento' : 'Code de réinitialisation'}</Label>
+                  <Input value={resetToken} onChange={e => setResetToken(e.target.value)} placeholder={isEs ? 'Código recibido por email' : 'Code reçu par email'} className="mt-1" />
                 </div>
               )}
               <div>
-                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> Nouveau mot de passe</Label>
-                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="6 caractères minimum" className="mt-1" />
+                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Nueva contraseña' : 'Nouveau mot de passe'}</Label>
+                <Input type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder={isEs ? 'Mínimo 6 caracteres' : '6 caractères minimum'} className="mt-1" />
               </div>
               <div>
-                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> Confirmer le mot de passe</Label>
-                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder="Confirme ton mot de passe" className="mt-1" />
+                <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Confirmar la contraseña' : 'Confirmer le mot de passe'}</Label>
+                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={isEs ? 'Confirme su contraseña' : 'Confirme ton mot de passe'} className="mt-1" />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
-                {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+                {loading ? (isEs ? 'Restableciendo...' : 'Réinitialisation...') : (isEs ? 'Restablecer la contraseña' : 'Réinitialiser le mot de passe')}
               </Button>
               <div className="text-center">
                 <button type="button" onClick={() => switchMode('login')} className="text-sm text-red-600 hover:text-red-700 font-medium">
-                  Retour à la connexion
+                  {isEs ? 'Volver al inicio de sesión' : 'Retour à la connexion'}
                 </button>
               </div>
             </form>
@@ -301,7 +320,9 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
           {mode !== 'register' && mode !== 'reset' && (
             <div className="mt-4 text-center">
               <button onClick={() => switchMode(mode === 'login' ? 'register' : 'login')} className="text-sm text-red-600 hover:text-red-700 font-medium">
-                {mode === 'login' ? 'Pas encore de compte ? S\'inscrire' : 'Déjà un compte ? Se connecter'}
+                {mode === 'login'
+                  ? (isEs ? '¿Aún no tiene cuenta? Regístrese' : 'Pas encore de compte ? S\'inscrire')
+                  : (isEs ? '¿Ya tiene cuenta? Inicie sesión' : 'Déjà un compte ? Se connecter')}
               </button>
             </div>
           )}

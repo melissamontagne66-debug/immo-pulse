@@ -7,46 +7,74 @@ interface FirstTimeOnboardingProps {
   onComplete: () => void;
 }
 
-const steps = [
+// Langue lue depuis le profil local (iad-coach-profile-{email}) via la session
+// (iad-coach-session) — ce composant ne reçoit pas le profil en props.
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
+
+const getSteps = (isEs: boolean) => [
   {
     icon: Home,
     color: 'text-red-600',
     bg: 'bg-red-50',
-    title: 'Ton tableau de bord',
-    description: 'Ici tu retrouves chaque matin tes objectifs du jour, ton action de prospection, et les conseils adaptés à ton niveau.',
+    title: isEs ? 'Su panel de control' : 'Ton tableau de bord',
+    description: isEs
+      ? 'Aquí encuentra cada mañana sus objetivos del día, su acción de prospección y los consejos adaptados a su nivel.'
+      : 'Ici tu retrouves chaque matin tes objectifs du jour, ton action de prospection, et les conseils adaptés à ton niveau.',
   },
   {
     icon: Calendar,
     color: 'text-blue-600',
     bg: 'bg-blue-50',
-    title: 'Tes actions du jour',
-    description: 'Dans "Aujourd\'hui", tu as ta liste d\'actions à cocher. Un défi chaque jour pour te challenger. Coche-les au fur et à mesure !',
+    title: isEs ? 'Sus acciones del día' : 'Tes actions du jour',
+    description: isEs
+      ? 'En "Hoy", tiene su lista de acciones para marcar. Un reto cada día para superarse. ¡Márquelas a medida que las completa!'
+      : 'Dans "Aujourd\'hui", tu as ta liste d\'actions à cocher. Un défi chaque jour pour te challenger. Coche-les au fur et à mesure !',
   },
   {
     icon: MessageCircle,
     color: 'text-green-600',
     bg: 'bg-green-50',
-    title: 'Le Coach Immo t’accompagne chaque jour',
-    description: 'Retrouve un plan d’action personnalisé chaque matin et un bilan guidé chaque soir : c’est ce suivi quotidien qui te fait progresser.',
+    title: isEs ? 'El Coach Immo le acompaña cada día' : 'Le Coach Immo t’accompagne chaque jour',
+    description: isEs
+      ? 'Encuentre un plan de acción personalizado cada mañana y un balance guiado cada noche: es este seguimiento diario el que le hace progresar.'
+      : 'Retrouve un plan d’action personnalisé chaque matin et un bilan guidé chaque soir : c’est ce suivi quotidien qui te fait progresser.',
   },
   {
     icon: HomeIcon,
     color: 'text-purple-600',
     bg: 'bg-purple-50',
-    title: 'Comptes rendus de visite',
-    description: 'Après chaque visite, enregistre les retours de l\'acheteur. L\'outil génère un message diplomatique pour le vendeur.',
+    title: isEs ? 'Informes de visita' : 'Comptes rendus de visite',
+    description: isEs
+      ? 'Después de cada visita, registre las impresiones del comprador. La herramienta genera un mensaje diplomático para el vendedor.'
+      : 'Après chaque visite, enregistre les retours de l\'acheteur. L\'outil génère un message diplomatique pour le vendeur.',
   },
   {
     icon: TrendingUp,
     color: 'text-orange-600',
     bg: 'bg-orange-50',
-    title: 'Bilan du soir',
-    description: 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les meilleurs. Ça débloque le lendemain !',
+    title: isEs ? 'Balance de la noche' : 'Bilan du soir',
+    description: isEs
+      ? 'Cada noche, haga su balance. Es LO QUE MARCA LA DIFERENCIA entre los buenos y los mejores. ¡Y desbloquea el día siguiente!'
+      : 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les meilleurs. Ça débloque le lendemain !',
   },
 ];
 
 export function FirstTimeOnboarding({ onComplete }: FirstTimeOnboardingProps) {
   const [currentStep, setCurrentStep] = useState(0);
+  const isEs = readIsEs();
+  const steps = getSteps(isEs);
 
   const next = () => {
     if (currentStep < steps.length - 1) {
@@ -92,16 +120,16 @@ export function FirstTimeOnboarding({ onComplete }: FirstTimeOnboardingProps) {
             className="w-full bg-red-600 hover:bg-red-700 py-3 text-base"
           >
             {currentStep < steps.length - 1 ? (
-              <>Suivant <ArrowRight className="w-4 h-4 ml-2" /></>
+              <>{isEs ? 'Siguiente' : 'Suivant'} <ArrowRight className="w-4 h-4 ml-2" /></>
             ) : (
-              <>C'est parti ! <CheckCircle className="w-4 h-4 ml-2" /></>
+              <>{isEs ? '¡Empezamos!' : "C'est parti !"} <CheckCircle className="w-4 h-4 ml-2" /></>
             )}
           </Button>
 
           {/* Skip */}
           {currentStep < steps.length - 1 && (
             <button onClick={onComplete} className="text-sm text-gray-400 hover:text-gray-600 transition-colors">
-              Passer le tutoriel
+              {isEs ? 'Saltar el tutorial' : 'Passer le tutoriel'}
             </button>
           )}
         </CardContent>

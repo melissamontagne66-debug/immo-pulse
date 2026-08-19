@@ -13,18 +13,41 @@ interface VisitHistoryProps {
   onUpdateVisit: (id: string, updates: Partial<VisitReport>) => void;
 }
 
-const statusLabels: Record<string, { label: string; color: string }> = {
-  intéressé: { label: 'Intéressé', color: 'bg-green-500' },
-  réflexion: { label: 'Réflexion', color: 'bg-amber-500' },
-  négatif: { label: 'Négatif', color: 'bg-red-500' },
-  offre: { label: 'Offre', color: 'bg-blue-500' },
-  
+const statusLabels: Record<string, { label: string; labelEs: string; color: string }> = {
+  intéressé: { label: 'Intéressé', labelEs: 'Interesado', color: 'bg-green-500' },
+  réflexion: { label: 'Réflexion', labelEs: 'Pensándoselo', color: 'bg-amber-500' },
+  négatif: { label: 'Négatif', labelEs: 'Negativo', color: 'bg-red-500' },
+  offre: { label: 'Offre', labelEs: 'Oferta', color: 'bg-blue-500' },
+
 };
+
+// Langue lue depuis la session (iad-coach-session) puis le profil local
+// (iad-coach-profile-{email}) — même pattern que readAgentInfo dans
+// VisitReportWriter, car ce composant ne reçoit pas profile en props.
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
 
 export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeleteProperty, onUpdateVisit }: VisitHistoryProps) {
   const [selectedProperty, setSelectedProperty] = useState<string | null>(null);
   const [expandedVisit, setExpandedVisit] = useState<string | null>(null);
   const [editingStatus, setEditingStatus] = useState<string | null>(null);
+
+  const isEs = readIsEs();
+  const statusLabel = (s: string) => {
+    const entry = statusLabels[s];
+    return entry ? (isEs ? entry.labelEs : entry.label) : s;
+  };
 
   const propertyList = Object.entries(stats.byProperty).sort((a, b) => b[1].length - a[1].length);
 
@@ -38,9 +61,9 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-red-600" />
-              Historique des visites
+              {isEs ? 'Historial de visitas' : 'Historique des visites'}
             </h2>
-            <p className="text-gray-500 mt-1">{visits.length} visite{visits.length > 1 ? 's' : ''} enregistrée{visits.length > 1 ? 's' : ''}</p>
+            <p className="text-gray-500 mt-1">{visits.length} {isEs ? 'visita' : 'visite'}{visits.length > 1 ? 's' : ''} {isEs ? 'registrada' : 'enregistrée'}{visits.length > 1 ? 's' : ''}</p>
           </div>
         </div>
       </div>
@@ -51,7 +74,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
           <Card key={status}><CardContent className="p-3 text-center">
             <div className={`w-3 h-3 rounded-full mx-auto mb-1 ${statusLabels[status]?.color || 'bg-gray-400'}`} />
             <p className="text-xl font-bold text-gray-900">{count}</p>
-            <p className="text-xs text-gray-500">{statusLabels[status]?.label || status}</p>
+            <p className="text-xs text-gray-500">{statusLabel(status)}</p>
           </CardContent></Card>
         ))}
       </div>
@@ -62,9 +85,9 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
           <CardContent className="p-5">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-red-500" />
-              Arguments qui reviennent le plus chez les acheteurs
+              {isEs ? 'Los argumentos que más se repiten entre los compradores' : 'Arguments qui reviennent le plus chez les acheteurs'}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">Utilise ces stats lors de tes RDV de suivi avec les vendeurs pour justifier des ajustements.</p>
+            <p className="text-xs text-gray-500 mb-4">{isEs ? 'Utilice estas estadísticas en sus citas de seguimiento con los vendedores para justificar ajustes.' : 'Utilise ces stats lors de tes RDV de suivi avec les vendeurs pour justifier des ajustements.'}</p>
             <div className="space-y-3">
               {stats.topBuyerObjections.map((obj, i) => {
                 const pct = Math.round((obj.count / maxObjCount) * 100);
@@ -90,7 +113,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
           <CardContent className="p-5">
             <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-blue-500" />
-              Aperçu des retours par vendeur
+              {isEs ? 'Resumen de las opiniones por vendedor' : 'Aperçu des retours par vendeur'}
             </h3>
             <div className="space-y-4">
               {propertyList.slice(0, 10).map(([address, propertyVisits]) => {
@@ -101,27 +124,27 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                   <div key={address} className="space-y-1">
                     <div className="flex items-center justify-between">
                       <p className="text-xs font-medium text-gray-700 truncate flex-1">{address}</p>
-                      <p className="text-xs text-gray-500 ml-2">{total} visite{total > 1 ? 's' : ''}</p>
+                      <p className="text-xs text-gray-500 ml-2">{total} {isEs ? 'visita' : 'visite'}{total > 1 ? 's' : ''}</p>
                     </div>
                     <div className="flex h-4 rounded-full overflow-hidden bg-gray-100">
                       {statusCounts.intéressé > 0 && (
-                        <div className="bg-green-500 h-full" style={{ width: `${(statusCounts.intéressé / total) * 100}%` }} title={`Intéressé: ${statusCounts.intéressé}`} />
+                        <div className="bg-green-500 h-full" style={{ width: `${(statusCounts.intéressé / total) * 100}%` }} title={`${statusLabel('intéressé')}: ${statusCounts.intéressé}`} />
                       )}
                       {statusCounts.réflexion > 0 && (
-                        <div className="bg-amber-500 h-full" style={{ width: `${(statusCounts.réflexion / total) * 100}%` }} title={`Réflexion: ${statusCounts.réflexion}`} />
+                        <div className="bg-amber-500 h-full" style={{ width: `${(statusCounts.réflexion / total) * 100}%` }} title={`${statusLabel('réflexion')}: ${statusCounts.réflexion}`} />
                       )}
                       {statusCounts.négatif > 0 && (
-                        <div className="bg-red-500 h-full" style={{ width: `${(statusCounts.négatif / total) * 100}%` }} title={`Négatif: ${statusCounts.négatif}`} />
+                        <div className="bg-red-500 h-full" style={{ width: `${(statusCounts.négatif / total) * 100}%` }} title={`${statusLabel('négatif')}: ${statusCounts.négatif}`} />
                       )}
                       {statusCounts.offre > 0 && (
-                        <div className="bg-blue-500 h-full" style={{ width: `${(statusCounts.offre / total) * 100}%` }} title={`Offre: ${statusCounts.offre}`} />
+                        <div className="bg-blue-500 h-full" style={{ width: `${(statusCounts.offre / total) * 100}%` }} title={`${statusLabel('offre')}: ${statusCounts.offre}`} />
                       )}
                     </div>
                     <div className="flex gap-3 text-xs text-gray-500">
-                      {statusCounts.intéressé > 0 && <span className="text-green-600">● Intéressé {statusCounts.intéressé}</span>}
-                      {statusCounts.réflexion > 0 && <span className="text-amber-600">● Réflexion {statusCounts.réflexion}</span>}
-                      {statusCounts.négatif > 0 && <span className="text-red-600">● Négatif {statusCounts.négatif}</span>}
-                      {statusCounts.offre > 0 && <span className="text-blue-600">● Offre {statusCounts.offre}</span>}
+                      {statusCounts.intéressé > 0 && <span className="text-green-600">● {statusLabel('intéressé')} {statusCounts.intéressé}</span>}
+                      {statusCounts.réflexion > 0 && <span className="text-amber-600">● {statusLabel('réflexion')} {statusCounts.réflexion}</span>}
+                      {statusCounts.négatif > 0 && <span className="text-red-600">● {statusLabel('négatif')} {statusCounts.négatif}</span>}
+                      {statusCounts.offre > 0 && <span className="text-blue-600">● {statusLabel('offre')} {statusCounts.offre}</span>}
                     </div>
                   </div>
                 );
@@ -129,10 +152,10 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
             </div>
             {/* Légende */}
             <div className="mt-4 pt-3 border-t border-gray-100 flex gap-4 text-xs text-gray-500">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> Intéressé</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> Réflexion</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> Négatif</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> Offre</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500" /> {statusLabel('intéressé')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-500" /> {statusLabel('réflexion')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" /> {statusLabel('négatif')}</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" /> {statusLabel('offre')}</span>
             </div>
           </CardContent>
         </Card>
@@ -142,11 +165,11 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
       <div>
         <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
           <Home className="w-5 h-5 text-blue-500" />
-          Visites par bien
+          {isEs ? 'Visitas por inmueble' : 'Visites par bien'}
         </h3>
 
         {propertyList.length === 0 && (
-          <Card><CardContent className="p-8 text-center text-gray-500">Aucune visite enregistrée encore. Remplis ton premier compte rendu de visite.</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-gray-500">{isEs ? 'Aún no hay ninguna visita registrada. Complete su primer informe de visita.' : 'Aucune visite enregistrée encore. Remplis ton premier compte rendu de visite.'}</CardContent></Card>
         )}
 
         <div className="space-y-3">
@@ -160,15 +183,15 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                   <Home className="w-4 h-4 text-gray-400" />
                   <div>
                     <p className="text-sm font-semibold text-gray-900">{address}</p>
-                    <p className="text-xs text-gray-500">{propertyVisits.length} visite(s) · Vendeur : {propertyVisits[0]?.sellerName || 'Non renseigné'}</p>
+                    <p className="text-xs text-gray-500">{propertyVisits.length} {isEs ? 'visita(s) · Vendedor: ' : 'visite(s) · Vendeur : '}{propertyVisits[0]?.sellerName || (isEs ? 'No indicado' : 'Non renseigné')}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{propertyVisits.length} visites</span>
+                  <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{propertyVisits.length} {isEs ? 'visitas' : 'visites'}</span>
                   <button
-                    onClick={(e) => { e.stopPropagation(); if (confirm('Supprimer ce bien et toutes ses visites ?')) onDeleteProperty(address); }}
+                    onClick={(e) => { e.stopPropagation(); if (confirm(isEs ? '¿Eliminar este inmueble y todas sus visitas?' : 'Supprimer ce bien et toutes ses visites ?')) onDeleteProperty(address); }}
                     className="text-gray-300 hover:text-red-500 p-1"
-                    title="Supprimer ce bien"
+                    title={isEs ? 'Eliminar este inmueble' : 'Supprimer ce bien'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -183,7 +206,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                     <div className="p-4 bg-amber-50 border-b border-amber-100">
                       <h4 className="text-sm font-semibold text-amber-800 mb-3 flex items-center gap-2">
                         <PieChart className="w-4 h-4" />
-                        Récap visuel des retours — {propertyVisits.length} visites
+                        {isEs ? 'Resumen visual de las opiniones' : 'Récap visuel des retours'} — {propertyVisits.length} {isEs ? 'visitas' : 'visites'}
                       </h4>
                       {/* Distribution des statuts */}
                       <div className="mb-3">
@@ -194,10 +217,10 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                             const t = propertyVisits.length;
                             return (
                               <>
-                                {sc.intéressé > 0 && <div className="bg-green-500 h-full" style={{ width: `${(sc.intéressé / t) * 100}%` }} title={`Intéressé`} />}
-                                {sc.réflexion > 0 && <div className="bg-amber-500 h-full" style={{ width: `${(sc.réflexion / t) * 100}%` }} title={`Réflexion`} />}
-                                {sc.négatif > 0 && <div className="bg-red-500 h-full" style={{ width: `${(sc.négatif / t) * 100}%` }} title={`Négatif`} />}
-                                {sc.offre > 0 && <div className="bg-blue-500 h-full" style={{ width: `${(sc.offre / t) * 100}%` }} title={`Offre`} />}
+                                {sc.intéressé > 0 && <div className="bg-green-500 h-full" style={{ width: `${(sc.intéressé / t) * 100}%` }} title={statusLabel('intéressé')} />}
+                                {sc.réflexion > 0 && <div className="bg-amber-500 h-full" style={{ width: `${(sc.réflexion / t) * 100}%` }} title={statusLabel('réflexion')} />}
+                                {sc.négatif > 0 && <div className="bg-red-500 h-full" style={{ width: `${(sc.négatif / t) * 100}%` }} title={statusLabel('négatif')} />}
+                                {sc.offre > 0 && <div className="bg-blue-500 h-full" style={{ width: `${(sc.offre / t) * 100}%` }} title={statusLabel('offre')} />}
                               </>
                             );
                           })()}
@@ -208,10 +231,10 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                             propertyVisits.forEach(v => sc[v.status]++);
                             return (
                               <>
-                                {sc.intéressé > 0 && <span className="text-green-600">● Intéressé {sc.intéressé}</span>}
-                                {sc.réflexion > 0 && <span className="text-amber-600">● Réflexion {sc.réflexion}</span>}
-                                {sc.négatif > 0 && <span className="text-red-600">● Négatif {sc.négatif}</span>}
-                                {sc.offre > 0 && <span className="text-blue-600">● Offre {sc.offre}</span>}
+                                {sc.intéressé > 0 && <span className="text-green-600">● {statusLabel('intéressé')} {sc.intéressé}</span>}
+                                {sc.réflexion > 0 && <span className="text-amber-600">● {statusLabel('réflexion')} {sc.réflexion}</span>}
+                                {sc.négatif > 0 && <span className="text-red-600">● {statusLabel('négatif')} {sc.négatif}</span>}
+                                {sc.offre > 0 && <span className="text-blue-600">● {statusLabel('offre')} {sc.offre}</span>}
                               </>
                             );
                           })()}
@@ -220,10 +243,10 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                       {/* Récurrence des retours */}
                       <div className="grid grid-cols-2 gap-2">
                         {[
-                          { key: 'priceFeedback', label: '💰 Prix', color: 'text-red-700', bg: 'bg-red-50' },
-                          { key: 'locationFeedback', label: '📍 Emplacement', color: 'text-blue-700', bg: 'bg-blue-50' },
-                          { key: 'workFeedback', label: '🔧 Travaux', color: 'text-amber-700', bg: 'bg-amber-50' },
-                          { key: 'generalFeedback', label: '📝 Général', color: 'text-gray-700', bg: 'bg-gray-50' },
+                          { key: 'priceFeedback', label: isEs ? '💰 Precio' : '💰 Prix', color: 'text-red-700', bg: 'bg-red-50' },
+                          { key: 'locationFeedback', label: isEs ? '📍 Ubicación' : '📍 Emplacement', color: 'text-blue-700', bg: 'bg-blue-50' },
+                          { key: 'workFeedback', label: isEs ? '🔧 Obras' : '🔧 Travaux', color: 'text-amber-700', bg: 'bg-amber-50' },
+                          { key: 'generalFeedback', label: isEs ? '📝 General' : '📝 Général', color: 'text-gray-700', bg: 'bg-gray-50' },
                         ].map(cat => {
                           const feedbacks = propertyVisits
                             .filter(v => v[cat.key as keyof VisitReport] as string)
@@ -251,13 +274,13 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                         const pct = Math.round((interestedCount / propertyVisits.length) * 100);
                         let trendText = '';
                         let trendColor = '';
-                        if (pct >= 60) { trendText = 'Tendance positive — Le bien plaît aux acheteurs'; trendColor = 'text-green-700'; }
-                        else if (pct >= 30) { trendText = 'Tendance mitigée — Ajustements possibles'; trendColor = 'text-amber-700'; }
-                        else { trendText = 'Tendance négative — RDV de suivi vendeur recommandé'; trendColor = 'text-red-700'; }
+                        if (pct >= 60) { trendText = isEs ? 'Tendencia positiva — El inmueble gusta a los compradores' : 'Tendance positive — Le bien plaît aux acheteurs'; trendColor = 'text-green-700'; }
+                        else if (pct >= 30) { trendText = isEs ? 'Tendencia mixta — Ajustes posibles' : 'Tendance mitigée — Ajustements possibles'; trendColor = 'text-amber-700'; }
+                        else { trendText = isEs ? 'Tendencia negativa — Se recomienda una cita de seguimiento con el vendedor' : 'Tendance négative — RDV de suivi vendeur recommandé'; trendColor = 'text-red-700'; }
                         return (
                           <div className="mt-3 flex items-center gap-2">
                             <Hash className="w-4 h-4 text-gray-400" />
-                            <p className={`text-xs font-medium ${trendColor}`}>{trendText} ({pct}% d'intérêt)</p>
+                            <p className={`text-xs font-medium ${trendColor}`}>{trendText} ({pct}% {isEs ? 'de interés' : "d'intérêt"})</p>
                           </div>
                         );
                       })()}
@@ -269,7 +292,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <Calendar className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-500">{new Date(visit.date).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
+                            <span className="text-xs text-gray-500">{new Date(visit.date).toLocaleDateString(isEs ? 'es-ES' : 'fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</span>
                             {editingStatus === visit.id ? (
                               <div className="flex items-center gap-1">
                                 {(['intéressé', 'réflexion', 'négatif', 'offre'] as VisitStatus[]).map(s => (
@@ -278,43 +301,43 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                                     onClick={() => { onUpdateVisit(visit.id, { status: s }); setEditingStatus(null); }}
                                     className={`text-xs px-2 py-0.5 rounded-full text-white transition-all ${statusLabels[s]?.color || 'bg-gray-400'} ${visit.status === s ? 'ring-2 ring-offset-1 ring-gray-400' : 'opacity-70 hover:opacity-100'}`}
                                   >
-                                    {statusLabels[s]?.label || s}
+                                    {statusLabel(s)}
                                   </button>
                                 ))}
-                                <button onClick={() => setEditingStatus(null)} className="text-xs text-gray-400 hover:text-gray-600 ml-1">Annuler</button>
+                                <button onClick={() => setEditingStatus(null)} className="text-xs text-gray-400 hover:text-gray-600 ml-1">{isEs ? 'Cancelar' : 'Annuler'}</button>
                               </div>
                             ) : (
                               <div className="flex items-center gap-1">
-                                <span className={`text-xs px-2 py-0.5 rounded-full text-white ${statusLabels[visit.status]?.color || 'bg-gray-400'}`}>{statusLabels[visit.status]?.label || visit.status}</span>
-                                <button onClick={() => setEditingStatus(visit.id)} className="text-gray-300 hover:text-blue-500 p-0.5" title="Changer le statut"><Edit3 className="w-3 h-3" /></button>
+                                <span className={`text-xs px-2 py-0.5 rounded-full text-white ${statusLabels[visit.status]?.color || 'bg-gray-400'}`}>{statusLabel(visit.status)}</span>
+                                <button onClick={() => setEditingStatus(visit.id)} className="text-gray-300 hover:text-blue-500 p-0.5" title={isEs ? 'Cambiar el estado' : 'Changer le statut'}><Edit3 className="w-3 h-3" /></button>
                               </div>
                             )}
                           </div>
-                          <p className="text-sm font-medium text-gray-900">Acquéreur : {visit.buyerName || 'Non renseigné'}</p>
+                          <p className="text-sm font-medium text-gray-900">{isEs ? 'Comprador: ' : 'Acquéreur : '}{visit.buyerName || (isEs ? 'No indicado' : 'Non renseigné')}</p>
 
                           {/* Categorized feedback */}
                           <div className="mt-2 grid grid-cols-2 gap-2">
                             {visit.priceFeedback && (
                               <div className="bg-red-50 rounded p-2">
-                                <p className="text-xs font-medium text-red-700">💰 Prix</p>
+                                <p className="text-xs font-medium text-red-700">{isEs ? '💰 Precio' : '💰 Prix'}</p>
                                 <p className="text-xs text-red-600">{visit.priceFeedback}</p>
                               </div>
                             )}
                             {visit.locationFeedback && (
                               <div className="bg-blue-50 rounded p-2">
-                                <p className="text-xs font-medium text-blue-700">📍 Emplacement</p>
+                                <p className="text-xs font-medium text-blue-700">{isEs ? '📍 Ubicación' : '📍 Emplacement'}</p>
                                 <p className="text-xs text-blue-600">{visit.locationFeedback}</p>
                               </div>
                             )}
                             {visit.workFeedback && (
                               <div className="bg-amber-50 rounded p-2">
-                                <p className="text-xs font-medium text-amber-700">🔧 Travaux</p>
+                                <p className="text-xs font-medium text-amber-700">{isEs ? '🔧 Obras' : '🔧 Travaux'}</p>
                                 <p className="text-xs text-amber-600">{visit.workFeedback}</p>
                               </div>
                             )}
                             {visit.generalFeedback && (
                               <div className="bg-gray-50 rounded p-2">
-                                <p className="text-xs font-medium text-gray-700">📝 Général</p>
+                                <p className="text-xs font-medium text-gray-700">{isEs ? '📝 General' : '📝 Général'}</p>
                                 <p className="text-xs text-gray-600">{visit.generalFeedback}</p>
                               </div>
                             )}
@@ -324,7 +347,9 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
                           {visit.generatedMessage && (
                             <div className="mt-2">
                               <button onClick={() => setExpandedVisit(expandedVisit === visit.id ? null : visit.id)} className="text-xs text-blue-600 hover:underline">
-                                {expandedVisit === visit.id ? 'Masquer le message' : 'Voir le message envoyé au vendeur'}
+                                {expandedVisit === visit.id
+                                  ? (isEs ? 'Ocultar el mensaje' : 'Masquer le message')
+                                  : (isEs ? 'Ver el mensaje enviado al vendedor' : 'Voir le message envoyé au vendeur')}
                               </button>
                               {expandedVisit === visit.id && (
                                 <div className="mt-2 bg-white border border-gray-200 rounded p-3 text-xs text-gray-700 whitespace-pre-line">{visit.generatedMessage}</div>

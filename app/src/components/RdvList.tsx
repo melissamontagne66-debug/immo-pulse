@@ -10,13 +10,30 @@ import { useRdv, type Rdv } from '@/hooks/useRdv';
 // Version simple : liste + formulaire inline, pas de vue calendrier.
 // ============================================
 
-function formatDateHeure(dateHeure: string): string {
+// Langue lue depuis le profil local (iad-coach-profile-{email}) via la session —
+// le composant ne reçoit pas `profile` en props (même pattern que
+// readAgentInfo dans VisitReportWriter).
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
+
+function formatDateHeure(dateHeure: string, isEs: boolean): string {
   const [datePart, timePart] = dateHeure.split('T');
   const [y, m, d] = datePart.split('-').map(Number);
-  const dateLabel = new Date(y, (m || 1) - 1, d || 1).toLocaleDateString('fr-FR', {
+  const dateLabel = new Date(y, (m || 1) - 1, d || 1).toLocaleDateString(isEs ? 'es-ES' : 'fr-FR', {
     weekday: 'short', day: 'numeric', month: 'short',
   });
-  return timePart ? `${dateLabel} à ${timePart}` : dateLabel;
+  return timePart ? `${dateLabel} ${isEs ? 'a las' : 'à'} ${timePart}` : dateLabel;
 }
 
 function formatHeure(dateHeure: string): string {
@@ -28,6 +45,8 @@ export function RdvList() {
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState({ titre: '', date: '', heure: '', lieu: '' });
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const isEs = readIsEs();
 
   const rdvDuJour = getRdvDuJour();
   const aVenir = getRdvAVenir();
@@ -50,14 +69,14 @@ export function RdvList() {
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold text-gray-900 flex items-center gap-2">
             <CalendarDays className="w-4 h-4 text-red-600" />
-            📅 Mes RDV à venir
+            📅 {isEs ? 'Mis próximas citas' : 'Mes RDV à venir'}
           </p>
           {!formOpen && (
             <button
               onClick={() => setFormOpen(true)}
               className="flex items-center gap-1 text-xs font-medium text-red-600 hover:text-red-700"
             >
-              <Plus className="w-3.5 h-3.5" /> Ajouter
+              <Plus className="w-3.5 h-3.5" /> {isEs ? 'Añadir' : 'Ajouter'}
             </button>
           )}
         </div>
@@ -67,7 +86,7 @@ export function RdvList() {
           <div className="bg-red-50 border border-red-200 rounded-lg px-3 py-2 space-y-0.5">
             {rdvDuJour.map(r => (
               <p key={r.id} className="text-sm font-medium text-red-800">
-                Aujourd'hui&nbsp;: {r.titre}{formatHeure(r.dateHeure) && <> — {formatHeure(r.dateHeure)}</>}
+                {isEs ? <>Hoy: {r.titre}</> : <>Aujourd'hui&nbsp;: {r.titre}</>}{formatHeure(r.dateHeure) && <> — {formatHeure(r.dateHeure)}</>}
                 {r.lieu && <span className="font-normal text-red-600"> · {r.lieu}</span>}
               </p>
             ))}
@@ -80,26 +99,26 @@ export function RdvList() {
             <Input
               value={form.titre}
               onChange={e => setForm({ ...form, titre: e.target.value })}
-              placeholder="Titre * (ex : R1 Mme Dupont)"
+              placeholder={isEs ? 'Título * (ej.: R1 Sra. García)' : 'Titre * (ex : R1 Mme Dupont)'}
             />
             <div className="grid grid-cols-2 gap-2">
               <Input
                 type="date"
                 value={form.date}
                 onChange={e => setForm({ ...form, date: e.target.value })}
-                aria-label="Date *"
+                aria-label={isEs ? 'Fecha *' : 'Date *'}
               />
               <Input
                 type="time"
                 value={form.heure}
                 onChange={e => setForm({ ...form, heure: e.target.value })}
-                aria-label="Heure"
+                aria-label={isEs ? 'Hora' : 'Heure'}
               />
             </div>
             <Input
               value={form.lieu}
               onChange={e => setForm({ ...form, lieu: e.target.value })}
-              placeholder="Lieu (optionnel)"
+              placeholder={isEs ? 'Lugar (opcional)' : 'Lieu (optionnel)'}
             />
             <div className="flex gap-2">
               <Button
@@ -108,10 +127,10 @@ export function RdvList() {
                 disabled={!form.titre.trim() || !form.date}
                 className="bg-red-600 hover:bg-red-700"
               >
-                Enregistrer
+                {isEs ? 'Guardar' : 'Enregistrer'}
               </Button>
               <Button size="sm" variant="outline" onClick={() => setFormOpen(false)}>
-                Annuler
+                {isEs ? 'Cancelar' : 'Annuler'}
               </Button>
             </div>
           </div>
@@ -119,7 +138,9 @@ export function RdvList() {
 
         {/* Liste des RDV à venir */}
         {aVenir.length === 0 && !formOpen ? (
-          <p className="text-sm text-gray-400">Aucun RDV planifié — ajoute ton prochain rendez-vous pour le garder sous les yeux.</p>
+          <p className="text-sm text-gray-400">{isEs
+            ? 'Ninguna cita programada — añada su próxima cita para tenerla siempre a la vista.'
+            : 'Aucun RDV planifié — ajoute ton prochain rendez-vous pour le garder sous les yeux.'}</p>
         ) : (
           <div className="space-y-1.5">
             {aVenir.map(r => (
@@ -127,7 +148,7 @@ export function RdvList() {
                 <div className="min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">{r.titre}</p>
                   <p className="text-xs text-gray-500">
-                    {formatDateHeure(r.dateHeure)}
+                    {formatDateHeure(r.dateHeure, isEs)}
                     {r.lieu && (
                       <span className="inline-flex items-center gap-0.5 ml-2">
                         <MapPin className="w-3 h-3" /> {r.lieu}
@@ -137,22 +158,22 @@ export function RdvList() {
                 </div>
                 {confirmDeleteId === r.id ? (
                   <span className="flex items-center gap-2 text-xs flex-shrink-0">
-                    <span className="text-gray-600">Supprimer&nbsp;?</span>
+                    <span className="text-gray-600">{isEs ? '¿Eliminar?' : 'Supprimer\u00a0?'}</span>
                     <button
                       onClick={() => { deleteRdv(r.id); setConfirmDeleteId(null); }}
                       className="text-red-600 font-semibold hover:underline"
                     >
-                      Oui
+                      {isEs ? 'Sí' : 'Oui'}
                     </button>
                     <button onClick={() => setConfirmDeleteId(null)} className="text-gray-500 hover:underline">
-                      Non
+                      {isEs ? 'No' : 'Non'}
                     </button>
                   </span>
                 ) : (
                   <button
                     onClick={() => setConfirmDeleteId(r.id)}
                     className="text-gray-400 hover:text-red-500 p-1 flex-shrink-0"
-                    aria-label="Supprimer"
+                    aria-label={isEs ? 'Eliminar' : 'Supprimer'}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>

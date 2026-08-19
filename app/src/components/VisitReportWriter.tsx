@@ -33,6 +33,13 @@ const statusLabels: Record<VisitStatus, { label: string; color: string }> = {
 
 };
 
+const statusLabelsEs: Record<VisitStatus, string> = {
+  intéressé: 'Interesado',
+  réflexion: 'Lo está pensando',
+  négatif: 'Negativo',
+  offre: '¡Oferta recibida!',
+};
+
 type SellerCivility = 'M./Mme' | 'M.' | 'Mme';
 
 // Infos de l'agent lues depuis la session (iad-coach-session) puis le profil
@@ -42,10 +49,11 @@ interface AgentInfo {
   lastName: string;
   phone: string;
   city: string;
+  language: 'fr' | 'es';
 }
 
 function readAgentInfo(): AgentInfo {
-  const info: AgentInfo = { firstName: '', lastName: '', phone: '', city: '' };
+  const info: AgentInfo = { firstName: '', lastName: '', phone: '', city: '', language: 'fr' };
   try {
     const sessionRaw = localStorage.getItem('iad-coach-session');
     const session = sessionRaw ? JSON.parse(sessionRaw) : null;
@@ -59,6 +67,7 @@ function readAgentInfo(): AgentInfo {
       if (profile?.lastName) info.lastName = String(profile.lastName);
       if (profile?.phone) info.phone = String(profile.phone);
       if (profile?.city) info.city = String(profile.city);
+      if (profile?.language === 'es') info.language = 'es';
     }
   } catch { /* ignore */ }
   return info;
@@ -67,54 +76,80 @@ function readAgentInfo(): AgentInfo {
 // Reformulation diplomatique des notes brutes : règles par mots-clés,
 // puis un encadrage neutre en fallback (la note brute n'est jamais
 // recopiée telle quelle sans enrobage).
-const DIPLOMATIC_RULES: { pattern: RegExp; replacement: string }[] = [
+const DIPLOMATIC_RULES: { pattern: RegExp; replacement: { fr: string; es: string } }[] = [
   {
     pattern: /trop cher|prix\s+(jugé\s+)?(trop\s+)?(élevé|haut)|hors de prix|surestimé|au-dessus du marché/i,
-    replacement: "Le prix a été perçu comme au-dessus de son budget et des références récentes du secteur",
+    replacement: {
+      fr: "Le prix a été perçu comme au-dessus de son budget et des références récentes du secteur",
+      es: 'El precio se ha percibido por encima de su presupuesto y de las referencias recientes de la zona',
+    },
   },
   {
     pattern: /cuisine.{0,30}(rénover|refaire|vieille|vétuste|vieillotte)|(rénover|refaire).{0,30}cuisine/i,
-    replacement: 'Des travaux de rafraîchissement sont à prévoir côté cuisine',
+    replacement: {
+      fr: 'Des travaux de rafraîchissement sont à prévoir côté cuisine',
+      es: 'Hay que prever trabajos de actualización en la cocina',
+    },
   },
   {
     pattern: /salle de bain.{0,30}(refaire|vieille|vétuste|vieillotte)|(refaire|rénover).{0,30}salle de bain/i,
-    replacement: 'Des travaux de rafraîchissement sont à prévoir côté salle de bain',
+    replacement: {
+      fr: 'Des travaux de rafraîchissement sont à prévoir côté salle de bain',
+      es: 'Hay que prever trabajos de actualización en el baño',
+    },
   },
   {
     pattern: /bruyant|trop de bruit|bruit\s+(de la\s+)?(rue|route|voisin)/i,
-    replacement: "L'environnement sonore a fait partie de ses réserves",
+    replacement: {
+      fr: "L'environnement sonore a fait partie de ses réserves",
+      es: 'El entorno sonoro ha sido una de sus reservas',
+    },
   },
   {
     pattern: /trop (petit|sombre)|exigu|manque de (place|lumière)|sombre/i,
-    replacement: "La surface ou la luminosité lui a semblé juste au regard de son projet",
+    replacement: {
+      fr: "La surface ou la luminosité lui a semblé juste au regard de son projet",
+      es: 'La superficie o la luminosidad le han parecido justas para su proyecto',
+    },
   },
   {
     pattern: /jardin.{0,30}(petit|petite)|pas de jardin/i,
-    replacement: "L'extérieur ne correspond pas tout à fait à ce qu'il recherche",
+    replacement: {
+      fr: "L'extérieur ne correspond pas tout à fait à ce qu'il recherche",
+      es: 'El exterior no se ajusta del todo a lo que busca',
+    },
   },
   {
     pattern: /loin|excentré|transport|éloigné/i,
-    replacement: "La localisation l'a interrogé par rapport à ses habitudes",
+    replacement: {
+      fr: "La localisation l'a interrogé par rapport à ses habitudes",
+      es: 'La ubicación le ha planteado dudas respecto a sus costumbres',
+    },
   },
   {
     pattern: /travaux|à rénover|vétuste|rafraîchir/i,
-    replacement: 'Des travaux sont à anticiper sur le bien',
+    replacement: {
+      fr: 'Des travaux sont à anticiper sur le bien',
+      es: 'Hay que prever trabajos en el inmueble',
+    },
   },
 ];
 
 // Retours catégorisés qui sonnent positifs → ils alimentent les points positifs
 const POSITIVE_PATTERN = /adore|adoré|coup de cœur|parfait|dans le budget|dans son budget|bien placé|calme|lumineux|aime|plaît|plait|super|top|ravi|conquis|ok\b/i;
 
-function diplomatize(raw: string): string {
+function diplomatize(raw: string, isEs: boolean): string {
   const trimmed = raw.trim();
   if (!trimmed) return '';
   for (const rule of DIPLOMATIC_RULES) {
-    if (rule.pattern.test(trimmed)) return rule.replacement;
+    if (rule.pattern.test(trimmed)) return isEs ? rule.replacement.es : rule.replacement.fr;
   }
   // Fallback : on encadre la réserve sans recracher la note brute.
   // Minuscule en tête si la note commence par une majuscule non nécessaire.
   const note = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
-  return `Il a émis une réserve sur ce point : « ${note} »`;
+  return isEs
+    ? `Ha expresado una reserva sobre este punto: « ${note} »`
+    : `Il a émis une réserve sur ce point : « ${note} »`;
 }
 
 // Découpe une note en lignes/puces exploitables
@@ -145,6 +180,11 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
   const agentRef = useRef<AgentInfo | null>(null);
   if (agentRef.current === null) agentRef.current = readAgentInfo();
   const agent = agentRef.current;
+  const isEs = agent.language === 'es';
+
+  const statusText = (s: VisitStatus) => (isEs ? statusLabelsEs[s] : statusLabels[s].label);
+  const civilityText = (c: SellerCivility) =>
+    !isEs ? c : c === 'M.' ? 'Sr.' : c === 'Mme' ? 'Sra.' : 'Sr./Sra.';
 
   // Scroll en haut au montage
   useEffect(() => {
@@ -167,13 +207,13 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
 
   const generateMessage = () => {
     if (!visitStatus) return;
-    const date = new Date().toLocaleDateString('fr-FR');
-    const statusLabel = statusLabels[visitStatus]?.label || visitStatus;
+    const date = new Date().toLocaleDateString(isEs ? 'es-ES' : 'fr-FR');
+    const statusLabel = statusText(visitStatus);
 
     // Points positifs : points d'appui + retours catégorisés positifs
     const positiveLines: string[] = [...splitLines(strongPoints)];
     // Points de vigilance : points faibles + retours catégorisés négatifs/neutres
-    const vigilanceLines: string[] = splitLines(weakPoints).map(diplomatize);
+    const vigilanceLines: string[] = splitLines(weakPoints).map(l => diplomatize(l, isEs));
 
     const categories: { label: string; value: string }[] = [
       { label: 'Prix', value: priceFeedback },
@@ -186,16 +226,20 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
         if (POSITIVE_PATTERN.test(line)) {
           positiveLines.push(line);
         } else {
-          vigilanceLines.push(diplomatize(line));
+          vigilanceLines.push(diplomatize(line, isEs));
         }
       }
     }
 
     if (positiveLines.length === 0) {
-      positiveLines.push("Votre bien a retenu toute l'attention de l'acquéreur pendant la visite.");
+      positiveLines.push(isEs
+        ? 'Su inmueble ha captado toda la atención del comprador durante la visita.'
+        : "Votre bien a retenu toute l'attention de l'acquéreur pendant la visite.");
     }
     if (vigilanceLines.length === 0) {
-      vigilanceLines.push("Aucune réserve particulière n'a été exprimée.");
+      vigilanceLines.push(isEs
+        ? 'No se ha expresado ninguna reserva en particular.'
+        : "Aucune réserve particulière n'a été exprimée.");
     }
 
     // Prochaine étape selon le statut
@@ -211,7 +255,7 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
     }
 
     const greeting = sellerName.trim()
-      ? `Bonjour ${sellerCivility} ${sellerName.trim()},`
+      ? `Bonjour ${civilityText(sellerCivility)} ${sellerName.trim()},`
       : 'Bonjour,';
     const visitLine = buyerName.trim()
       ? `Je reviens vers vous suite à la visite de votre bien du ${date} avec ${buyerName.trim()}.`
@@ -533,12 +577,16 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
         className="w-full bg-red-600 hover:bg-red-700 py-3 text-base disabled:opacity-50"
       >
         <CheckCircle className="w-4 h-4 mr-2" />
-        {saved ? 'Compte rendu enregistré ✓' : 'Enregistrer le compte rendu'}
+        {saved
+          ? (isEs ? 'Informe guardado ✓' : 'Compte rendu enregistré ✓')
+          : (isEs ? 'Guardar el informe' : 'Enregistrer le compte rendu')}
       </Button>
 
       {!visitStatus && sellerName.trim() && propertyAddress.trim() && (
         <p className="text-center text-sm text-amber-600">
-          Choisis le résultat de la visite (Intéressé, En réflexion, Négatif ou Offre) pour pouvoir enregistrer.
+          {isEs
+            ? 'Elija el resultado de la visita (Interesado, En reflexión, Negativo u Oferta) para poder guardar.'
+            : 'Choisis le résultat de la visite (Intéressé, En réflexion, Négatif ou Offre) pour pouvoir enregistrer.'}
         </p>
       )}
 

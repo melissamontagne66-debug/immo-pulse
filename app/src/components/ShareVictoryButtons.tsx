@@ -32,14 +32,19 @@ export function ShareVictoryButtons({ victoire, profile }: ShareVictoryButtonsPr
   const text = victoire.trim();
   if (!text) return null;
 
+  const isEs = profile.language === 'es';
   const parrain = profile.parrain;
   const prenom = profile.firstName;
 
   const mailBody = parrain
-    ? `Salut ${parrain.prenom}, ${text} — ${prenom}`
+    ? isEs
+      ? `Hola ${parrain.prenom}, ${text} — ${prenom}`
+      : `Salut ${parrain.prenom}, ${text} — ${prenom}`
     : `${text} — ${prenom}`;
   const waText = parrain
-    ? `Salut ${parrain.prenom} 🎉 ${text} — ${prenom}`
+    ? isEs
+      ? `Hola ${parrain.prenom} 🎉 ${text} — ${prenom}`
+      : `Salut ${parrain.prenom} 🎉 ${text} — ${prenom}`
     : `🎉 ${text} — ${prenom}`;
 
   const contact = parrain?.contact ?? '';
@@ -47,13 +52,19 @@ export function ShareVictoryButtons({ victoire, profile }: ShareVictoryButtonsPr
   const waNumber = parrain ? toWhatsAppNumber(contact) : null;
   const waOk = !parrain || waNumber !== null || !isEmail(contact);
 
-  const mailto = `mailto:${parrain && isEmail(contact) ? contact.trim() : ''}?subject=${encodeURIComponent('🏆 Une victoire à te raconter !')}&body=${encodeURIComponent(mailBody)}`;
+  const mailto = `mailto:${parrain && isEmail(contact) ? contact.trim() : ''}?subject=${encodeURIComponent(isEs ? '🏆 ¡Una victoria que contarle!' : '🏆 Une victoire à te raconter !')}&body=${encodeURIComponent(mailBody)}`;
   const waUrl = `https://wa.me/${waNumber ?? ''}?text=${encodeURIComponent(waText)}`;
 
   return (
     <div>
       <p className="text-sm font-semibold text-gray-900 mb-2">
-        {parrain ? `Envoyer ma victoire à ${parrain.prenom}` : 'Partager ma victoire'}
+        {parrain
+          ? isEs
+            ? `Enviar mi victoria a ${parrain.prenom}`
+            : `Envoyer ma victoire à ${parrain.prenom}`
+          : isEs
+            ? 'Compartir mi victoria'
+            : 'Partager ma victoire'}
       </p>
       <div className="flex gap-2 flex-wrap">
         {mailOk && (
@@ -62,7 +73,7 @@ export function ShareVictoryButtons({ victoire, profile }: ShareVictoryButtonsPr
             className="flex-1 min-w-[8rem] flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium transition-colors"
           >
             <Mail className="w-4 h-4" />
-            Par email
+            {isEs ? 'Por email' : 'Par email'}
           </a>
         )}
         {waOk && (
@@ -73,7 +84,7 @@ export function ShareVictoryButtons({ victoire, profile }: ShareVictoryButtonsPr
             className="flex-1 min-w-[8rem] flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium transition-colors"
           >
             <MessageCircle className="w-4 h-4" />
-            Par WhatsApp
+            {isEs ? 'Por WhatsApp' : 'Par WhatsApp'}
           </a>
         )}
       </div>

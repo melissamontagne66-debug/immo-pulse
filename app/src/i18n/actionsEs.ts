@@ -16,7 +16,7 @@ export const actionsEs: Record<number, ActionEs> = {
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca, toca en el bien + 10 vecinos.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y termina diciendo que efectivamente parece encajar con la búsqueda de tus compradores. Coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores, lo comprendéis — para tomar el conjunto de los detalles técnicos y hablarles a los compradores, para rápidamente traerles a la visita. ¿Mejor por la mañana o por la tarde, qué os va mejor?"
 
@@ -34,19 +34,19 @@ Cada antiguo cliente satisfecho = 2 a 3 recomendaciones naturales. Es la base de
     objectif: '🎯 Principiante: 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 mínimo // Confirmado: 10 antiguos clientes reactivados, 2 recomendaciones obtenidas',
   },
   2: {
-    title: 'Colaboradores — Selecciona y coloca tus paneles "Estimación ofrecida"',
-    description: `Hoy: selecciona 2 a 3 colaboradores de negocios BIEN situados en tu sector, con paso, y a quienes vas a proponer colocar un panel "Estimación ofrecida".
+    title: 'Colaboradores — Selecciona y coloca tus carteles "Estimación ofrecida"',
+    description: `Hoy: selecciona 2 a 3 colaboradores de negocios BIEN situados en tu sector, con paso, y a quienes vas a proponer colocar un cartel "Estimación ofrecida".
 
-El panel se pone en su ventana, visible desde la calle.
+El cartel se pone en su ventana, visible desde la calle.
 
 El trato es simple:
 → Lo registras como colaborador de negocios oficial en su cuenta
-→ Cuando llegue una llamada, preguntas sistemáticamente: "¿En qué panel habéis visto mi número?"
+→ Cuando llegue una llamada, preguntas sistemáticamente: "¿En qué cartel ha visto mi número?"
 → Registras esta recomendación a tu colaborador para que sea remunerado en cuanto se haga la venta
 
-Cada panel colocado = un colaborador que trabaja para ti 24h/24.`,
+Cada cartel colocado = un colaborador que trabaja para ti 24h/24.`,
     script: 'Consejo método — Tus scripts y memorandos de formación están a tu disposición para abordar a tus colaboradores. Elige emplazamientos estratégicos: calle con paso, esquina, cerca de parada de autobús. La visibilidad = la eficacia.',
-    objectif: '🎯 2-3 colaboradores seleccionados y abordados, 2 paneles "Estimación ofrecida" colocados mínimo, 2 colaboradores registrados en tu CRM',
+    objectif: '🎯 2-3 colaboradores seleccionados y abordados, 2 carteles "Estimación ofrecida" colocados mínimo, 2 colaboradores registrados en tu CRM',
   },
   3: {
     title: 'Comerciantes — Flyers VENDIDO + EN VENTA con QR code',
@@ -85,7 +85,7 @@ Cada estimación ofrecida = un futuro mandato.`,
     description: `Elige una calle que no conozcas bien. Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca. Toca en el bien + a los 8 vecinos.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — para tomar el conjunto de los detalles técnicos y hablarles a los compradores. ¿Mejor por la mañana o por la tarde?"
 
@@ -102,11 +102,11 @@ Cada R1 obtenido = un mandato potencial en 30-90 días o una recomendación para
     title: 'Colaboradores — Agradecer a los activos, reforzar los lazos',
     description: `Hoy ves a tus colaboradores que han entregado. Trae un pequeño regalo: bombones, una botella, un ramo. Agradéceles de viva voz. El éxito debe verse.
 
-Si un colaborador ha colocado un panel y no has tenido nada a cambio desde hace 2 meses, vuelve a ver: quizás el panel está escondido, quizás ha olvidado. Sin reproche — solo presencia y ayuda mutua.
+Si un colaborador ha colocado un cartel y no has tenido nada a cambio desde hace 2 meses, vuelve a ver: quizás el cartel está escondido, quizás ha olvidado. Sin reproche — solo presencia y ayuda mutua.
 
-**Novedad:** Busca 1 colaborador ORIGINAL esta semana. Piensa en cocineros, chatarreros/brocantes, farmacéuticos, peluqueros de perros... Tus scripts para estos colaboradores subexplotados están en tus memorandos de formación.`,
-    script: 'Consejo método — El éxito debe verse: trae un pequeño regalo, agradece de viva voz. Si un panel está escondido, repositiona. Prueba un nuevo colaborador esta semana — un cocinero o un chatarrero puede sorprenderte por la calidad de sus puestas en relación.',
-    objectif: '🎯 3 colaboradores agradecidos en persona con regalo, 2 paneles verificados, 1 nuevo colaborador original contactado',
+**Novedad:** Busca 1 colaborador ORIGINAL esta semana. Piensa en tienda de cocinass, anticuarios/brocantes, farmacéuticos, peluqueros de perros... Tus scripts para estos colaboradores subexplotados están en tus memorandos de formación.`,
+    script: 'Consejo método — El éxito debe verse: trae un pequeño regalo, agradece de viva voz. Si un cartel está escondido, repositiona. Prueba un nuevo colaborador esta semana — un tienda de cocinas o un anticuario puede sorprenderte por la calidad de sus puestas en relación.',
+    objectif: '🎯 3 colaboradores agradecidos en persona con regalo, 2 carteles verificados, 1 nuevo colaborador original contactado',
   },
   7: {
     title: 'Comerciantes — Nuevos contactos en periferia + clientes',
@@ -114,11 +114,11 @@ Si un colaborador ha colocado un panel y no has tenido nada a cambio desde hace 
 
 Preséntate con tu flyer (1 vendido + 1 en venta + QR code).
 
-**Consejo:** ¡Cuando haya clientes esperando en el comercio, inclúyelos! Di: "¿Conocéis el valor de vuestro bien en este sector? Es una locura cómo ha movido el mercado..." A la gente le gusta hablar de inmobiliaria, y creas un contacto natural sin presión.
+**Consejo:** ¡Cuando haya clientes esperando en el comercio, inclúyelos! Di: "¿Conocéis el valor de su bien en este sector? Es una locura cómo ha movido el mercado..." A la gente le gusta hablar de inmobiliaria, y creas un contacto natural sin presión.
 
 Objetivo: 2 nuevos comerciantes colaboradores hoy.`,
     script: 'Consejo método — Incluye a los clientes que esperan — ¡son tu objetivo! Están relajados, en confianza gracias al comerciante, y curiosos. Un intercambio de 2 minutos puede desembocar en una cita de estimación. Tus scripts están en tus memorandos.',
-    objectif: '🎯 3 nuevos contactos cualificados, 1 panel "Estimación ofrecida" colocado en nuevo comercio, 2 colaboradores registrados',
+    objectif: '🎯 3 nuevos contactos cualificados, 1 cartel "Estimación ofrecida" colocado en nuevo comercio, 2 colaboradores registrados',
   },
   8: {
     title: `Estimación patrimonial ofrecida — Palanca "Bien EN VENTA actualmente"`,
@@ -144,14 +144,14 @@ Cada estimación ofrecida = un futuro mandato.`,
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 estimación mínimo`,
   },
@@ -196,14 +196,14 @@ Retira los flyers viejos (+3 semanas / 1 mes).`,
 Aprovecha que ya estás en la calle.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados`,
   },
@@ -234,7 +234,7 @@ Cada respuesta = un R1 potencial en el día.`,
 1. Genera tu informe local con la herramienta interna (3 min máx)
 2. envíalo a tus contactos de este sector
 3. Selecciona 10 propietarios ciblados en tu sector (vecinos de bienes vendidos, contactos existentes, calle a conquistar)
-4. ""Soy [Tu nombre], asesor inmobiliario en el sector. Acabo de publicar un informe muy completo sobre la evolución de los precios en vuestro barrio. Puede interesaros para conocer el valor de vuestro patrimonio, o para vuestro entorno. Si me dejáis vuestro email, os lo envío inmediatamente.""
+4. ""Soy [Tu nombre], asesor inmobiliario en el sector. Acabo de publicar un informe muy completo sobre la evolución de los precios en su barrio. Puede interesaros para conocer el valor de su patrimonio, o para su entorno. Si me dejáis su email, os lo envío inmediatamente.""
 5. Aprovecha para discutir con ellos y proponer una estimación patrimonial o registrarles como colaboradores.
 
 Cada informe enviado = un contacto caliente + una prueba de tu expertise.
@@ -263,17 +263,17 @@ Cada estimación ofrecida = un futuro mandato.`,
   },
 
   16: {
-    title: `Colaboradores — Ciber a cocineros del sector`,
-    description: `El cocinero es el primero en enterarse del proyecto de vida. Un propietario que quiere vender se dice: "Si redo la cocina, venderé más caro". Va a ver al cocinero ANTES que al agente inmobiliario.
+    title: `Colaboradores — Ciber a tienda de cocinass del sector`,
+    description: `El tienda de cocinas es el primero en enterarse del proyecto de vida. Un propietario que quiere vender se dice: "Si redo la cocina, venderé más caro". Va a ver al tienda de cocinas ANTES que al agente inmobiliario.
 
 **Tu script**:
 "Te propongo un partenariado para transformar tus presupuestos dormidos en ventas. Cuando un cliente duda en firmar porque tiene un proyecto de venta, habla de mí. Hago la estimación, aconsejo sobre la rentabilidad de las obras, y si el vendedor no hace las obras, presento tus planos 3D a todos mis compradores. Tocas el 6% de mi comisión vía Propertips."
 
-Encuentra 2 cocineros en tu sector. ¡Adelante!
+Encuentra 2 tienda de cocinass en tu sector. ¡Adelante!
 
-El cocinero está bloqueado: el cliente duda en firmar un presupuesto de 15 000€. Te conviertes en su salvador aportando claridad sobre la plusvalía.`,
-    script: `Consejo método — Los colaboradores subexplotados (cocineros, chatarreros...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
-    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 paneles verificados`,
+El tienda de cocinas está bloqueado: el cliente duda en firmar un presupuesto de 15 000€. Te conviertes en su salvador aportando claridad sobre la plusvalía.`,
+    script: `Consejo método — Los colaboradores subexplotados (tienda de cocinass, anticuarios...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
+    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 carteles verificados`,
   },
 
   17: {
@@ -298,14 +298,14 @@ Retira los flyers viejos (+3 semanas / 1 mes).`,
 Los vecinos se preguntan todos: "¿Cuánto se ha vendido? ¿Mi bien vale lo mismo?"
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados, 1 colaborador registrado`,
   },
@@ -336,7 +336,7 @@ Cada respuesta = un R1 potencial en el día.`,
 1. Haz tu búsqueda en los sitios de anuncios con los mismos criterios objetivos que tu bien
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -348,34 +348,34 @@ Proponles venir con los compradores serios que estaban interesados por su bien s
   },
 
   21: {
-    title: `Colaboradores — Ciber a chatarreros/vaciado de casas`,
+    title: `Colaboradores — Ciber a anticuarios/vaciado de casas`,
     description: `Cuando se vacía una casa de arriba abajo, nunca es para redecorar: es porque la casa va a ser vendida. Generalmente tras un fallecimiento (sucesión) o una marcha a residencia.
 
 **Tu script**:
 "Veo a menudo tus camiones en el sector. Acompaño a muchas familias en sucesión y a menudo me preguntan quién puede vaciar la casa limpiamente. Me gustaría recomendarte sistemáticamente. Y cuando vacíes una casa que vaya a ser puesta en venta, propónles conocerme. Yo me ocupo de todo: estimación, notaría, visitas. Tocas el 6% vía Propertips."
 
-Encuentra 2 empresas de vaciado o chatarreros en tu sector.
+Encuentra 2 empresas de vaciado o anticuarios en tu sector.
 
-El chatarrero es a menudo el PRIMER prestador llamado, a veces incluso antes que el notario. Si te recomienda en ese momento, tienes un 90% de probabilidades de tomar el mandato sin competencia.`,
+El anticuario es a menudo el PRIMER prestador llamado, a veces incluso antes que el notario. Si te recomienda en ese momento, tienes un 90% de probabilidades de tomar el mandato sin competencia.`,
     script: `Consejo método — El feedback sistemático después de cada puesta en relación = un colaborador motivado al 200%. El "café estratégico" mensual es obligatorio.`,
     objectif: `🎯 2 nuevos colaboradores originales contactados, 1 partenariado concluido mínimo`,
   },
 
   22: {
-    title: `Contacto terreno — Calles con paneles de la competencia`,
+    title: `Contacto terreno — Calles con carteles de la competencia`,
     description: `Elige una calle donde aún no hayas pasado este trimestre.
 
 Selecciona 3 bienes en venta en tu herramienta interna en esta zona o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 5 puertas post-R1 por cada R1, 1 estimación espontánea mínimo`,
   },
@@ -430,19 +430,19 @@ El farmacéutico tiene una relación de confianza absoluta. Si dice "Id a ver [T
 
   26: {
     title: `Contacto terreno — Ronda de la calle tras cada venta`,
-    description: `Cible las calles donde tus competidores tienen paneles "En venta".
+    description: `Cible las calles donde tus competidores tienen carteles "En venta".
 
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 estimación mínimo`,
   },
@@ -469,14 +469,14 @@ Retira los flyers viejos (+3 semanas / 1 mes).`,
 Aprovecha tu reciente éxito.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados`,
   },
@@ -508,7 +508,7 @@ Cada estimación ofrecida = un futuro mandato.`,
 ¡Lleva a tu perro si tienes uno!
 
 El peluquero tiene infos "frescas" y ultra-locales. La postura es amistosa, comunitaria. Si te gustan los animales, ya tienes un punto común enorme.`,
-    script: `Consejo método — Los colaboradores subexplotados (cocineros, chatarreros...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
+    script: `Consejo método — Los colaboradores subexplotados (tienda de cocinass, anticuarios...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
     objectif: `🎯 2 colaboradores contactados, 1 partenariado concluido mínimo`,
   },
 
@@ -519,7 +519,7 @@ El peluquero tiene infos "frescas" y ultra-locales. La postura es amistosa, comu
 1. Identifica tus bienes invendidos (sin visita desde 15 días o precio bloqueado)
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -554,14 +554,14 @@ Cada informe enviado = un contacto caliente + una prueba de tu expertise.
 Selecciona 3 bienes en venta en tu herramienta. Toca en el bien + 10 vecinos.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados, 1 colaborador registrado`,
   },
@@ -630,7 +630,7 @@ El feedback es obligatorio: en cuanto se haga una puesta en relación, mantenlo 
 
 "Café estratégico" mensual con cada colaborador. No vengas a preguntar "¿tienes un mandato?" — ven a hablar del mercado. El feedback sistemático después de cada puesta en relación = un colaborador motivado al 200%.`,
     script: `Consejo método — El feedback sistemático después de cada puesta en relación = un colaborador motivado al 200%. El "café estratégico" mensual es obligatorio.`,
-    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 paneles verificados`,
+    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 carteles verificados`,
   },
 
   38: {
@@ -640,7 +640,7 @@ El feedback es obligatorio: en cuanto se haga una puesta en relación, mantenlo 
 1. Analiza tus resultados de las semanas anteriores: ¿qué colegas han respondido mejor? Priorízalos.
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -658,14 +658,14 @@ El inter-agencia debe convertirse en un canal regular de venta, no solo una solu
 Selecciona 3 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 5 puertas post-R1 por cada R1, 1 estimación espontánea mínimo`,
   },
@@ -677,14 +677,14 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 Selecciona 3 bienes en venta en tu herramienta en esta zona adyacente.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 estimación mínimo`,
   },
@@ -762,14 +762,14 @@ Tus scripts detallados para cada colaborador están en tus memorandos de formaci
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados`,
   },
@@ -781,7 +781,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 1. Genera tu informe local con la herramienta interna (3 min máx)
 2. envíalo a TODOS los contactos que ya han recibido un informe (actualización)
 3. Cible 10 nuevos propietarios
-4. ""Aquí está mi informe trimestral sobre la evolución del mercado en vuestro barrio. Las cifras son muy elocuentes...""
+4. ""Aquí está mi informe trimestral sobre la evolución del mercado en su barrio. Las cifras son muy elocuentes...""
 5. Aprovecha para discutir con ellos y proponer una estimación patrimonial o registrarles como colaboradores.
 
 Cada informe enviado = un contacto caliente + una prueba de tu expertise.
@@ -798,14 +798,14 @@ Cada informe enviado = un contacto caliente + una prueba de tu expertise.
 Aprovecha que ya estás en la calle.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados, 1 colaborador registrado`,
   },
@@ -817,7 +817,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 1. Llama a los colegas que hicieron visitas la semana pasada → feedback, ¿ofertas?
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -862,15 +862,15 @@ Cada estimación ofrecida = un futuro mandato.`,
 
   51: {
     title: `Colaboradores — Ciber a diagnosticadores DPE`,
-    description: `El cocinero es el primero en enterarse del proyecto de vida. Un propietario que quiere vender se dice: "Si redo la cocina, venderé más caro". Va a ver al cocinero ANTES que al agente inmobiliario.
+    description: `El tienda de cocinas es el primero en enterarse del proyecto de vida. Un propietario que quiere vender se dice: "Si redo la cocina, venderé más caro". Va a ver al tienda de cocinas ANTES que al agente inmobiliario.
 
 **Tu script**:
 "Te propongo un partenariado para transformar tus presupuestos dormidos en ventas. Cuando un cliente duda en firmar porque tiene un proyecto de venta, habla de mí. Hago la estimación, aconsejo sobre la rentabilidad de las obras, y si el vendedor no hace las obras, presento tus planos 3D a todos mis compradores. Tocas el 6% de mi comisión vía Propertips."
 
-Encuentra 2 cocineros en tu sector. ¡Adelante!
+Encuentra 2 tienda de cocinass en tu sector. ¡Adelante!
 
-El cocinero está bloqueado: el cliente duda en firmar un presupuesto de 15 000€. Te conviertes en su salvador aportando claridad sobre la plusvalía.`,
-    script: `Consejo método — Los colaboradores subexplotados (cocineros, chatarreros...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
+El tienda de cocinas está bloqueado: el cliente duda en firmar un presupuesto de 15 000€. Te conviertes en su salvador aportando claridad sobre la plusvalía.`,
+    script: `Consejo método — Los colaboradores subexplotados (tienda de cocinass, anticuarios...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
     objectif: `🎯 5 colaboradores reforzados con regalo, 1 nuevo colaborador original contactado`,
   },
 
@@ -881,14 +881,14 @@ El cocinero está bloqueado: el cliente duda en firmar un presupuesto de 15 000�
 Los vecinos se preguntan todos: "¿Cuánto se ha vendido? ¿Mi bien vale lo mismo?"
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 5 puertas post-R1 por cada R1, 1 estimación espontánea mínimo`,
   },
@@ -917,14 +917,14 @@ Cada informe enviado = un contacto caliente + una prueba de tu expertise.
 Selecciona 3 bienes en venta en tu herramienta interna en esta zona o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 estimación mínimo`,
   },
@@ -936,7 +936,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 1. Balance del mes: ¿cuántas ventas en inter-agencia? ¿Qué colegas son los más activos?
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -990,28 +990,28 @@ Cada estimación ofrecida = un futuro mandato.`,
 **Tu script**:
 "Veo a menudo tus camiones en el sector. Acompaño a muchas familias en sucesión y a menudo me preguntan quién puede vaciar la casa limpiamente. Me gustaría recomendarte sistemáticamente. Y cuando vacíes una casa que vaya a ser puesta en venta, propónles conocerme. Yo me ocupo de todo: estimación, notaría, visitas. Tocas el 6% vía Propertips."
 
-Encuentra 2 empresas de vaciado o chatarreros en tu sector.
+Encuentra 2 empresas de vaciado o anticuarios en tu sector.
 
-El chatarrero es a menudo el PRIMER prestador llamado, a veces incluso antes que el notario. Si te recomienda en ese momento, tienes un 90% de probabilidades de tomar el mandato sin competencia.`,
+El anticuario es a menudo el PRIMER prestador llamado, a veces incluso antes que el notario. Si te recomienda en ese momento, tienes un 90% de probabilidades de tomar el mandato sin competencia.`,
     script: `Consejo método — El feedback sistemático después de cada puesta en relación = un colaborador motivado al 200%. El "café estratégico" mensual es obligatorio.`,
     objectif: `🎯 2 colaboradores contactados, 1 partenariado concluido mínimo`,
   },
 
   59: {
     title: `Contacto terreno post-R1 — Capitalizar en cada cita`,
-    description: `Cible las calles donde tus competidores tienen paneles "En venta".
+    description: `Cible las calles donde tus competidores tienen carteles "En venta".
 
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados`,
   },
@@ -1023,7 +1023,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 1. Genera tu informe local con la herramienta interna (3 min máx)
 2. envíalo a todos tus contactos (email + WhatsApp)
 3. Cible a los 10 últimos propietarios de tu sector
-4. ""Aquí está mi último informe del trimestre. Las cifras son muy elocuentes. Si vosotros o vuestro entorno deseáis conocer el valor de vuestro patrimonio...""
+4. ""Aquí está mi último informe del trimestre. Las cifras son muy elocuentes. Si ustedes o su entorno deseáis conocer el valor de su patrimonio...""
 5. Aprovecha para discutir con ellos y proponer una estimación patrimonial o registrarles como colaboradores.
 
 Cada informe enviado = un contacto caliente + una prueba de tu expertise.
@@ -1040,14 +1040,14 @@ Cada informe enviado = un contacto caliente + una prueba de tu expertise.
 Aprovecha tu reciente éxito.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados, 1 colaborador registrado`,
   },
@@ -1059,7 +1059,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 1. Nuevos bienes invendidos del T1 que reintentar, nuevos colegas que contactar
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -1092,14 +1092,14 @@ Retira los flyers viejos (+3 semanas / 1 mes).`,
 Selecciona 3 bienes en venta en tu herramienta. Toca en el bien + 10 vecinos.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 5 puertas post-R1 por cada R1, 1 estimación espontánea mínimo`,
   },
@@ -1132,7 +1132,7 @@ Cada estimación ofrecida = un futuro mandato.`,
 
 El farmacéutico tiene una relación de confianza absoluta. Si dice "Id a ver [Tu nombre]", ya habéis ganado el 80% de la confianza.`,
     script: `Consejo método — Tus scripts y memorandos de formación están a tu disposición. Lanza un challenge para motivar a tus colaboradores activos.`,
-    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 paneles verificados`,
+    objectif: `🎯 3 colaboradores agradecidos en persona con regalo, 2 carteles verificados`,
   },
 
   67: {
@@ -1178,7 +1178,7 @@ Cada informe enviado = un contacto caliente + una prueba de tu expertise.
 1. Sigue las visitas de la semana anterior, identifica nuevos bienes invendidos
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -1205,20 +1205,20 @@ Retira los flyers viejos (+3 semanas / 1 mes).`,
   },
 
   71: {
-    title: `Contacto terreno — Calles con paneles de la competencia`,
+    title: `Contacto terreno — Calles con carteles de la competencia`,
     description: `Nuevo trimestre, nuevas calles que conquistar.
 
 Selecciona 3 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — La pregunta mágica a cada puerta = recomendaciones que nunca tendrías de otra forma. Un solo flyer basta.`,
     objectif: `🎯 2 bienes en venta seleccionados, 10 puertas tocadas, 1 R1 estimación mínimo`,
   },
@@ -1233,7 +1233,7 @@ Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender �
 ¡Lleva a tu perro si tienes uno!
 
 El peluquero tiene infos "frescas" y ultra-locales. La postura es amistosa, comunitaria. Si te gustan los animales, ya tienes un punto común enorme.`,
-    script: `Consejo método — Los colaboradores subexplotados (cocineros, chatarreros...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
+    script: `Consejo método — Los colaboradores subexplotados (tienda de cocinass, anticuarios...) a menudo tienen contactos de mejor calidad que los colaboradores clásicos.`,
     objectif: `🎯 2 nuevos colaboradores originales contactados, 1 partenariado concluido mínimo`,
   },
 
@@ -1280,7 +1280,7 @@ Cada respuesta = un R1 potencial en el día.`,
 1. Sigue las visitas, identifica nuevos bienes invendidos, programa las visitas de la semana entrante
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -1330,14 +1330,14 @@ Cada estimación ofrecida = un futuro mandato.`,
 Selecciona 3 bienes en venta en tu herramienta en esta zona adyacente.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — El post-R1 sistemático es la CLAVE. 5 puertas después de cada R1 = 15-25 puertas por semana sin esfuerzo adicional.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados`,
   },
@@ -1400,7 +1400,7 @@ Cada respuesta = un R1 potencial en el día.`,
 1. Balance: ¿cuántas ventas este mes? ¿Qué colegas han entregado?
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 
@@ -1451,14 +1451,14 @@ Cada estimación ofrecida = un futuro mandato.`,
 Selecciona 2 bienes en venta en tu herramienta interna en esta calle o muy cerca.
 
 **En la dirección exacta del bien en venta:**
-"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabríais de cuál se trata?"
+"Estoy en búsqueda muy activa para compradores que buscan absolutamente ESTE sector, XX habitaciones y XX m². He oído decir que hay un bien en venta que podría corresponder actualmente en venta en esta calle, ¿sabría de cuál se trata?"
 
 Si es la puerta correcta, haz preguntas subjetivas sobre el bien, habla del precio, y coge la cita para una primera visita: "No puedo decentemente descubrir el bien al mismo tiempo que mis compradores — ¿mejor por la mañana o por la tarde?"
 
 **En los vecinos (las 10 puertas alrededor):**
 Ahí, pasas a la estimación patrimonial ofrecida. No estás ahí para vender — aportas una info fiable sobre el valor de su patrimonio.
 
-**Pregunta mágica**: "¿Quién conocéis en vuestro entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
+**Pregunta mágica**: "¿Quién conocéis en su entorno que desee vender o simplemente tener una opinión precisa sobre el valor de su bien?"`,
     script: `Consejo método — Cada puerta tocada = un contacto registrado en el CRM. Propón sistemáticamente una estimación patrimonial — es tu misión primera.`,
     objectif: `🎯 3 bienes en venta seleccionados, 13 puertas tocadas, 3 contactos cualificados, 1 colaborador registrado`,
   },
@@ -1485,7 +1485,7 @@ Tus scripts detallados para cada colaborador están en tus memorandos de formaci
 1. Genera tu informe local con la herramienta interna (3 min máx)
 2. envíalo a tus contactos con una nota sobre la novedad
 3. Cible 10 nuevos propietarios
-4. ""Aquí está mi informe de este mes en un nuevo formato. ¡Descubrid las cifras de vuestro barrio!""
+4. ""Aquí está mi informe de este mes en un nuevo formato. ¡Descubrid las cifras de su barrio!""
 5. Aprovecha para discutir con ellos y proponer una estimación patrimonial o registrarles como colaboradores.
 
 Cada informe enviado = un contacto caliente + una prueba de tu expertise.
@@ -1521,7 +1521,7 @@ Cada respuesta = un R1 potencial en el día.`,
 1. Haz tu búsqueda en los sitios de anuncios con los mismos criterios objetivos que tu bien
 2. Busca bienes similares en los sitios de anuncios en un radio de 5km
 3. Encuentra los bienes por debajo del precio del tuyo
-4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al vuestro en [sector]. Tengo compradores serios que han visitado vuestro bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
+4. Envía un mensaje a los colegas: "Hola, tengo un bien similar al su en [sector]. Tengo compradores serios que han visitado su bien o uno similar. El propietario está abierto a ofertas razonables aunque no quiera bajar el precio público. ¿Estaríais abiertos a un inter-agencia? 50/50 si venta."
 5. Espera que los colegas te devuelvan la llamada
 6. Programa las visitas
 

@@ -12,9 +12,28 @@ interface BilanHistoryProps {
   onBack: () => void;
 }
 
+// Langue de l'interface lue depuis la session (iad-coach-session) puis le profil
+// local (iad-coach-profile-{email}) — le composant ne reçoit pas `profile` en props.
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (email) {
+      const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+      const profile = profileRaw ? JSON.parse(profileRaw) : null;
+      return profile?.language === 'es';
+    }
+    return session?.language === 'es';
+  } catch { return false; }
+}
+
 export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [currentPeriod, setCurrentPeriod] = useState(0); // 0 = current, -1 = previous, etc.
+
+  const isEs = readIsEs();
+  const dateLocale = isEs ? 'es-ES' : 'fr-FR';
 
   const today = new Date();
 
@@ -83,17 +102,19 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
       const result = periodResults.find(r => r.date === dateStr) || null;
       days.push({
         date: dateStr,
-        label: current.toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' }),
+        label: current.toLocaleDateString(dateLocale, { weekday: 'short', day: 'numeric' }),
         results: result,
       });
       current.setDate(current.getDate() + 1);
     }
     return days;
-  }, [period.start, period.end, periodResults]);
+  }, [period.start, period.end, periodResults, dateLocale]);
 
   const periodLabel = viewMode === 'week'
-    ? `Semaine du ${period.start.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
-    : period.start.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+    ? isEs
+      ? `Semana del ${period.start.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' })}`
+      : `Semaine du ${period.start.toLocaleDateString(dateLocale, { day: 'numeric', month: 'long' })}`
+    : period.start.toLocaleDateString(dateLocale, { month: 'long', year: 'numeric' });
 
   return (
     <div className="space-y-6">
@@ -104,16 +125,16 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
           <div>
             <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
               <BarChart3 className="w-6 h-6 text-red-600" />
-              Historique des bilans
+              {isEs ? 'Historial de balances' : 'Historique des bilans'}
             </h2>
-            <p className="text-gray-500 mt-1">Aperçu de ton activité</p>
+            <p className="text-gray-500 mt-1">{isEs ? 'Resumen de su actividad' : 'Aperçu de ton activité'}</p>
           </div>
         </div>
       </div>
 
       {/* View mode selector */}
       <div className="flex gap-2">
-        {([{ key: 'week', label: 'Par semaine' }, { key: 'month', label: 'Par mois' }] as const).map(v => (
+        {([{ key: 'week', label: isEs ? 'Por semana' : 'Par semaine' }, { key: 'month', label: isEs ? 'Por mes' : 'Par mois' }] as const).map(v => (
           <button
             key={v.key}
             onClick={() => { setViewMode(v.key); setCurrentPeriod(0); }}
@@ -150,22 +171,22 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
             <Card><CardContent className="p-3 text-center">
               <Phone className="w-5 h-5 text-blue-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.callsMade}</p>
-              <p className="text-xs text-gray-500">Conversations</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Conversaciones' : 'Conversations'}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <Users className="w-5 h-5 text-green-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.contactsApproached}</p>
-              <p className="text-xs text-gray-500">Contacts physiques</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Contactos físicos' : 'Contacts physiques'}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <CalendarCheck className="w-5 h-5 text-purple-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.rdvR1Done + stats.rdvR2Done}</p>
-              <p className="text-xs text-gray-500">RDV ({stats.rdvR1Done} R1 + {stats.rdvR2Done} R2)</p>
+              <p className="text-xs text-gray-500">{isEs ? `Citas (${stats.rdvR1Done} R1 + ${stats.rdvR2Done} R2)` : `RDV (${stats.rdvR1Done} R1 + ${stats.rdvR2Done} R2)`}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <FileCheck className="w-5 h-5 text-indigo-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.mandatsSigned}</p>
-              <p className="text-xs text-gray-500">Mandats signés</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Mandatos firmados' : 'Mandats signés'}</p>
             </CardContent></Card>
           </div>
 
@@ -173,29 +194,29 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
             <Card><CardContent className="p-3 text-center">
               <Home className="w-5 h-5 text-teal-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.visitesDone}</p>
-              <p className="text-xs text-gray-500">Visites effectuées</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Visitas realizadas' : 'Visites effectuées'}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <TrendingUp className="w-5 h-5 text-orange-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.offresWritten}</p>
-              <p className="text-xs text-gray-500">Offres rédigées</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Ofertas redactadas' : 'Offres rédigées'}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <Calendar className="w-5 h-5 text-gray-600 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.daysTracked}</p>
-              <p className="text-xs text-gray-500">Jours suivis</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Días registrados' : 'Jours suivis'}</p>
             </CardContent></Card>
             <Card><CardContent className="p-3 text-center">
               <Star className="w-5 h-5 text-amber-500 mx-auto mb-1" />
               <p className="text-xl font-bold text-gray-900">{stats.avgMood}<span className="text-sm text-gray-400">/5</span></p>
-              <p className="text-xs text-gray-500">Humeur moyenne</p>
+              <p className="text-xs text-gray-500">{isEs ? 'Estado de ánimo medio' : 'Humeur moyenne'}</p>
             </CardContent></Card>
           </div>
 
           {/* Day-by-day chart */}
           <Card>
             <CardContent className="p-5">
-              <h3 className="font-semibold text-gray-900 mb-4">Activité jour par jour</h3>
+              <h3 className="font-semibold text-gray-900 mb-4">{isEs ? 'Actividad día a día' : 'Activité jour par jour'}</h3>
               <div className="space-y-3">
                 {dailyBreakdown.map(day => (
                   <div key={day.date} className={`p-3 rounded-lg border ${day.results ? 'bg-white border-gray-200' : 'bg-gray-50 border-gray-100 opacity-50'}`}>
@@ -212,19 +233,19 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
                       <>
                         <div className="flex gap-2 flex-wrap">
                           {day.results.callsMade > 0 && <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{day.results.callsMade} conv.</span>}
-                          {day.results.contactsApproached > 0 && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{day.results.contactsApproached} contacts</span>}
+                          {day.results.contactsApproached > 0 && <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">{day.results.contactsApproached} {isEs ? 'contactos' : 'contacts'}</span>}
                           {day.results.rdvR1Done > 0 && <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">{day.results.rdvR1Done} R1</span>}
                           {day.results.rdvR2Done > 0 && <span className="text-xs bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full">{day.results.rdvR2Done} R2</span>}
-                          {day.results.mandatsSigned > 0 && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{day.results.mandatsSigned} mandat{day.results.mandatsSigned > 1 ? 's' : ''}</span>}
-                          {day.results.visitesDone > 0 && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{day.results.visitesDone} visite{day.results.visitesDone > 1 ? 's' : ''}</span>}
-                          {day.results.offresWritten > 0 && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{day.results.offresWritten} offre{day.results.offresWritten > 1 ? 's' : ''}</span>}
+                          {day.results.mandatsSigned > 0 && <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{day.results.mandatsSigned} {isEs ? `mandato${day.results.mandatsSigned > 1 ? 's' : ''}` : `mandat${day.results.mandatsSigned > 1 ? 's' : ''}`}</span>}
+                          {day.results.visitesDone > 0 && <span className="text-xs bg-teal-100 text-teal-700 px-2 py-0.5 rounded-full">{day.results.visitesDone} {isEs ? `visita${day.results.visitesDone > 1 ? 's' : ''}` : `visite${day.results.visitesDone > 1 ? 's' : ''}`}</span>}
+                          {day.results.offresWritten > 0 && <span className="text-xs bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">{day.results.offresWritten} {isEs ? `oferta${day.results.offresWritten > 1 ? 's' : ''}` : `offre${day.results.offresWritten > 1 ? 's' : ''}`}</span>}
                         </div>
                         {day.results.notes && (
                           <p className="text-xs text-gray-500 mt-2 whitespace-pre-line">{day.results.notes}</p>
                         )}
                       </>
                     ) : (
-                      <p className="text-xs text-gray-400">Aucune donnée</p>
+                      <p className="text-xs text-gray-400">{isEs ? 'Sin datos' : 'Aucune donnée'}</p>
                     )}
                   </div>
                 ))}
@@ -237,18 +258,18 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
             <CardContent className="p-5">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-500" />
-                Répartition de ton activité
+                {isEs ? 'Reparto de su actividad' : 'Répartition de ton activité'}
               </h3>
               {/* Barres horizontales */}
               <div className="space-y-4">
                 {[
-                  { label: 'Conversations', value: stats.callsMade, color: 'bg-blue-500', icon: Phone },
-                  { label: 'Contacts physiques', value: stats.contactsApproached, color: 'bg-green-500', icon: Users },
+                  { label: isEs ? 'Conversaciones' : 'Conversations', value: stats.callsMade, color: 'bg-blue-500', icon: Phone },
+                  { label: isEs ? 'Contactos físicos' : 'Contacts physiques', value: stats.contactsApproached, color: 'bg-green-500', icon: Users },
                   { label: 'R1', value: stats.rdvR1Done, color: 'bg-purple-500', icon: CalendarCheck },
                   { label: 'R2', value: stats.rdvR2Done, color: 'bg-indigo-500', icon: CalendarCheck },
-                  { label: 'Mandats', value: stats.mandatsSigned, color: 'bg-red-500', icon: FileCheck },
-                  { label: 'Visites', value: stats.visitesDone, color: 'bg-teal-500', icon: Home },
-                  { label: 'Offres', value: stats.offresWritten, color: 'bg-orange-500', icon: TrendingUp },
+                  { label: isEs ? 'Mandatos' : 'Mandats', value: stats.mandatsSigned, color: 'bg-red-500', icon: FileCheck },
+                  { label: isEs ? 'Visitas' : 'Visites', value: stats.visitesDone, color: 'bg-teal-500', icon: Home },
+                  { label: isEs ? 'Ofertas' : 'Offres', value: stats.offresWritten, color: 'bg-orange-500', icon: TrendingUp },
                 ].filter(item => item.value > 0).map(item => {
                   const maxVal = Math.max(stats.callsMade, stats.contactsApproached, stats.rdvR1Done, stats.rdvR2Done, stats.mandatsSigned, stats.visitesDone, stats.offresWritten, 1);
                   const pct = Math.round((item.value / maxVal) * 100);
@@ -272,16 +293,16 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
             <CardContent className="p-5">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-green-500" />
-                Taux de conversion
+                {isEs ? 'Tasa de conversión' : 'Taux de conversion'}
               </h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {[
-                  { label: 'Contacts → R1', num: stats.rdvR1Done, den: stats.contactsApproached, color: 'text-purple-600', bg: 'bg-purple-50' },
+                  { label: isEs ? 'Contactos → R1' : 'Contacts → R1', num: stats.rdvR1Done, den: stats.contactsApproached, color: 'text-purple-600', bg: 'bg-purple-50' },
                   { label: 'R1 → R2', num: stats.rdvR2Done, den: stats.rdvR1Done, color: 'text-indigo-600', bg: 'bg-indigo-50' },
-                  { label: 'R2 → Mandat', num: stats.mandatsSigned, den: stats.rdvR2Done, color: 'text-red-600', bg: 'bg-red-50' },
-                  { label: 'Mandat → Visite', num: stats.visitesDone, den: stats.mandatsSigned, color: 'text-teal-600', bg: 'bg-teal-50' },
-                  { label: 'Visite → Offre', num: stats.offresWritten, den: stats.visitesDone, color: 'text-orange-600', bg: 'bg-orange-50' },
-                  { label: 'Conversations → Contact', num: stats.contactsApproached, den: stats.callsMade, color: 'text-blue-600', bg: 'bg-blue-50' },
+                  { label: isEs ? 'R2 → Mandato' : 'R2 → Mandat', num: stats.mandatsSigned, den: stats.rdvR2Done, color: 'text-red-600', bg: 'bg-red-50' },
+                  { label: isEs ? 'Mandato → Visita' : 'Mandat → Visite', num: stats.visitesDone, den: stats.mandatsSigned, color: 'text-teal-600', bg: 'bg-teal-50' },
+                  { label: isEs ? 'Visita → Oferta' : 'Visite → Offre', num: stats.offresWritten, den: stats.visitesDone, color: 'text-orange-600', bg: 'bg-orange-50' },
+                  { label: isEs ? 'Conversaciones → Contacto' : 'Conversations → Contact', num: stats.contactsApproached, den: stats.callsMade, color: 'text-blue-600', bg: 'bg-blue-50' },
                 ]
                   // Ratios sans dénominateur (0) masqués : « 0 % (1/0) » n'a pas de sens
                   .filter(conv => conv.den > 0)
@@ -389,8 +410,8 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
       ) : (
         <Card><CardContent className="p-8 text-center text-gray-500">
           <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p>Aucun bilan pour cette période.</p>
-          <p className="text-sm mt-1">Commence à remplir tes bilans quotidiens pour voir tes stats !</p>
+          <p>{isEs ? 'Ningún balance para este período.' : 'Aucun bilan pour cette période.'}</p>
+          <p className="text-sm mt-1">{isEs ? '¡Empiece a completar sus balances diarios para ver sus estadísticas!' : 'Commence à remplir tes bilans quotidiens pour voir tes stats !'}</p>
         </CardContent></Card>
       )}
     </div>

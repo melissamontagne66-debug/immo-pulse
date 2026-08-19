@@ -23,8 +23,25 @@ interface CelebrationProps {
 
 const CONFETTI_EMOJIS = ['🎉', '🎊', '💰', '✨', '🏡', '🔑'];
 
+// Langue lue depuis la session (iad-coach-session) puis le profil local
+// (iad-coach-profile-{email}) — le composant ne reçoit pas le profil en props.
+function readIsSpanish(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
+
 export function Celebration({ show, message, submessage, particleCount = 32, autoCloseMs = 4000, variant = 'modal', onClose }: CelebrationProps) {
   const [reducedMotion, setReducedMotion] = useState(false);
+  const isEs = readIsSpanish();
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
@@ -130,7 +147,7 @@ export function Celebration({ show, message, submessage, particleCount = 32, aut
       >
         <p className="text-lg font-bold text-gray-900">{message}</p>
         {submessage && <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{submessage}</p>}
-        <p className="text-sm text-gray-500 mt-2">Touche pour fermer</p>
+        <p className="text-sm text-gray-500 mt-2">{isEs ? 'Toca para cerrar' : 'Touche pour fermer'}</p>
       </div>
     </div>
   );

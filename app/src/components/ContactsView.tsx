@@ -18,11 +18,21 @@ interface ContactsViewProps {
   state?: ReturnType<typeof useContacts>;
 }
 
-const STATUTS: { value: ContactStatut; label: string; badge: string; active: string }[] = [
-  { value: 'chaud', label: 'Chaud', badge: 'bg-red-50 text-red-700 border-red-200', active: 'border-red-500 bg-red-50 text-red-700' },
-  { value: 'tiède', label: 'Tiède', badge: 'bg-orange-50 text-orange-700 border-orange-200', active: 'border-orange-500 bg-orange-50 text-orange-700' },
-  { value: 'froid', label: 'Froid', badge: 'bg-blue-50 text-blue-700 border-blue-200', active: 'border-blue-500 bg-blue-50 text-blue-700' },
+const STATUTS: { value: ContactStatut; label: string; labelEs: string; badge: string; active: string }[] = [
+  { value: 'chaud', label: 'Chaud', labelEs: 'Caliente', badge: 'bg-red-50 text-red-700 border-red-200', active: 'border-red-500 bg-red-50 text-red-700' },
+  { value: 'tiède', label: 'Tiède', labelEs: 'Templado', badge: 'bg-orange-50 text-orange-700 border-orange-200', active: 'border-orange-500 bg-orange-50 text-orange-700' },
+  { value: 'froid', label: 'Froid', labelEs: 'Frío', badge: 'bg-blue-50 text-blue-700 border-blue-200', active: 'border-blue-500 bg-blue-50 text-blue-700' },
 ];
+
+// Langue lue depuis le profil local (iad-coach-profile-{userKey})
+function readIsEs(userKey: string): boolean {
+  try {
+    const key = userKey ? `iad-coach-profile-${userKey}` : 'iad-coach-profile';
+    const stored = localStorage.getItem(key);
+    if (stored) return JSON.parse(stored)?.language === 'es';
+  } catch { /* ignore */ }
+  return false;
+}
 
 const EMPTY_FORM = {
   nom: '',
@@ -33,16 +43,17 @@ const EMPTY_FORM = {
   statut: 'chaud' as ContactStatut,
 };
 
-function formatRelance(dateRelance: string): { label: string; overdue: boolean } | null {
+function formatRelance(dateRelance: string, isEs: boolean): { label: string; overdue: boolean } | null {
   if (!dateRelance) return null;
   const today = new Date().toISOString().split('T')[0];
-  const label = new Date(`${dateRelance}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+  const label = new Date(`${dateRelance}T12:00:00`).toLocaleDateString(isEs ? 'es-ES' : 'fr-FR', { day: 'numeric', month: 'short' });
   return { label, overdue: dateRelance <= today };
 }
 
 export function ContactsView({ userKey, state }: ContactsViewProps) {
   const internal = useContacts(userKey);
   const { contacts, addContact, updateContact, removeContact, sortedContacts } = state ?? internal;
+  const isEs = readIsEs(userKey);
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -96,15 +107,17 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Users className="w-6 h-6 text-red-600" />
-            Contacts chauds
+            {isEs ? 'Contactos calientes' : 'Contacts chauds'}
           </h2>
           <p className="text-gray-500 mt-1">
-            {contacts.length} contact{contacts.length > 1 ? 's' : ''} dans ton carnet
+            {isEs
+              ? `${contacts.length} contacto${contacts.length > 1 ? 's' : ''} en su agenda`
+              : `${contacts.length} contact${contacts.length > 1 ? 's' : ''} dans ton carnet`}
           </p>
         </div>
         {!formOpen && (
           <Button onClick={openAddForm} className="bg-red-600 hover:bg-red-700">
-            <Plus className="w-4 h-4 mr-2" /> Ajouter
+            <Plus className="w-4 h-4 mr-2" /> {isEs ? 'Añadir' : 'Ajouter'}
           </Button>
         )}
       </div>
@@ -115,7 +128,9 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
           <div className="flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
             <p className="text-xs text-amber-700">
-              Ces fiches contiennent des données personnelles de prospects : tu es responsable de leur conservation et de leur suppression (cf. recommandations RGPD).
+              {isEs
+                ? 'Estas fichas contienen datos personales de clientes potenciales: usted es responsable de su conservación y de su eliminación (cf. recomendaciones RGPD).'
+                : 'Ces fiches contiennent des données personnelles de prospects : tu es responsable de leur conservation et de leur suppression (cf. recommandations RGPD).'}
             </p>
           </div>
         </CardContent>
@@ -126,52 +141,54 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
         <Card className="border-red-200 bg-red-50/50">
           <CardContent className="p-6 space-y-4">
             <h3 className="font-semibold text-gray-900">
-              {editingId ? 'Modifier la fiche' : 'Nouvelle fiche contact'}
+              {editingId
+                ? (isEs ? 'Modificar la ficha' : 'Modifier la fiche')
+                : (isEs ? 'Nueva ficha de contacto' : 'Nouvelle fiche contact')}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="contact-nom">Nom *</Label>
+                <Label htmlFor="contact-nom">{isEs ? 'Nombre *' : 'Nom *'}</Label>
                 <Input
                   id="contact-nom"
                   value={form.nom}
                   onChange={e => setForm({ ...form, nom: e.target.value })}
-                  placeholder="Ex : Mme Dupont"
+                  placeholder={isEs ? 'Ej.: Sra. García' : 'Ex : Mme Dupont'}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-telephone">Téléphone</Label>
+                <Label htmlFor="contact-telephone">{isEs ? 'Teléfono' : 'Téléphone'}</Label>
                 <Input
                   id="contact-telephone"
                   type="tel"
                   value={form.telephone}
                   onChange={e => setForm({ ...form, telephone: e.target.value })}
-                  placeholder="06 12 34 56 78"
+                  placeholder={isEs ? '612 34 56 78' : '06 12 34 56 78'}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-contexte">Contexte</Label>
+                <Label htmlFor="contact-contexte">{isEs ? 'Contexto' : 'Contexte'}</Label>
                 <Input
                   id="contact-contexte"
                   value={form.contexte}
                   onChange={e => setForm({ ...form, contexte: e.target.value })}
-                  placeholder="Ex : veut vendre sa maison avant septembre"
+                  placeholder={isEs ? 'Ej.: quiere vender su casa antes de septiembre' : 'Ex : veut vendre sa maison avant septembre'}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-origine">Origine</Label>
+                <Label htmlFor="contact-origine">{isEs ? 'Origen' : 'Origine'}</Label>
                 <Input
                   id="contact-origine"
                   value={form.origine}
                   onChange={e => setForm({ ...form, origine: e.target.value })}
-                  placeholder="Ex : porte-à-porte, recommandation…"
+                  placeholder={isEs ? 'Ej.: puerta fría, recomendación…' : 'Ex : porte-à-porte, recommandation…'}
                   className="mt-1"
                 />
               </div>
               <div>
-                <Label htmlFor="contact-relance">Date de relance</Label>
+                <Label htmlFor="contact-relance">{isEs ? 'Fecha de seguimiento' : 'Date de relance'}</Label>
                 <Input
                   id="contact-relance"
                   type="date"
@@ -181,7 +198,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                 />
               </div>
               <div>
-                <Label>Statut</Label>
+                <Label>{isEs ? 'Estado' : 'Statut'}</Label>
                 <div className="grid grid-cols-3 gap-2 mt-1">
                   {STATUTS.map(s => (
                     <button
@@ -191,7 +208,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                         form.statut === s.value ? s.active : 'border-gray-200 hover:border-gray-300 text-gray-600'
                       }`}
                     >
-                      {s.label}
+                      {isEs ? s.labelEs : s.label}
                     </button>
                   ))}
                 </div>
@@ -199,10 +216,12 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
             </div>
             <div className="flex gap-3">
               <Button onClick={submitForm} disabled={!form.nom.trim()} className="bg-red-600 hover:bg-red-700">
-                {editingId ? 'Enregistrer les modifications' : 'Créer la fiche'}
+                {editingId
+                  ? (isEs ? 'Guardar los cambios' : 'Enregistrer les modifications')
+                  : (isEs ? 'Crear la ficha' : 'Créer la fiche')}
               </Button>
               <Button variant="outline" onClick={() => { setFormOpen(false); setEditingId(null); }}>
-                Annuler
+                {isEs ? 'Cancelar' : 'Annuler'}
               </Button>
             </div>
           </CardContent>
@@ -215,16 +234,16 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
           <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-gray-400" />
           </div>
-          <p className="text-gray-500">Ton fichier démarre ici&nbsp;: ajoute ton premier contact chaud.</p>
+          <p className="text-gray-500">{isEs ? 'Su archivo empieza aquí: añada su primer contacto caliente.' : 'Ton fichier démarre ici : ajoute ton premier contact chaud.'}</p>
           <Button onClick={openAddForm} className="mt-4 bg-red-600 hover:bg-red-700">
-            <Plus className="w-4 h-4 mr-2" /> Ajouter un contact
+            <Plus className="w-4 h-4 mr-2" /> {isEs ? 'Añadir un contacto' : 'Ajouter un contact'}
           </Button>
         </div>
       ) : (
         <div className="space-y-3">
           {sorted.map(contact => {
             const statut = STATUTS.find(s => s.value === contact.statut) ?? STATUTS[0];
-            const relance = formatRelance(contact.dateRelance);
+            const relance = formatRelance(contact.dateRelance, isEs);
             return (
               <Card key={contact.id} className="overflow-hidden">
                 <CardContent className="p-4">
@@ -232,7 +251,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-gray-900 flex items-center gap-2 flex-wrap">
                         {contact.nom}
-                        <Badge variant="outline" className={statut.badge}>{statut.label}</Badge>
+                        <Badge variant="outline" className={statut.badge}>{isEs ? statut.labelEs : statut.label}</Badge>
                       </p>
                       {contact.contexte && (
                         <p className="text-sm text-gray-600 mt-1">{contact.contexte}</p>
@@ -243,11 +262,13 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                             <Phone className="w-3 h-3" /> {contact.telephone}
                           </a>
                         )}
-                        {contact.origine && <span>Origine : {contact.origine}</span>}
+                        {contact.origine && <span>{isEs ? 'Origen' : 'Origine'} : {contact.origine}</span>}
                         {relance && (
                           <span className={`flex items-center gap-1 ${relance.overdue ? 'text-red-600 font-semibold' : ''}`}>
                             <CalendarClock className="w-3 h-3" />
-                            {relance.overdue ? 'À relancer' : 'Relance'} le {relance.label}
+                            {isEs
+                              ? `${relance.overdue ? 'Seguimiento pendiente' : 'Seguimiento'} el ${relance.label}`
+                              : `${relance.overdue ? 'À relancer' : 'Relance'} le ${relance.label}`}
                           </span>
                         )}
                       </div>
@@ -255,26 +276,26 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                     <div className="flex items-center gap-1 flex-shrink-0">
                       {confirmDeleteId === contact.id ? (
                         <span className="flex items-center gap-2 text-xs">
-                          <span className="text-gray-600">Supprimer ?</span>
+                          <span className="text-gray-600">{isEs ? '¿Eliminar?' : 'Supprimer ?'}</span>
                           <button
                             onClick={() => { removeContact(contact.id); setConfirmDeleteId(null); }}
                             className="text-red-600 font-semibold hover:underline"
                           >
-                            Oui
+                            {isEs ? 'Sí' : 'Oui'}
                           </button>
                           <button
                             onClick={() => setConfirmDeleteId(null)}
                             className="text-gray-500 hover:underline"
                           >
-                            Non
+                            {isEs ? 'No' : 'Non'}
                           </button>
                         </span>
                       ) : (
                         <>
-                          <button onClick={() => openEditForm(contact)} className="text-gray-400 hover:text-blue-500 p-2" aria-label="Modifier">
+                          <button onClick={() => openEditForm(contact)} className="text-gray-400 hover:text-blue-500 p-2" aria-label={isEs ? 'Modificar' : 'Modifier'}>
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button onClick={() => setConfirmDeleteId(contact.id)} className="text-gray-400 hover:text-red-500 p-2" aria-label="Supprimer">
+                          <button onClick={() => setConfirmDeleteId(contact.id)} className="text-gray-400 hover:text-red-500 p-2" aria-label={isEs ? 'Eliminar' : 'Supprimer'}>
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </>

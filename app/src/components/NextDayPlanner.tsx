@@ -20,6 +20,22 @@ interface SkippedAction {
   reportDate: string;
 }
 
+// Langue lue depuis la session (iad-coach-session) puis le profil local
+// (iad-coach-profile-{email}) — le composant ne reçoit pas le profil en props.
+function readIsEs(): boolean {
+  try {
+    const sessionRaw = localStorage.getItem('iad-coach-session');
+    const session = sessionRaw ? JSON.parse(sessionRaw) : null;
+    const email = session?.email;
+    if (!email) return false;
+    const profileRaw = localStorage.getItem(`iad-coach-profile-${email}`);
+    const profile = profileRaw ? JSON.parse(profileRaw) : null;
+    return profile?.language === 'es';
+  } catch {
+    return false;
+  }
+}
+
 export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerProps) {
   const [selectedActions, setSelectedActions] = useState<string[]>([]);
   const [skippedActions, setSkippedActions] = useState<SkippedAction[]>([]);
@@ -28,6 +44,8 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
   const [currentSkipAction, setCurrentSkipAction] = useState<string | null>(null);
   const [skipReason, setSkipReason] = useState<SkippedAction['reason']>('blocage');
   const [skipDetail, setSkipDetail] = useState('');
+
+  const isEs = readIsEs();
 
   // Récupérer les actions du jour suivant
   let foundNextDay = false;
@@ -91,10 +109,10 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
   };
 
   const reasonLabels: Record<string, string> = {
-    blocage: 'Un blocage m\'empêche d\'avancer',
-    difficulté: 'C\'est trop difficile pour mon niveau actuel',
-    report: 'Je préfère reporter à plus tard',
-    autre: 'Autre raison',
+    blocage: isEs ? 'Un bloqueo me impide avanzar' : 'Un blocage m\'empêche d\'avancer',
+    difficulté: isEs ? 'Es demasiado difícil para mi nivel actual' : 'C\'est trop difficile pour mon niveau actuel',
+    report: isEs ? 'Prefiero posponerlo para más tarde' : 'Je préfère reporter à plus tard',
+    autre: isEs ? 'Otra razón' : 'Autre raison',
   };
 
   if (validated) {
@@ -103,11 +121,11 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
           <Check className="w-8 h-8 text-green-600" />
         </div>
-        <h3 className="text-xl font-bold text-gray-900">Plan de demain enregistré !</h3>
-        <p className="text-gray-500">Tu as sélectionné {selectedActions.length} action(s) pour demain. Bon courage !</p>
+        <h3 className="text-xl font-bold text-gray-900">{isEs ? '¡Plan de mañana guardado!' : 'Plan de demain enregistré !'}</h3>
+        <p className="text-gray-500">{isEs ? `Ha seleccionado ${selectedActions.length} acción(es) para mañana. ¡Mucho ánimo!` : `Tu as sélectionné ${selectedActions.length} action(s) pour demain. Bon courage !`}</p>
         {skippedActions.length > 0 && (
           <div className="bg-amber-50 rounded-xl p-4 max-w-md mx-auto text-left">
-            <p className="text-sm font-semibold text-amber-800 mb-2">Actions reportées :</p>
+            <p className="text-sm font-semibold text-amber-800 mb-2">{isEs ? 'Acciones pospuestas:' : 'Actions reportées :'}</p>
             {skippedActions.map((s, i) => (
               <p key={i} className="text-sm text-amber-700">
                 • {nextDayActions.find(a => a.id === s.actionId)?.title} — {reasonLabels[s.reason]}
@@ -126,16 +144,16 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
           <Sun className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900">Planifie ton lendemain</h3>
-          <p className="text-sm text-gray-500">Sélectionne les actions que tu veux réaliser demain (Jour {nextDay})</p>
+          <h3 className="text-lg font-bold text-gray-900">{isEs ? 'Planifique el día de mañana' : 'Planifie ton lendemain'}</h3>
+          <p className="text-sm text-gray-500">{isEs ? `Seleccione las acciones que desea realizar mañana (Día ${nextDay})` : `Sélectionne les actions que tu veux réaliser demain (Jour ${nextDay})`}</p>
         </div>
       </div>
 
       {nextDayActions.length === 0 ? (
         <Card>
           <CardContent className="p-6 text-center">
-            <p className="text-gray-500">Aucune action prévue pour le jour {nextDay}.</p>
-            <Button onClick={onSkip} variant="outline" className="mt-4">Fermer</Button>
+            <p className="text-gray-500">{isEs ? `No hay ninguna acción prevista para el día ${nextDay}.` : `Aucune action prévue pour le jour ${nextDay}.`}</p>
+            <Button onClick={onSkip} variant="outline" className="mt-4">{isEs ? 'Cerrar' : 'Fermer'}</Button>
           </CardContent>
         </Card>
       ) : (
@@ -188,7 +206,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
                           onClick={() => handleSkipAction(action.id)}
                           className="text-xs text-gray-400 hover:text-amber-600 px-2 py-1 rounded hover:bg-amber-50 transition-colors"
                         >
-                          Reporter
+                          {isEs ? 'Posponer' : 'Reporter'}
                         </button>
                       )}
                     </div>
@@ -205,10 +223,11 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
                 <div className="flex items-start gap-3">
                   <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-red-800">Tu n'as pas sélectionné toutes les actions</p>
+                    <p className="text-sm font-semibold text-red-800">{isEs ? 'No ha seleccionado todas las acciones' : 'Tu n\'as pas sélectionné toutes les actions'}</p>
                     <p className="text-sm text-red-700 mt-1">
-                      C'est normal si certaines actions ne te semblent pas prioritaires. Mais pour celles que tu ne fais pas :
-                      est-ce un blocage, une difficulté, ou tu préfères juste reporter ? Cela m'aide à te conseiller.
+                      {isEs
+                        ? 'Es normal si algunas acciones no le parecen prioritarias. Pero para las que no va a hacer: ¿se trata de un bloqueo, de una dificultad, o simplemente prefiere posponerlas? Esto me ayuda a aconsejarle.'
+                        : 'C\'est normal si certaines actions ne te semblent pas prioritaires. Mais pour celles que tu ne fais pas : est-ce un blocage, une difficulté, ou tu préfères juste reporter ? Cela m\'aide à te conseiller.'}
                     </p>
                   </div>
                 </div>
@@ -220,13 +239,15 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
             {skippedActions.length > 0 && (
               <div className="bg-amber-50 rounded-lg p-3 border border-amber-200">
                 <p className="text-xs text-amber-700">
-                  💡 Tu as reporté {skippedActions.length} {skippedActions.length > 1 ? 'actions' : 'action'}. N'hésite pas à en parler avec la personne avec qui tu collabores (parrain, mentor, partenaire) pour débloquer la situation.
+                  {isEs
+                    ? `💡 Ha pospuesto ${skippedActions.length} ${skippedActions.length > 1 ? 'acciones' : 'acción'}. No dude en hablarlo con la persona con la que colabora (padrino, mentor, socio) para desbloquear la situación.`
+                    : `💡 Tu as reporté ${skippedActions.length} ${skippedActions.length > 1 ? 'actions' : 'action'}. N'hésite pas à en parler avec la personne avec qui tu collabores (parrain, mentor, partenaire) pour débloquer la situation.`}
                 </p>
               </div>
             )}
             <div className="flex gap-3">
               <Button variant="outline" onClick={onSkip} className="flex-1">
-                Reporter
+                {isEs ? 'Posponer' : 'Reporter'}
               </Button>
               <Button
                 onClick={handleValidate}
@@ -234,7 +255,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
                 disabled={selectedActions.length === 0 && skippedActions.length === 0}
               >
                 <ChevronRight className="w-4 h-4 mr-1" />
-                Valider mon plan
+                {isEs ? 'Validar mi plan' : 'Valider mon plan'}
               </Button>
             </div>
           </div>
@@ -247,12 +268,12 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-amber-600" />
-              Pourquoi tu ne fais pas cette action ?
+              {isEs ? '¿Por qué no va a hacer esta acción?' : 'Pourquoi tu ne fais pas cette action ?'}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <p className="text-sm text-gray-600">
-              Action : <strong>{nextDayActions.find(a => a.id === currentSkipAction)?.title}</strong>
+              {isEs ? 'Acción' : 'Action'} : <strong>{nextDayActions.find(a => a.id === currentSkipAction)?.title}</strong>
             </p>
             <div className="space-y-2">
               {(['blocage', 'difficulté', 'report', 'autre'] as const).map(reason => (
@@ -270,19 +291,19 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
               ))}
             </div>
             <div>
-              <p className="text-sm text-gray-500 mb-2">Détail (optionnel)</p>
+              <p className="text-sm text-gray-500 mb-2">{isEs ? 'Detalle (opcional)' : 'Détail (optionnel)'}</p>
               <Textarea
                 value={skipDetail}
                 onChange={e => setSkipDetail(e.target.value)}
-                placeholder="Explique ton blocage si tu veux..."
+                placeholder={isEs ? 'Explique su bloqueo si lo desea...' : 'Explique ton blocage si tu veux...'}
               />
             </div>
             <div className="flex gap-3">
               <Button variant="outline" onClick={() => setCurrentSkipAction(null)} className="flex-1">
-                Annuler
+                {isEs ? 'Cancelar' : 'Annuler'}
               </Button>
               <Button onClick={confirmSkip} className="flex-1 bg-red-600 hover:bg-red-700">
-                Confirmer
+                {isEs ? 'Confirmar' : 'Confirmer'}
               </Button>
             </div>
           </div>
