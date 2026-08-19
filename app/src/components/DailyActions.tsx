@@ -413,8 +413,8 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
               ...def,
               title: isEs ? '🗓️ Bloquea tus franjas importantes en la agenda' : '🗓️ Bloque tes créneaux importants dans ton agenda',
               description: isEs
-                ? 'Hoy, prepara tu semana: bloquea cada día en tu agenda 30 min al inicio de la jornada para enviar los mensajes sobre los anuncios + 1 h de terreno + 1 h de administrativo.\n\nEstas franjas son sagradas: no pongas citas encima. Si una cita es inevitable, mueve inmediatamente la franja a otro momento del mismo día — nunca la elimines.'
-                : 'Aujourd\'hui, prépare ta semaine : bloque chaque jour dans ton agenda 30 min en début de journée pour envoyer tes messages sur les annonces + 1 h de terrain + 1 h d\'administratif.\n\nCes blocs sont sacrés : tu ne poses pas de RDV dessus. Et si un RDV est inévitable, tu recales immédiatement le bloc concerné à un autre moment de la même journée — tu ne le supprimes jamais.',
+                ? 'Hoy, prepara tu semana: bloquea en tu agenda, EN RECURRENCIA (todos los días laborables), 30 min al inicio de la jornada para enviar los mensajes sobre los anuncios + 1 h de terreno + 1 h de administrativo.\n\nPonerlos en recurrencia es lo que te protege: no tendrás que recrearlos cada semana. Estas franjas son sagradas: no pongas citas encima. Si una cita es inevitable, mueve inmediatamente la franja a otro momento del mismo día — nunca la elimines.'
+                : 'Aujourd\'hui, prépare ta semaine : bloque dans ton agenda, EN RÉCURRENCE (tous les jours ouvrés), 30 min en début de journée pour envoyer tes messages sur les annonces + 1 h de terrain + 1 h d\'administratif.\n\nLes mettre en récurrence, c\'est ce qui te protège : tu n\'auras pas à les recréer chaque semaine. Ces blocs sont sacrés : tu ne poses pas de RDV dessus. Et si un RDV est inévitable, tu recales immédiatement le bloc concerné à un autre moment de la même journée — tu ne le supprimes jamais.',
             };
           }
           return {
