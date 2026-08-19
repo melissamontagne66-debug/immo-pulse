@@ -487,7 +487,7 @@ function App() {
             onNavigate={setActiveTab}
             userEmail={currentUser?.email}
             onCreateContact={(note) => {
-              contactsState.addContact({ nom: '', telephone: '', contexte: note, origine: 'Action du jour', dateRelance: '', statut: 'chaud' });
+              contactsState.addContact({ nom: '', prenom: '', telephone: '', email: '', contexte: note, origine: 'autre', typeProspect: '', occupancy: '', adresse: '', codePostal: '', ville: '', quartier: '', anniversaire: '', dateDerniereRelance: '', dateRelance: '', notes: [], statut: 'chaud' });
               setActiveTab('contacts');
             }}
             nextDayPlan={progress.nextDayPlans.find(p => p.date === toLocalDateKey(new Date()))}

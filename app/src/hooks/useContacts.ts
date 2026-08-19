@@ -8,14 +8,35 @@ import { apiSaveContact, apiDeleteContact, isCloudEnabled } from '@/services/api
 // ============================================
 
 export type ContactStatut = 'chaud' | 'tiède' | 'froid';
+export type ContactOrigine = 'pige' | 'porte-a-porte' | 'bouche-a-oreille' | 'apporteur' | 'autre';
+export type ContactTypeProspect = 'acheteur' | 'vendeur' | 'sans-projet' | '';
+export type ContactOccupancy = 'proprietaire' | 'locataire' | '';
+export type DelaiRelance = '1-semaine' | '15-jours' | '1-mois' | '3-mois' | 'personnalise' | '';
+
+export interface ContactNote {
+  id: string;
+  date: string;   // YYYY-MM-DD
+  texte: string;
+}
 
 export interface Contact {
   id: string;
   nom: string;
+  prenom: string;
   telephone: string;
+  email: string;
   contexte: string;
-  origine: string;
-  dateRelance: string; // ISO YYYY-MM-DD ('' si pas de relance prévue)
+  origine: ContactOrigine;
+  typeProspect: ContactTypeProspect;
+  occupancy: ContactOccupancy;
+  adresse: string;
+  codePostal: string;
+  ville: string;
+  quartier: string;
+  anniversaire: string;        // YYYY-MM-DD ('' si inconnu)
+  dateRelance: string;         // YYYY-MM-DD ('' si pas de relance prévue)
+  dateDerniereRelance: string; // YYYY-MM-DD ('' si jamais relancé)
+  notes: ContactNote[];
   createdAt: string;
   statut: ContactStatut;
 }
@@ -26,10 +47,37 @@ function getStorageKey(userKey: string): string {
   return `${STORAGE_PREFIX}-${userKey}`;
 }
 
+// Migration douce : les contacts créés avant l'enrichissement reçoivent
+// les nouveaux champs vides par défaut.
+function migrateContact(raw: any): Contact {
+  const origines: ContactOrigine[] = ['pige', 'porte-a-porte', 'bouche-a-oreille', 'apporteur'];
+  return {
+    id: raw.id,
+    nom: raw.nom || '',
+    prenom: raw.prenom || '',
+    telephone: raw.telephone || '',
+    email: raw.email || '',
+    contexte: raw.contexte || '',
+    origine: origines.includes(raw.origine) ? raw.origine : (raw.origine ? 'autre' : 'autre'),
+    typeProspect: raw.typeProspect === 'acheteur' || raw.typeProspect === 'vendeur' || raw.typeProspect === 'sans-projet' ? raw.typeProspect : '',
+    occupancy: raw.occupancy === 'proprietaire' || raw.occupancy === 'locataire' ? raw.occupancy : '',
+    adresse: raw.adresse || '',
+    codePostal: raw.codePostal || '',
+    ville: raw.ville || '',
+    quartier: raw.quartier || '',
+    anniversaire: raw.anniversaire || '',
+    dateRelance: raw.dateRelance || '',
+    dateDerniereRelance: raw.dateDerniereRelance || '',
+    notes: Array.isArray(raw.notes) ? raw.notes : [],
+    createdAt: raw.createdAt || '',
+    statut: (raw.statut === 'tiède' || raw.statut === 'froid') ? raw.statut : 'chaud',
+  };
+}
+
 function loadContacts(userKey: string): Contact[] {
   try {
     const stored = localStorage.getItem(getStorageKey(userKey));
-    if (stored) return JSON.parse(stored);
+    if (stored) return (JSON.parse(stored) as any[]).map(migrateContact);
   } catch { /* ignore */ }
   return [];
 }
@@ -52,9 +100,9 @@ function toApiContact(contact: Contact) {
   };
 }
 
-// Mapping API (EN) → front (FR)
+// Mapping API (EN) → front (FR) — avec migration douce vers le modèle enrichi
 function fromApiContact(raw: any): Contact {
-  return {
+  return migrateContact({
     id: raw.id,
     nom: raw.name || '',
     telephone: raw.phone || '',
@@ -63,7 +111,7 @@ function fromApiContact(raw: any): Contact {
     dateRelance: raw.followUpDate || '',
     createdAt: raw.createdAt || '',
     statut: (raw.status === 'tiède' || raw.status === 'froid') ? raw.status : 'chaud',
-  };
+  });
 }
 
 function pushToCloud(contact: Contact) {
@@ -143,6 +191,36 @@ export function useContacts(userKey: string) {
     updateContact(id, { dateRelance: tomorrow.toISOString().split('T')[0] });
   }, [updateContact]);
 
+  // Ajoute une note à l'historique du prospect
+  const addNote = useCallback((id: string, texte: string) => {
+    const trimmed = texte.trim();
+    if (!trimmed) return;
+    setContacts(prev => {
+      const updated = prev.map(c => {
+        if (c.id !== id) return c;
+        const note = { id: `note-${Date.now()}`, date: new Date().toISOString().split('T')[0], texte: trimmed };
+        return { ...c, notes: [note, ...(c.notes ?? [])] };
+      });
+      saveContacts(loadedKey.current, updated);
+      const contact = updated.find(c => c.id === id);
+      if (contact) pushToCloud(contact);
+      return updated;
+    });
+  }, []);
+
+  // Planifie une relance depuis un délai choisi (ou une date exacte si personnalisé)
+  const planifierRelance = useCallback((id: string, delai: DelaiRelance, dateExacte?: string) => {
+    if (delai === 'personnalise' && dateExacte) {
+      updateContact(id, { dateRelance: dateExacte });
+      return;
+    }
+    const jours = delai === '1-semaine' ? 7 : delai === '15-jours' ? 15 : delai === '1-mois' ? 30 : delai === '3-mois' ? 90 : 0;
+    if (jours === 0) return;
+    const d = new Date();
+    d.setDate(d.getDate() + jours);
+    updateContact(id, { dateRelance: d.toISOString().split('T')[0] });
+  }, [updateContact]);
+
   // Contacts triés par date de relance (les plus urgents d'abord, sans date à la fin)
   const sortedContacts = useCallback((): Contact[] => {
     return [...contacts].sort((a, b) => {
@@ -165,6 +243,8 @@ export function useContacts(userKey: string) {
     updateContact,
     removeContact,
     postponeContact,
+    addNote,
+    planifierRelance,
     sortedContacts,
     getDueContacts,
     loadFromCloud,
