@@ -407,14 +407,14 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             catIcon: catInfo.icon,
           };
         case 'admin':
-          // J1 : mise en place des blocs récurrents (terrain + administratif)
+          // J1 : mise en place des blocs récurrents (messages annonces + terrain + administratif)
           if (def.id === 'blocs-agenda-jour-1') {
             return {
               ...def,
               title: isEs ? '🗓️ Bloquea tus franjas importantes en la agenda' : '🗓️ Bloque tes créneaux importants dans ton agenda',
               description: isEs
-                ? 'Hoy, prepara tu semana: bloquea cada día 1 h de terreno + 1 h de administrativo en tu agenda.\n\nEstas franjas son sagradas: no pongas citas encima. Si una cita es inevitable, mueve inmediatamente la franja a otro momento del mismo día — nunca la elimines.'
-                : 'Aujourd\'hui, prépare ta semaine : bloque chaque jour 1 h de terrain + 1 h d\'administratif dans ton agenda.\n\nCes blocs sont sacrés : tu ne poses pas de RDV dessus. Et si un RDV est inévitable, tu recales immédiatement le bloc concerné à un autre moment de la même journée — tu ne le supprimes jamais.',
+                ? 'Hoy, prepara tu semana: bloquea cada día en tu agenda 30 min al inicio de la jornada para enviar los mensajes sobre los anuncios + 1 h de terreno + 1 h de administrativo.\n\nEstas franjas son sagradas: no pongas citas encima. Si una cita es inevitable, mueve inmediatamente la franja a otro momento del mismo día — nunca la elimines.'
+                : 'Aujourd\'hui, prépare ta semaine : bloque chaque jour dans ton agenda 30 min en début de journée pour envoyer tes messages sur les annonces + 1 h de terrain + 1 h d\'administratif.\n\nCes blocs sont sacrés : tu ne poses pas de RDV dessus. Et si un RDV est inévitable, tu recales immédiatement le bloc concerné à un autre moment de la même journée — tu ne le supprimes jamais.',
             };
           }
           return {
