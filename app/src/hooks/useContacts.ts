@@ -111,6 +111,36 @@ function purgeExpired(userKey: string, contacts: Contact[]): Contact[] {
   return kept;
 }
 
+// ============================================
+// Alerte 80 jours (demande client) : contacts sans AUCUNE interaction
+// (relance, note, modification) depuis 80 jours ou plus → le conseiller
+// doit les rappeler / leur écrire avant la purge automatique à 90 jours.
+// Une relance simplement PLANIFIÉE ne suffit PAS à sortir de la liste :
+// seules une note d'échange ou une relance effective (dernière relance
+// renseignée) comptent comme interaction réelle.
+// ============================================
+const ALERTE_INACTIVITE_JOURS = 80;
+
+export interface ContactInactif {
+  contact: Contact;
+  derniereInteraction: string; // YYYY-MM-DD
+  joursSansInteraction: number;
+}
+
+export function getContactsInactifs(contacts: Contact[]): ContactInactif[] {
+  const now = Date.now();
+  return contacts
+    .map(c => {
+      const last = lastInteractionKey(c);
+      if (!last) return null;
+      const jours = Math.floor((now - new Date(`${last}T12:00:00`).getTime()) / 86400000);
+      if (jours < ALERTE_INACTIVITE_JOURS) return null;
+      return { contact: c, derniereInteraction: last, joursSansInteraction: jours };
+    })
+    .filter((x): x is ContactInactif => x !== null)
+    .sort((a, b) => b.joursSansInteraction - a.joursSansInteraction);
+}
+
 function saveContacts(userKey: string, contacts: Contact[]) {
   localStorage.setItem(getStorageKey(userKey), JSON.stringify(contacts));
 }

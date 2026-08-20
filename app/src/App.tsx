@@ -491,6 +491,7 @@ function App() {
               setActiveTab('contacts');
             }}
             nextDayPlan={progress.nextDayPlans.find(p => p.date === toLocalDateKey(new Date()))}
+            contactsState={contactsState}
           />
         );
       case 'chat':

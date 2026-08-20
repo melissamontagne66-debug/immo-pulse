@@ -647,9 +647,8 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                               className="bg-red-600 hover:bg-red-700"
                               onClick={() => {
                                 planifierRelance(contact.id, replanDelai, replanDate || undefined);
-                                // La relance planifiée compte aussi comme dernière relance effectuée ? Non :
-                                // on met à jour la dernière relance à aujourd'hui (action de planification).
-                                updateContact(contact.id, { dateDerniereRelance: toLocalDateKey(new Date()) });
+                                // Une relance PLANIFIÉE ne remet PAS le compteur d'inactivité à zéro
+                                // (dateDerniereRelance n'est mise à jour que sur une interaction réelle).
                                 setReplanId(null);
                               }}
                             >

@@ -10,7 +10,7 @@ import type { UserProfile } from '@/types/profile';
 import {
   CheckCircle2, Circle, ClipboardCheck,
   Database, ChevronLeft, ChevronRight, Bell,
-  ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil
+  ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil, AlertTriangle
 } from 'lucide-react';
 import { getProspectionActionForDay, getProspectionCategoryInfo } from '@/data/prospectionActions';
 import { getDefiForDay } from '@/data/defis';
@@ -23,6 +23,8 @@ import { MarkdownText } from '@/components/MarkdownText';
 import { Celebration } from '@/components/Celebration';
 import { toast } from 'sonner';
 import { shouldPromptForPush, snoozePushPrompt, subscribeToPush, isPushDenied } from '@/lib/push';
+import { useContacts, getContactsInactifs } from '@/hooks/useContacts';
+import { RelanceInactifsModal } from '@/components/RelanceInactifsModal';
 
 interface DailyActionsProps {
   currentDay: number;
@@ -41,6 +43,8 @@ interface DailyActionsProps {
   onCreateContact?: (contexte: string) => void;
   // MOD-35 — plan du jour issu du bilan de la veille (tâches reportées, badge « Reporté d'hier »)
   nextDayPlan?: NextDayPlan;
+  // Tâche « contacts inactifs » (80 jours) — carnet de contacts partagé
+  contactsState: ReturnType<typeof useContacts>;
 }
 
 // Idées de contenu réseaux sociaux — une par jour, cycle de 30 idées
@@ -194,6 +198,7 @@ export function DailyActions({
   userEmail,
   onCreateContact,
   nextDayPlan,
+  contactsState,
 }: DailyActionsProps) {
   const isAdmin = userEmail === 'melissa.montagne66@gmail.com';
 
@@ -216,6 +221,10 @@ export function DailyActions({
 
   // MOD-29 : carte douce de proposition des rappels push (jour ≥ 2)
   const [showPushPrompt, setShowPushPrompt] = useState(false);
+
+  // Tâche « contacts inactifs » (80 jours sans interaction) — modale un par un
+  const [showRelanceModal, setShowRelanceModal] = useState(false);
+  const inactifs = useMemo(() => getContactsInactifs(contactsState.contacts), [contactsState.contacts]);
 
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
@@ -598,6 +607,37 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
 
   return (
     <div className="space-y-5">
+      {/* Tâche « contacts inactifs » (80 jours sans interaction) — carte en tête
+          tant qu'il reste des contacts à traiter. S'ouvre en traitement un par un. */}
+      {inactifs.length > 0 && (
+        <Card className="bg-red-50 border-red-300">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-red-800">
+                  {isEs
+                    ? `${inactifs.length} contacto${inactifs.length > 1 ? 's' : ''} sin interacción desde hace mucho tiempo`
+                    : `${inactifs.length} contact${inactifs.length > 1 ? 's' : ''} sans interaction depuis longtemps`}
+                </p>
+                <p className="text-xs text-red-600 mt-1">
+                  {isEs
+                    ? 'Serán eliminados automáticamente si no hay acción de seguimiento, intercambio o nota que lo registre.'
+                    : 'Ils seront supprimés automatiquement s\'il n\'y a pas d\'action de relance, d\'échange, et de note pour en faire état.'}
+                </p>
+                <Button
+                  size="sm"
+                  onClick={() => setShowRelanceModal(true)}
+                  className="mt-2 bg-red-600 hover:bg-red-700 text-xs"
+                >
+                  {isEs ? 'Tratarlos ahora (1 a 1)' : 'Les traiter maintenant (1 par 1)'}
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* MOD-29 : proposition douce des rappels push — carte non bloquante,
           affichée après une action cochée (jour ≥ 2), jamais au 1er lancement */}
       {showPushPrompt && (
@@ -951,6 +991,16 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         message=""
         onClose={() => setCheckCelebration(false)}
       />
+
+      {/* Tâche « contacts inactifs » — traitement un par un */}
+      {showRelanceModal && inactifs.length > 0 && (
+        <RelanceInactifsModal
+          inactifs={inactifs}
+          contactsState={contactsState}
+          isEs={isEs}
+          onClose={() => setShowRelanceModal(false)}
+        />
+      )}
     </div>
   );
 }
