@@ -9,7 +9,7 @@ import { CGU_ARTICLES, CGU_VERSION, CGU_DATE, CGU_CHECKBOX_LABEL_FR, CGU_CHECKBO
 
 interface LoginScreenProps {
   onLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  onRegister?: (email: string, password: string, firstName: string, lastName: string) => Promise<{ success: boolean; error?: string }>;
+  onRegister?: (email: string, password: string, firstName: string, lastName: string, experienceLevel?: string, startDate?: string, cguVersion?: string) => Promise<{ success: boolean; error?: string }>;
 }
 
 type Mode = 'login' | 'register' | 'forgot' | 'reset';
@@ -100,7 +100,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       return;
     }
     setLoading(true);
-    const result = await onRegister(email.trim(), password, firstName.trim(), lastName.trim());
+    const result = await onRegister(email.trim(), password, firstName.trim(), lastName.trim(), undefined, undefined, CGU_VERSION);
     setLoading(false);
     if (result.success) {
       // Article 8 des CGU : la date et la version de l'acceptation sont enregistrées.

@@ -53,14 +53,14 @@ export async function isApiReachable(): Promise<boolean> {
 
 // --- AUTH ---
 
-export async function apiRegister(email: string, password: string, firstName: string, lastName: string, expérienceLevel?: string, startDate?: string) {
+export async function apiRegister(email: string, password: string, firstName: string, lastName: string, expérienceLevel?: string, startDate?: string, cguVersion?: string) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
   }
   const res = await fetchWithTimeout(`${API_URL}/api/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, password, firstName, lastName, expérienceLevel, startDate }),
+    body: JSON.stringify({ email, password, firstName, lastName, expérienceLevel, startDate, cguVersion }),
   });
   const data = await res.json();
   if (data.token) localStorage.setItem('immo-pulse-token', data.token);

@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS users (
   start_date TEXT,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   last_seen_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  email_opt_out INTEGER DEFAULT 0
+  email_opt_out INTEGER DEFAULT 0,
+  cgu_version TEXT,
+  cgu_accepted_at DATETIME
 );
 
 -- Table des profils (JSON complet)

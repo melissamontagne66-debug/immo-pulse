@@ -339,7 +339,7 @@ On plie en deux et on met dans la boîte aux lettres (moins de chance d'être je
 
 **Cette semaine :** varie ton angle. Si la semaine dernière tu parlais de tes acquéreurs, cette semaine parle d'une estimation offerte : "Je suis [Ton prénom], conseiller immobilier sur [secteur]. Je suis en train de constituer mes rapports locaux et je voudrais inclure votre bien. Seriez-vous ouvert à une estimation offerte sans engagement ?"
 
-Les vendeurs rappellent dans la journée — sois prêt.`,
+Les vendeurs rappellent dans la journée — sois prêt.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — Vary tes messages à chaque vague. Les voisins de biens vendus = cible ultra-réceptive au FOMO. Dès qu\'un proprio répond, appelle dans la minute pour fixer le R1. Tes modèles de SMS sont dans tes mémos.',
     objectif: '🎯 15 messages SMS envoyés, 3 réponses positives, 1 R1 fixé',
     duree: '1h',
@@ -579,7 +579,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 34,
     category: 'relances',
     title: 'Relances mensuelles — Relance de tes contacts qualifiés',
-    description: `Session PIGE Légale avec ciblage avancé.\n\nCette fois, segmente ta liste :\n• **Propriétaires de plus de 5 ans** : "Le marché a beaucoup évolué depuis votre achat. Voulez-vous connaître la valeur actuelle de votre patrimoine ?"\n• **Voisins de biens vendus** : FOMO classique\n• **Anciens contacts non convertis** : Relance douce\n\nPersonnalise chaque message selon le segment. Un message personnalisé = un taux de réponse 3x plus élevé.`,
+    description: `Session PIGE Légale avec ciblage avancé.\n\nCette fois, segmente ta liste :\n• **Propriétaires de plus de 5 ans** : "Le marché a beaucoup évolué depuis votre achat. Voulez-vous connaître la valeur actuelle de votre patrimoine ?"\n• **Voisins de biens vendus** : FOMO classique\n• **Anciens contacts non convertis** : Relance douce\n\nPersonnalise chaque message selon le segment. Un message personnalisé = un taux de réponse 3x plus élevé.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — Le ciblage précis change tout. Un propriétaire depuis 5 ans veut savoir "combien j\'ai gagné ?". Un ancien contact veut sentir que tu n\'as pas oublié. Segmentez, personnalisez, convertissez.',
     objectif: '🎯 15 SMS segmentés envoyés, 4 réponses positives, 2 R1 fixés',
     duree: '30 min (7h-8h30)',
@@ -673,7 +673,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 41,
     category: 'relances',
     title: 'Relances mensuelles — Relance de tes prospects chauds',
-    description: `Dernière PIGE Légale de la semaine. Cette fois, relance UNIQUEMENT les non-répondants des 2 vagues précédentes avec un message différent.\n\n"Bonjour [Prénom], c\'est [Ton prénom] du secteur. Je repasse vers vous car je viens de vendre un bien très proche du vôtre et les acquéreurs sont toujours à la recherche. Si vous ou quelqu\'un de votre entourage envisagez de vendre, je vous propose une estimation offerte sans engagement. Puis-je vous appeler 5 minutes ?"\n\nLa preuve sociale ("je viens de vendre") + l\'urgence ("les acquéreurs cherchent toujours") = motivation maximale.`,
+    description: `Dernière PIGE Légale de la semaine. Cette fois, relance UNIQUEMENT les non-répondants des 2 vagues précédentes avec un message différent.\n\n"Bonjour [Prénom], c\'est [Ton prénom] du secteur. Je repasse vers vous car je viens de vendre un bien très proche du vôtre et les acquéreurs sont toujours à la recherche. Si vous ou quelqu\'un de votre entourage envisagez de vendre, je vous propose une estimation offerte sans engagement. Puis-je vous appeler 5 minutes ?"\n\nLa preuve sociale ("je viens de vendre") + l\'urgence ("les acquéreurs cherchent toujours") = motivation maximale.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — La relance des non-répondants est souvent plus productive que les premiers messages. Ils ont vu ton nom, ils commencent à te reconnaître. La preuve sociale franchit la dernière barrière.',
     objectif: '🎯 15 relances envoyées, 3 réponses positives, 1 R1 fixé',
     duree: '30 min (7h-8h30)',
@@ -1032,7 +1032,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     title: 'PIGE Légale — Ciblage avancé',
     description: `Ta session PIGE Légale — 30 minutes chrono, très tôt le matin.
 
-PIGE Légale avec ciblage avancé basé sur tes résultats des 10 semaines précédentes.\n\nQuel segment a le mieux répondu ? Double les efforts dessus.\n• Voisins de biens vendus → FOMO\n• Anciens contacts → maturité\n• Propriétaires 5+ ans → curiosité\n• Nouveaux contacts → fraîcheur\n\nAnalyse, segmente, convertis.`,
+PIGE Légale avec ciblage avancé basé sur tes résultats des 10 semaines précédentes.\n\nQuel segment a le mieux répondu ? Double les efforts dessus.\n• Voisins de biens vendus → FOMO\n• Anciens contacts → maturité\n• Propriétaires 5+ ans → curiosité\n• Nouveaux contacts → fraîcheur\n\nAnalyse, segmente, convertis.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — Les données des 10 semaines te disent exactement quoi faire. Quel segment a le meilleur taux de conversion ? Double les efforts. Quel message a le mieux répondu ? Utilise-le plus. Les données ne mentent pas.',
     objectif: '🎯 15 SMS segmentés envoyés, 5 réponses positives, 2 R1 fixés',
     duree: '30 min (7h-8h30)',
@@ -1118,7 +1118,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 74,
     category: 'relances',
     title: 'PIGE Légale — Rotation T2',
-    description: `PIGE Légale du T2 — rotation des segments.\n\nSi au T1 tu as ciblé les voisins de biens vendus → cette semaine cible les propriétaires depuis 5+ ans.\n\nAlterne les segments chaque semaine pour ne pas saturer.\n\n"Bonjour [Prénom], c\'est [Ton prénom] du secteur. Le marché a beaucoup évolué depuis votre achat. Si vous souhaitez connaître la valeur actualisée de votre patrimoine ou celle de votre entourage, je vous propose une estimation offerte sans engagement."`,
+    description: `PIGE Légale du T2 — rotation des segments.\n\nSi au T1 tu as ciblé les voisins de biens vendus → cette semaine cible les propriétaires depuis 5+ ans.\n\nAlterne les segments chaque semaine pour ne pas saturer.\n\n"Bonjour [Prénom], c\'est [Ton prénom] du secteur. Le marché a beaucoup évolué depuis votre achat. Si vous souhaitez connaître la valeur actualisée de votre patrimoine ou celle de votre entourage, je vous propose une estimation offerte sans engagement."\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — La rotation des segments évite la saturation. Un propriétaire qui reçoit 3 SMS sur 3 mois avec des angles différents = un propriétaire curieux. Un propriétaire qui reçoit 3 SMS identiques = un propriétaire agacé.',
     objectif: '🎯 15 SMS envoyés, 4 réponses positives, 2 R1 fixés',
     duree: '30 min (7h-8h30)',
@@ -1193,7 +1193,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 81,
     category: 'relances',
     title: 'PIGE Légale — Rotation segment (T2)',
-    description: `PIGE Légale — rotation des segments pour le mois en cours.\n\nAlterne : voisins de biens vendus → anciens contacts → propriétaires 5+ ans → nouveaux contacts.\n\nChaque segment a un angle différent. Chaque angle a un taux de conversion différent.\n\nTeste, mesure, optimise.`,
+    description: `PIGE Légale — rotation des segments pour le mois en cours.\n\nAlterne : voisins de biens vendus → anciens contacts → propriétaires 5+ ans → nouveaux contacts.\n\nChaque segment a un angle différent. Chaque angle a un taux de conversion différent.\n\nTeste, mesure, optimise.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — La rotation des segments = la clé de la PIGE Légale sur le long terme. Tu ne satures aucune cible, tu testes tous les angles, et tu doubles les efforts sur ce qui marche le mieux.',
     objectif: '🎯 15 SMS envoyés, 4 réponses positives, 2 R1 fixés',
     duree: '30 min (7h-8h30)',
@@ -1275,7 +1275,7 @@ Là, tu passes à l'estimation patrimoniale offerte. Tu n'es pas là pour vendre
     day: 88,
     category: 'relances',
     title: 'PIGE Légale — Dernier segment du mois',
-    description: `Dernière PIGE Légale du mois en cours.\n\nCible le dernier segment non exploré ce mois-ci.\n\nMessage personnalisé selon le segment.\n\nClôture le mois en beauté avec un maximum de R1.`,
+    description: `Dernière PIGE Légale du mois en cours.\n\nCible le dernier segment non exploré ce mois-ci.\n\nMessage personnalisé selon le segment.\n\nClôture le mois en beauté avec un maximum de R1.\n\n📌 La stratégie complète de la PIGE (celle mise au point par ton réseau) est dans tes vidéos de formation — regarde-les si tu ne la maîtrises pas encore. Et avant tout appel à un particulier, vérifie qu'il n'est pas inscrit sur Bloctel : c'est la loi.`,
     script: 'Conseil méthodo — Dernière PIGE du mois. Chaque SMS = une chance de signer un dernier mandat avant la fin du mois. Ne laisse aucune opportunité passer.',
     objectif: '🎯 15 SMS envoyés, 4 réponses positives, 2 R1 fixés',
     duree: '30 min (7h-8h30)',

@@ -150,7 +150,8 @@ export function useAuth() {
     firstName: string,
     lastName: string,
     experienceLevel?: string,
-    startDate?: string
+    startDate?: string,
+    cguVersion?: string
   ): Promise<{ success: boolean; error?: string }> => {
     setIsLoading(true);
     const normalizedEmail = email.toLowerCase().trim();
@@ -176,7 +177,7 @@ export function useAuth() {
     // Create the account on the backend so it's reachable from any device/session
     if (isApiConfigured()) {
       try {
-        const data = await apiRegister(normalizedEmail, password, firstName.trim(), lastName.trim(), experienceLevel, startDate);
+        const data = await apiRegister(normalizedEmail, password, firstName.trim(), lastName.trim(), experienceLevel, startDate, cguVersion);
         if (data.token) {
           setIsOfflineMode(false);
           const user: UserInfo = {

@@ -467,7 +467,7 @@ export default {
       // ===== AUTH: Register =====
       if (path === '/api/auth/register' && request.method === 'POST') {
         const body = await request.json() as any;
-        const { email, password, firstName, lastName, experienceLevel, startDate } = body;
+        const { email, password, firstName, lastName, experienceLevel, startDate, cguVersion } = body;
 
         if (!email || !password || password.length < 6) {
           return json({ error: 'Email et mot de passe (6 caractères min) requis.' }, 400, cors);
@@ -484,8 +484,24 @@ export default {
           'INSERT INTO users (id, email, password_hash, first_name, last_name, experience_level, start_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
         ).bind(id, email.toLowerCase().trim(), passwordHash, (firstName || '').trim(), (lastName || '').trim(), experienceLevel || 'débutant', startDate || new Date().toISOString().split('T')[0]).run();
 
+        // Preuve d'acceptation des CGU (article 8) — stockée côté serveur,
+        // récupérable en interne si besoin (preuve de consentement).
+        if (cguVersion) {
+          await env.DB.prepare(
+            'UPDATE users SET cgu_version = ?, cgu_accepted_at = datetime("now") WHERE id = ?'
+          ).bind(String(cguVersion), id).run();
+        }
+
         const token = await createJWT(id, email.toLowerCase().trim(), env);
         return json({ success: true, token, user: { id, email: email.toLowerCase().trim(), firstName, lastName, experienceLevel, startDate } }, 200, cors);
+      }
+
+      // ===== CGU: preuve d'acceptation (usage interne — récupération par l'utilisateur) =====
+      if (path === '/api/auth/cgu-proof' && request.method === 'GET') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+        const row = await env.DB.prepare('SELECT cgu_version, cgu_accepted_at FROM users WHERE id = ?').bind(userId).first();
+        return json({ cguVersion: row?.cgu_version ?? null, cguAcceptedAt: row?.cgu_accepted_at ?? null }, 200, cors);
       }
 
 // ===== AUTH: Forgot password =====
