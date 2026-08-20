@@ -267,11 +267,18 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <ShieldAlert className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-            <p className="text-xs text-amber-700">
-              {isEs
-                ? 'Estas fichas contienen datos personales de clientes potenciales: usted es responsable de su conservación y de su eliminación (cf. recomendaciones RGPD).'
-                : 'Ces fiches contiennent des données personnelles de prospects : tu es responsable de leur conservation et de leur suppression (cf. recommandations RGPD).'}
-            </p>
+            <div className="space-y-1.5">
+              <p className="text-xs text-amber-700">
+                {isEs
+                  ? 'Estas fichas contienen datos personales de clientes potenciales: usted es responsable de su conservación y de su eliminación (cf. recomendaciones RGPD).'
+                  : 'Ces fiches contiennent des données personnelles de prospects : tu es responsable de leur conservation et de leur suppression (cf. recommandations RGPD).'}
+              </p>
+              <p className="text-xs text-amber-800 font-medium">
+                {isEs
+                  ? '🔁 En cuanto un cliente potencial tiene un proyecto formalizado o una cita de estimación, transfiere su ficha a la intranet de tu red. Las fichas sin interacción durante 90 días se eliminan automáticamente.'
+                  : '🔁 Dès qu\'un prospect a un projet formalisé ou un RDV d\'estimation, transfère sa fiche sur l\'intranet de ton réseau. Les fiches sans interaction depuis 90 jours sont supprimées automatiquement.'}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>

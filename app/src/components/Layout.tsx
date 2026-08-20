@@ -6,6 +6,7 @@ import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bel
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 import { getSemaineProgramme } from '@/lib/jalons';
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
+import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
 
 interface LayoutProps {
   children: ReactNode;
@@ -256,6 +257,10 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
                   : 'Notifications bloquées par le navigateur — réactive-les dans les réglages du navigateur.'}
               </p>
             )}
+            {/* Rappel CGU : purge 90 jours + bascule vers l'intranet du réseau */}
+            <p className="text-[11px] text-gray-400 leading-relaxed">
+              {profile.language === 'es' ? CGU_REMINDER_ES : CGU_REMINDER_FR}
+            </p>
             {/* Sélecteur de langue */}
             <div className="flex items-center justify-center gap-1 mt-2">
               <button

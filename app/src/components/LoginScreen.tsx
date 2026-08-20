@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Sparkles, Mail, Lock, ArrowRight, LogIn, UserPlus, Key } from 'lucide-react';
 import { apiForgotPassword, apiResetPassword, isApiConfigured } from '@/services/api';
+import { CGU_ARTICLES, CGU_VERSION, CGU_DATE, CGU_CHECKBOX_LABEL_FR, CGU_CHECKBOX_LABEL_ES } from '@/data/cgu';
 
 interface LoginScreenProps {
   onLogin: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -48,6 +49,8 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
   const [info, setInfo] = useState('');
   const [loading, setLoading] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showCgu, setShowCgu] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
 
   const clearMessages = () => {
     setError('');
@@ -88,6 +91,10 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       setError(isEs ? 'La contraseña debe contener al menos 6 caracteres.' : 'Le mot de passe doit contenir au moins 6 caractères.');
       return;
     }
+    if (!cguAccepted) {
+      setError(isEs ? 'Debe aceptar las CGU para crear su cuenta.' : 'Tu dois accepter les CGU pour créer ton compte.');
+      return;
+    }
     if (!onRegister) {
       setError(isEs ? 'El registro no está disponible.' : 'L\'inscription n\'est pas disponible.');
       return;
@@ -95,6 +102,15 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     setLoading(true);
     const result = await onRegister(email.trim(), password, firstName.trim(), lastName.trim());
     setLoading(false);
+    if (result.success) {
+      // Article 8 des CGU : la date et la version de l'acceptation sont enregistrées.
+      try {
+        localStorage.setItem(`iad-coach-cgu-${email.trim().toLowerCase()}`, JSON.stringify({
+          version: CGU_VERSION,
+          acceptedAt: new Date().toISOString(),
+        }));
+      } catch { /* ignore */ }
+    }
     if (!result.success) {
       setError(result.error || (isEs ? 'Error durante el registro.' : 'Erreur lors de l\'inscription.'));
     }
@@ -262,6 +278,21 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
                 <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Contraseña' : 'Mot de passe'}</Label>
                 <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Mínimo 6 caracteres' : '6 caractères minimum'} className="mt-1" required />
               </div>
+              {/* Acceptation CGU — obligatoire (article 8 des CGU) */}
+              <label className="flex items-start gap-3 bg-gray-50 rounded-lg p-3 border border-gray-200 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={cguAccepted}
+                  onChange={e => setCguAccepted(e.target.checked)}
+                  className="mt-0.5 accent-red-600"
+                />
+                <span className="text-xs text-gray-700 leading-relaxed">
+                  {isEs ? CGU_CHECKBOX_LABEL_ES : CGU_CHECKBOX_LABEL_FR}{' '}
+                  <button type="button" onClick={() => setShowCgu(true)} className="text-red-600 hover:text-red-700 font-medium underline underline-offset-2">
+                    {isEs ? 'Leer las CGU' : 'Lire les CGU'}
+                  </button>
+                </span>
+              </label>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
                 {loading ? (isEs ? 'Registrando...' : 'Inscription...') : <>{isEs ? 'Registrarse' : 'S\'inscrire'} <ArrowRight className="w-4 h-4 ml-2" /></>}
               </Button>
@@ -330,11 +361,41 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
 
         <div className="text-center text-xs text-gray-400 mt-6 space-y-1.5">
           <p>🔒 Tes données sont stockées sur ton appareil et synchronisées de façon sécurisée sur ton compte. Tu les retrouves sur n'importe quel appareil.</p>
-          <button type="button" onClick={() => setShowPrivacy(true)} className="text-red-500 hover:text-red-600 font-medium underline underline-offset-2">
-            Politique de confidentialité
-          </button>
+          <p className="flex items-center justify-center gap-3">
+            <button type="button" onClick={() => setShowCgu(true)} className="text-red-500 hover:text-red-600 font-medium underline underline-offset-2">
+              CGU
+            </button>
+            <button type="button" onClick={() => setShowPrivacy(true)} className="text-red-500 hover:text-red-600 font-medium underline underline-offset-2">
+              Politique de confidentialité
+            </button>
+          </p>
         </div>
       </div>
+
+      {/* Modale CGU */}
+      {showCgu && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowCgu(false)}>
+          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[85vh] overflow-y-auto p-6" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-semibold text-gray-900">Conditions Générales d'Utilisation</h3>
+            <p className="text-xs text-gray-400 mt-1 mb-4">Version {CGU_VERSION} — {CGU_DATE}</p>
+            <div className="space-y-4">
+              {CGU_ARTICLES.map(article => (
+                <div key={article.titre}>
+                  <h4 className="text-sm font-semibold text-gray-900 mb-1.5">{article.titre}</h4>
+                  <div className="space-y-2">
+                    {article.paragraphes.map((p, i) => (
+                      <p key={i} className="text-sm text-gray-600 leading-relaxed">{p}</p>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Button onClick={() => setShowCgu(false)} className="w-full mt-6 bg-red-600 hover:bg-red-700">
+              Fermer
+            </Button>
+          </div>
+        </div>
+      )}
 
       {showPrivacy && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50" onClick={() => setShowPrivacy(false)}>
@@ -344,7 +405,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
               <p><strong className="text-gray-900">Responsable de traitement&nbsp;:</strong> l'éditeur de l'application Immo Pulse, qui met ce service à ta disposition dans le cadre de ton activité professionnelle.</p>
               <p><strong className="text-gray-900">Finalité&nbsp;:</strong> tes données (profil, bilans quotidiens, comptes rendus de visite, statistiques) sont traitées uniquement pour faire fonctionner le service de coaching et te restituer ton historique et tes résultats.</p>
               <p><strong className="text-gray-900">Stockage&nbsp;:</strong> tes données sont enregistrées sur ton appareil (stockage local du navigateur) et synchronisées de façon sécurisée sur ton compte, hébergé par Cloudflare (Workers et base de données D1), afin que tu les retrouves sur n'importe quel appareil.</p>
-              <p><strong className="text-gray-900">Durée de conservation&nbsp;:</strong> tes données sont conservées tant que ton compte est actif. La suppression de ton compte entraîne la suppression de l'ensemble de tes données.</p>
+              <p><strong className="text-gray-900">Durée de conservation&nbsp;:</strong> tes données sont conservées tant que ton compte est actif, à une exception près&nbsp;: les fiches de tes prospects sans aucune interaction (appel, note, relance ou modification) pendant 90 jours sont automatiquement et définitivement supprimées, sur ton appareil comme sur ton compte (principe de minimisation — pense à basculer tes prospects qualifiés sur l'intranet de ton réseau avant ce délai). La suppression de ton compte entraîne la suppression de l'ensemble de tes données.</p>
               <p><strong className="text-gray-900">Tes droits&nbsp;:</strong> tu disposes d'un droit d'accès, de rectification et de suppression de tes données. Tu peux les exercer à tout moment depuis les réglages de l'application, notamment en supprimant ton compte.</p>
               <p><strong className="text-gray-900">Données de tiers&nbsp;:</strong> les contacts que tu saisis (prospects, vendeurs) relèvent de ta responsabilité professionnelle. Informe ces personnes et supprime leurs données dès qu'elles ne sont plus utiles.</p>
               <p><strong className="text-gray-900">Contact&nbsp;:</strong> pour toute question ou demande relative à tes données personnelles, contacte le responsable du service via les coordonnées communiquées par ton organisation.</p>

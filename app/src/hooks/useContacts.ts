@@ -82,6 +82,35 @@ function loadContacts(userKey: string): Contact[] {
   return [];
 }
 
+// ============================================
+// Purge RGPD (article 3 des CGU) : une fiche prospect sans aucune
+// interaction enregistrée (relance, note, modification) pendant 90 jours
+// est automatiquement et définitivement supprimée — local ET cloud.
+// La dernière interaction = max(createdAt, dateDerniereRelance, dernière note).
+// ============================================
+const PURGE_DAYS = 90;
+
+function lastInteractionKey(c: Contact): string {
+  const candidates = [c.createdAt?.slice(0, 10) ?? '', c.dateDerniereRelance ?? ''];
+  for (const n of c.notes ?? []) if (n.date) candidates.push(n.date);
+  return candidates.filter(Boolean).sort().pop() ?? '';
+}
+
+function purgeExpired(userKey: string, contacts: Contact[]): Contact[] {
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - PURGE_DAYS);
+  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const expired = contacts.filter(c => {
+    const last = lastInteractionKey(c);
+    return last && last < cutoffKey;
+  });
+  if (expired.length === 0) return contacts;
+  expired.forEach(c => deleteFromCloud(c.id));
+  const kept = contacts.filter(c => !expired.some(e => e.id === c.id));
+  saveContacts(userKey, kept);
+  return kept;
+}
+
 function saveContacts(userKey: string, contacts: Contact[]) {
   localStorage.setItem(getStorageKey(userKey), JSON.stringify(contacts));
 }
@@ -125,16 +154,22 @@ function deleteFromCloud(id: string) {
 }
 
 export function useContacts(userKey: string) {
-  const [contacts, setContacts] = useState<Contact[]>(() => loadContacts(userKey));
+  const [contacts, setContacts] = useState<Contact[]>(() => purgeExpired(userKey, loadContacts(userKey)));
   const loadedKey = useRef(userKey);
 
   // React to userKey changes
   useEffect(() => {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
-      setContacts(loadContacts(userKey));
+      setContacts(purgeExpired(userKey, loadContacts(userKey)));
     }
   }, [userKey]);
+
+  // Purge RGPD à l'ouverture (une fois par session)
+  useEffect(() => {
+    setContacts(prev => purgeExpired(loadedKey.current, prev));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
   const loadFromCloud = useCallback((cloudContacts: any[] | null) => {
