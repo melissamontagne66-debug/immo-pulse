@@ -141,6 +141,16 @@ export function getContactsInactifs(contacts: Contact[]): ContactInactif[] {
     .sort((a, b) => b.joursSansInteraction - a.joursSansInteraction);
 }
 
+// ============================================
+// Anniversaires du jour : toute fiche dont la date d'anniversaire
+// (jour + mois) tombe aujourd'hui → tâche « message ou appel » du jour.
+// ============================================
+export function getContactsAnniversaireDuJour(contacts: Contact[]): Contact[] {
+  const now = new Date();
+  const jourMois = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  return contacts.filter(c => c.anniversaire && c.anniversaire.slice(5) === jourMois);
+}
+
 function saveContacts(userKey: string, contacts: Contact[]) {
   localStorage.setItem(getStorageKey(userKey), JSON.stringify(contacts));
 }

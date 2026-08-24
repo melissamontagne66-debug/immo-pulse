@@ -121,12 +121,15 @@ interface FormState {
   dateRelanceExacte: string;
 }
 
-const EMPTY_FORM: FormState = {
+// Par défaut : dernière relance = aujourd'hui (la fiche est créée au moment du
+// contact), prochaine relance = dans 3 mois (un contact doit être recontacté
+// au minimum tous les 3 mois).
+const DEFAULTS_FORM = (): FormState => ({
   nom: '', prenom: '', telephone: '', email: '', contexte: '',
   origine: 'autre', typeProspect: '', occupancy: '',
   adresse: '', codePostal: '', ville: '', quartier: '', anniversaire: '',
-  statut: 'chaud', dateDerniereRelance: '', delaiRelance: '', dateRelanceExacte: '',
-};
+  statut: 'chaud', dateDerniereRelance: toLocalDateKey(new Date()), delaiRelance: '3-mois', dateRelanceExacte: '',
+});
 
 function computeDateRelance(delai: DelaiRelance, dateExacte: string): string {
   if (delai === 'personnalise') return dateExacte;
@@ -144,7 +147,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [form, setForm] = useState<FormState>(DEFAULTS_FORM);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Filtres
@@ -162,7 +165,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
 
   const openAddForm = () => {
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm(DEFAULTS_FORM());
     setFormOpen(true);
   };
 
@@ -217,7 +220,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
     }
     setFormOpen(false);
     setEditingId(null);
-    setForm(EMPTY_FORM);
+    setForm(DEFAULTS_FORM());
   };
 
   const filtered = useMemo(() => {

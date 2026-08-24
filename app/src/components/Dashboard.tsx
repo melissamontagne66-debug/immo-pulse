@@ -11,6 +11,7 @@ import type { WeekPlan } from '@/types';
 import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknote } from 'lucide-react';
 import { formatEuro, toLocalDateKey, parseLocalDateKey } from '@/lib/utils';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
+import { InstallAppPrompt } from '@/components/InstallAppPrompt';
 import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
 import { getDefiForDay } from '@/data/defis';
 import { DefiCard } from '@/components/DefiCard';
@@ -129,12 +130,20 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
             </p>
             <div className="flex items-center gap-1.5 flex-shrink-0">
               {c.telephone && (
-                <a
-                  href={`tel:${c.telephone.replace(/\s+/g, '')}`}
-                  className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
-                >
-                  Appeler
-                </a>
+                <>
+                  <a
+                    href={`tel:${c.telephone.replace(/\s+/g, '')}`}
+                    className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                  >
+                    Appeler
+                  </a>
+                  <a
+                    href={`sms:${c.telephone.replace(/\s+/g, '')}`}
+                    className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                  >
+                    SMS
+                  </a>
+                </>
               )}
               <button
                 onClick={() => contactsState.postponeContact(c.id)}
@@ -416,6 +425,9 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           </div>
         </div>
       </section>
+
+      {/* Proposition d'ajout à l'écran d'accueil (PWA) — discrète, en bas */}
+      <InstallAppPrompt />
     </div>
   );
 }

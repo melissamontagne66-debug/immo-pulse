@@ -10,7 +10,7 @@ import type { UserProfile } from '@/types/profile';
 import {
   CheckCircle2, Circle, ClipboardCheck,
   Database, ChevronLeft, ChevronRight, Bell,
-  ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil, AlertTriangle
+  ChevronDown, ChevronUp, Lightbulb, Minus, Plus, Pencil, AlertTriangle, Cake
 } from 'lucide-react';
 import { getProspectionActionForDay, getProspectionCategoryInfo } from '@/data/prospectionActions';
 import { getDefiForDay } from '@/data/defis';
@@ -23,7 +23,7 @@ import { MarkdownText } from '@/components/MarkdownText';
 import { Celebration } from '@/components/Celebration';
 import { toast } from 'sonner';
 import { shouldPromptForPush, snoozePushPrompt, subscribeToPush, isPushDenied } from '@/lib/push';
-import { useContacts, getContactsInactifs } from '@/hooks/useContacts';
+import { useContacts, getContactsInactifs, getContactsAnniversaireDuJour } from '@/hooks/useContacts';
 import { RelanceInactifsModal } from '@/components/RelanceInactifsModal';
 
 interface DailyActionsProps {
@@ -226,6 +226,9 @@ export function DailyActions({
   const [showRelanceModal, setShowRelanceModal] = useState(false);
   const inactifs = useMemo(() => getContactsInactifs(contactsState.contacts), [contactsState.contacts]);
 
+  // Tâche « anniversaire du jour » — message ou appel sans faute
+  const anniversaires = useMemo(() => getContactsAnniversaireDuJour(contactsState.contacts), [contactsState.contacts]);
+
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
   const todayCheckupDone = dailyResults.some(r => r.date === todayStr);
@@ -407,7 +410,9 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             title: /défi du jour/i.test(action.title)
               ? action.title.replace(/^(Ton )?défi du jour/i, isEs ? 'Acción recomendada' : 'Action recommandée')
               : action.title,
-            description: action.description,
+            description: action.description + (isEs
+              ? '\n\n📇 Recuerda registrar cada contacto en la pestaña Contactos de la app.'
+              : '\n\n📇 Pense à enregistrer chaque contact dans l\'onglet Contacts de l\'app.'),
             script: action.script,
             objectif: action.objectif,
             duree: action.duree,
@@ -513,6 +518,22 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             description: isEs
               ? '¡Pon en marcha tu ficha Google Business Profile hoy! Es TU vitrina digital : cuando alguien busca "agente inmobiliario [tu ciudad]", debes aparecer en primer lugar.\n\n**Acciones de hoy:**\n→ Crea o completa tu ficha Google Business Profile\n→ Añade fotos profesionales de ti y de tu sector\n→ Redacta una descripción clara con tus palabras clave\n→ Pide 3 reseñas a tus primeros contactos (familia, amigos, antiguos clientes)\n\n💡 **Argumento motivador:** Una ficha de Google Business Profile bien cuidada te ahorra cientos de euros de publicidad. Un buen GMB = 3-5 llamadas calientes por semana sin gastar un céntimo. Tu competencia duerme sur ce canal — aprovecha. Si necesitas ayuda, mira el vídeo de formación del tema.'
               : 'Mets en route ta fiche Google Business Profile aujourd\'hui ! C\'est TA vitrine digitale : quand quelqu\'un cherche "conseiller immobilier [ta ville]", tu dois apparaître en premier.\n\n**Actions du jour :**\n→ Crée ou complète ta fiche Google Business Profile\n→ Ajoute des photos professionnelles de toi et de ton secteur\n→ Rédige une description claire avec tes mots-clés\n→ Demande 3 avis à tes premiers contacts (famille, amis, anciens clients)\n\n💡 **Argument motivant :** Une fiche Google Business Profile bien tenue te fait économiser des centaines d\'euros de publicité. Une fiche complète et à jour, c\'est des appels en plus — sans dépenser un centime. Ta concurrence dort sur ce canal — profite-en. Si tu as besoin d\'aide, revois la vidéo de formation sur le sujet.',
+          };
+        case 'gmb-hebdo':
+          return {
+            ...def,
+            title: isEs ? '🌐 Google Business Profile — 1 h dedicada' : '🌐 Google Business Profile — 1 h dédiée',
+            description: isEs
+              ? 'Una hora por semana para tu ficha Google — es tu escaparate gratuito.\n\n**Esta semana:**\n→ Publica un contenido (foto de un bien, dato del mercado local, consejo)\n→ Pide una reseña a 2 personas (amigos, antiguos clientes, contactos satisfechos)\n→ Responde a todas las reseñas recibidas\n\nUna ficha viva sube en los resultados locales. La constancia bate la intensidad.'
+              : 'Une heure par semaine sur ta fiche Google — c\'est ta vitrine gratuite.\n\n**Cette semaine :**\n→ Publie un contenu (photo d\'un bien, chiffre du marché local, conseil)\n→ Demande 2 avis (amis, anciens clients, contacts satisfaits)\n→ Réponds à tous les avis reçus\n\nUne fiche vivante remonte dans les résultats locaux. La constance bat l\'intensité.',
+          };
+        case 'relance-bdd':
+          return {
+            ...def,
+            title: isEs ? '🗃️ Relanza tu base de datos (2 h)' : '🗃️ Relance ta base de données (2 h)',
+            description: isEs
+              ? 'Las ventas se esconden en tu base de datos.\n\nBloquea 2 h hoy para relanzar tus contactos: llamadas o mensajes personalizados a tus prospectos, estimaciones pasadas, antiguos contactos. Un « no » de hace 3 meses puede ser un « sí » hoy.\n\n📇 Aproveche para registrar cada contacto en la pestaña Contactos de la app.'
+              : 'Les ventes se cachent dans ta base de données !\n\nBloque 2 h aujourd\'hui pour relancer tes contacts : appels ou messages personnalisés à tes prospects, estimations passées, anciens contacts. Un « non » d\'il y a 3 mois peut être un « oui » aujourd\'hui.\n\n📇 Profites-en pour enregistrer chaque contact dans l\'onglet Contacts de l\'app.',
           };
         case 'social':
           return {
@@ -632,6 +653,39 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                 >
                   {isEs ? 'Tratarlos ahora (1 a 1)' : 'Les traiter maintenant (1 par 1)'}
                 </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Tâche « anniversaire du jour » — carte en tête tant qu'un contact
+          fête son anniversaire aujourd'hui : message ou appel, sans faute. */}
+      {anniversaires.length > 0 && (
+        <Card className="bg-pink-50 border-pink-300">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <Cake className="w-5 h-5 text-pink-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-pink-800">
+                  {isEs
+                    ? `🎂 Hoy es el cumpleaños de ${anniversaires.map(c => `${c.prenom} ${c.nom}`.trim() || 'contacto').join(', ')}`
+                    : `🎂 C'est l'anniversaire de ${anniversaires.map(c => `${c.prenom} ${c.nom}`.trim() || 'contact').join(', ')}`}
+                </p>
+                <p className="text-xs text-pink-600 mt-1">
+                  {isEs
+                    ? 'Envíale un mensaje o llámalo hoy, sin falta.'
+                    : 'Envoie-lui un message ou passe-lui un coup de téléphone aujourd\'hui, sans faute.'}
+                </p>
+                {onNavigate && (
+                  <Button
+                    size="sm"
+                    onClick={() => onNavigate('contacts')}
+                    className="mt-2 bg-pink-600 hover:bg-pink-700 text-xs"
+                  >
+                    {isEs ? 'Abrir mis contactos' : 'Ouvrir mes contacts'}
+                  </Button>
+                )}
               </div>
             </div>
           </CardContent>
