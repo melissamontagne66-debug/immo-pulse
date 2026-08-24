@@ -115,14 +115,9 @@ function checkDefaultAccount(email: string, password: string): UserInfo | null {
 export function useAuth() {
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(() => loadSession());
   const [isLoading, setIsLoading] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
+  const [isOfflineMode, setIsOfflineMode] = useState(() => !isApiConfigured());
 
   const isAuthenticated = currentUser !== null;
-
-  // Check API status on mount
-  useEffect(() => {
-    setIsOfflineMode(!isApiConfigured());
-  }, []);
 
   // Listen for storage changes (logout from other tabs)
   useEffect(() => {

@@ -108,9 +108,9 @@ export async function apiResetPassword(token: string, password: string) {
 // --- SYNC ---
 
 export async function apiSyncSave(payload: {
-  profile: any;
-  progress: any;
-  visits: any[];
+  profile: unknown;
+  progress: unknown;
+  visits: unknown[];
 }) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
@@ -135,7 +135,7 @@ export async function apiSyncLoad() {
 
 // --- VISITS ---
 
-export async function apiSaveVisit(visit: any) {
+export async function apiSaveVisit(visit: unknown) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
   }
@@ -160,7 +160,7 @@ export async function apiDeleteVisit(id: string) {
 
 // --- CONTACTS ---
 
-export async function apiSaveContact(contact: any) {
+export async function apiSaveContact(contact: unknown) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
   }

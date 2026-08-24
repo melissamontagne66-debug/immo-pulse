@@ -51,6 +51,9 @@ export function useProgress(userKey: string) {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
       const stored = loadProgress(userKey);
+      // Rechargement localStorage au changement d'utilisateur : le setState
+      // synchrone est volontaire (données locales disponibles immédiatement).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProgress(stored);
     }
   }, [userKey]);
@@ -60,7 +63,7 @@ export function useProgress(userKey: string) {
   }, [progress]);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
-  const loadFromCloud = useCallback((cloudProgress: any | null) => {
+  const loadFromCloud = useCallback((cloudProgress: Partial<UserProgress> | null) => {
     if (!cloudProgress) return;
     setProgress(prev => {
       const merged = { ...defaultProgress, ...prev, ...cloudProgress };

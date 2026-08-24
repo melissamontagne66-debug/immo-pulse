@@ -11,6 +11,7 @@ export interface DailyCoachMessage {
   emoji: string;
 }
 
+/* eslint-disable @typescript-eslint/no-unused-vars -- paramètres conservés pour la signature publique du hook (stub) */
 export function useDailyCoach(
   _currentDay: number,
   _completedDays: string[],
@@ -19,6 +20,7 @@ export function useDailyCoach(
   _dailyTargets: { calls: number; contactsPhysiques: number; rdvR1: number; rdvR2: number; mandats: number; visites: number },
   _dailyResults?: DailyResults[]
 ) {
+/* eslint-enable @typescript-eslint/no-unused-vars */
   const messages = useMemo((): DailyCoachMessage[] => [], []);
   return { messages, week: 1 };
 }

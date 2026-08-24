@@ -55,7 +55,9 @@ export function useDailyCounters(userKeyProp?: string) {
   const [dateKey, setDateKey] = useState(() => toLocalDateKey(new Date()));
   const [state, setState] = useState(() => loadCounters(userKey, dateKey));
   const stateRef = useRef(state);
-  stateRef.current = state;
+  useEffect(() => {
+    stateRef.current = state;
+  }, [state]);
 
   // Recharge quand l'utilisateur ou la date change (minuit passé, app rouverte le lendemain)
   useEffect(() => {
@@ -139,7 +141,9 @@ export function useActionNotes(userKeyProp?: string) {
   const userKey = resolveUserKey(userKeyProp);
   const [notes, setNotes] = useState<Record<string, string>>(() => loadNotes(userKey));
   const notesRef = useRef(notes);
-  notesRef.current = notes;
+  useEffect(() => {
+    notesRef.current = notes;
+  }, [notes]);
 
   useEffect(() => {
     setNotes(loadNotes(userKey));

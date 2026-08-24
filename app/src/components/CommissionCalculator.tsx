@@ -14,6 +14,11 @@ import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { apiMilestone, isCloudEnabled } from '@/services/api';
 
 // Grille de commission-type (degressive) — suggestion par defaut
+// ID de vente horodaté — helper module-level (règle react-hooks/purity)
+function makeSaleId(): string {
+  return `sale-${Date.now()}`;
+}
+
 function getCommissionRate(price: number): number {
   if (price <= 50000) return 9.0;
   if (price <= 100000) return 8.0;
@@ -131,7 +136,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   // Confirmation de la vente après la question mandat (défaut : Oui)
   const confirmSale = (countsAsMandat: boolean) => {
     addSale({
-      id: `sale-${Date.now()}`,
+      id: makeSaleId(),
       name: nomVente.trim(),
       price: prixVente,
       net: netFinal,
@@ -210,7 +215,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                 onChange={e => {
                   const raw = e.target.value;
                   setPrixVenteInput(raw);
-                  const cleaned = raw.replace(/[\s  €]/g, '').replace(',', '.');
+                  const cleaned = raw.replace(/[\s\u00A0\u202F€]/g, '').replace(',', '.');
                   if (cleaned === '') { setPrixVenteError(null); return; }
                   const value = parseFloat(cleaned);
                   if (isNaN(value)) return;
@@ -224,7 +229,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                   setPrixVente(value);
                 }}
                 onBlur={() => {
-                  const cleaned = prixVenteInput.replace(/[\s  €]/g, '').replace(',', '.');
+                  const cleaned = prixVenteInput.replace(/[\s\u00A0\u202F€]/g, '').replace(',', '.');
                   const value = parseFloat(cleaned);
                   if (!isNaN(value) && value >= 10000 && value <= 10000000) {
                     setPrixVente(value);
@@ -372,8 +377,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
               <div className="flex-1">
                 <p className="text-sm font-medium text-gray-900">
                   {isSpain
-                    ? `Cargas autónomo (~${formatPct(defaultChargesPourcent)} %)`
-                    : `Charges auto-entrepreneur (~${formatPct(defaultChargesPourcent)} %)`}
+                    ? `Cargas autónomo (~${formatPct(defaultChargesPourcent)}\u00A0%)`
+                    : `Charges auto-entrepreneur (~${formatPct(defaultChargesPourcent)}\u00A0%)`}
                 </p>
                 <p className="text-xs text-gray-500">{isSpain ? 'Puedes ajustar el tipo a tu situación' : 'Tu peux ajuster le taux à ta situation'}</p>
               </div>
@@ -447,7 +452,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
                   }`}
                 >
-                  {p} %
+                  {p}\u00A0%
                   <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en tu bolsillo' : 'dans ta poche'}</span>
                 </button>
               ))}
@@ -525,16 +530,16 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                 <span className="font-bold text-purple-700">{formatEuro(commissionHT)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100 bg-blue-50">
-                <span className="text-gray-900 font-medium">{isSpain ? `Tu palier de ${pallier} %` : `Ton palier de ${pallier} %`}</span>
+                <span className="text-gray-900 font-medium">{isSpain ? `Tu palier de ${pallier}\u00A0%` : `Ton palier de ${pallier}\u00A0%`}</span>
                 <span className="font-bold text-blue-700">{formatEuro(netAvecPallier)}</span>
               </div>
               <p className="text-xs text-gray-500 italic">{isSpain ? '(Este es el importe que tú encajas, sobre el que se aplican cargas e impuestos)' : "(C'est ce montant que tu touches, sur lequel s'appliquent charges et impôts)"}</p>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                <span className="text-gray-600">{isSpain ? `Cargas AE (~${formatPct(chargesPourcent)} %)` : `Charges AE (~${formatPct(chargesPourcent)} %)`}</span>
+                <span className="text-gray-600">{isSpain ? `Cargas AE (~${formatPct(chargesPourcent)}\u00A0%)` : `Charges AE (~${formatPct(chargesPourcent)}\u00A0%)`}</span>
                 <span className="font-medium text-red-600">-{formatEuro(chargesSociales)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
-                <span className="text-gray-600">{isSpain ? `Impuesto liberatorio (${formatPct(impotPourcent)} %)` : `Impôt libératoire (${formatPct(impotPourcent)} %)`}</span>
+                <span className="text-gray-600">{isSpain ? `Impuesto liberatorio (${formatPct(impotPourcent)}\u00A0%)` : `Impôt libératoire (${formatPct(impotPourcent)}\u00A0%)`}</span>
                 <span className="font-medium text-indigo-600">-{formatEuro(impotLiberatoire)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
@@ -552,8 +557,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
             {/* Hypothèses de calcul */}
             <p className="text-xs text-gray-400 text-center">
               {isSpain
-                ? `Hipótesis: tipo de cotizaciones ${formatPct(chargesPourcent)} %, IVA 20 %. A verificar según tu situación real.`
-                : `Hypothèses : taux de cotisations ${formatPct(chargesPourcent)} % (prestations de services), TVA 20 %. À vérifier selon ta situation réelle.`}
+                ? `Hipótesis: tipo de cotizaciones ${formatPct(chargesPourcent)}\u00A0%, IVA 20\u00A0%. A verificar según tu situación real.`
+                : `Hypothèses : taux de cotisations ${formatPct(chargesPourcent)}\u00A0% (prestations de services), TVA 20\u00A0%. À vérifier selon ta situation réelle.`}
             </p>
           </div>
 
@@ -600,7 +605,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                         )}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatEuro(sale.price)} · {isSpain ? 'Honorarios' : 'Honoraires'} {formatEuro(sale.fees)} · Palier {sale.palier} %
+                        {formatEuro(sale.price)} · {isSpain ? 'Honorarios' : 'Honoraires'} {formatEuro(sale.fees)} · Palier {sale.palier}\u00A0%
                         {sale.date && ` · ${new Date(`${sale.date}T12:00:00`).toLocaleDateString(isSpain ? 'es-ES' : 'fr-FR', { day: 'numeric', month: 'short' })}`}
                       </p>
                     </div>

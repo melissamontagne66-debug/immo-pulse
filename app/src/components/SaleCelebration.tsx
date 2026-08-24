@@ -19,6 +19,18 @@ const CONFETTI_EMOJIS = ['🎉', '🎊', '💰', '✨', '🏡', '🔑'];
 const CONFETTI_COUNT = 32;
 const AUTO_CLOSE_MS = 4000;
 
+// Positions/délais aléatoires des particules, calculés une fois par affichage.
+function generateParticles() {
+  return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
+    id: i,
+    emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    duration: 2.2 + Math.random() * 1.5,
+    size: 1.2 + Math.random() * 1.3,
+  }));
+}
+
 export function SaleCelebration({ show, firstName, net, isSpain = false, onClose }: SaleCelebrationProps) {
   useEffect(() => {
     if (!show) return;
@@ -29,21 +41,14 @@ export function SaleCelebration({ show, firstName, net, isSpain = false, onClose
   // Positions/délais aléatoires calculés une fois par affichage
   const particles = useMemo(() => {
     if (!show) return [];
-    return Array.from({ length: CONFETTI_COUNT }, (_, i) => ({
-      id: i,
-      emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
-      left: Math.random() * 100,
-      delay: Math.random() * 0.8,
-      duration: 2.2 + Math.random() * 1.5,
-      size: 1.2 + Math.random() * 1.3,
-    }));
+    return generateParticles();
   }, [show]);
 
   if (!show) return null;
 
   const message = isSpain
     ? `🎉 ${firstName ? `${firstName}, ` : ''}¡venta registrada! ${formatEuro(net)} neto en tu bolsillo.`
-    : `🎉 ${firstName ? `${firstName}, ` : ''}vente enregistrée ! ${formatEuro(net)} net dans ta poche.`;
+    : `🎉 ${firstName ? `${firstName}, ` : ''}vente enregistrée\u00A0! ${formatEuro(net)} net dans ta poche.`;
 
   return (
     <div

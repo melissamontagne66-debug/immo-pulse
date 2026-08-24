@@ -23,6 +23,18 @@ interface CelebrationProps {
 
 const CONFETTI_EMOJIS = ['🎉', '🎊', '💰', '✨', '🏡', '🔑'];
 
+// Positions/délais aléatoires des particules, calculés une fois par affichage.
+function generateParticles(count: number) {
+  return Array.from({ length: count }, (_, i) => ({
+    id: i,
+    emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
+    left: Math.random() * 100,
+    delay: Math.random() * 0.8,
+    duration: 2.2 + Math.random() * 1.5,
+    size: 1.2 + Math.random() * 1.3,
+  }));
+}
+
 // Langue lue depuis la session (iad-coach-session) puis le profil local
 // (iad-coach-profile-{email}) — le composant ne reçoit pas le profil en props.
 function readIsSpanish(): boolean {
@@ -40,12 +52,11 @@ function readIsSpanish(): boolean {
 }
 
 export function Celebration({ show, message, submessage, particleCount = 32, autoCloseMs = 4000, variant = 'modal', onClose }: CelebrationProps) {
-  const [reducedMotion, setReducedMotion] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches);
   const isEs = readIsSpanish();
 
   useEffect(() => {
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setReducedMotion(mq.matches);
     const listener = (e: MediaQueryListEvent) => setReducedMotion(e.matches);
     mq.addEventListener('change', listener);
     return () => mq.removeEventListener('change', listener);
@@ -59,14 +70,7 @@ export function Celebration({ show, message, submessage, particleCount = 32, aut
 
   const particles = useMemo(() => {
     if (!show || reducedMotion) return [];
-    return Array.from({ length: particleCount }, (_, i) => ({
-      id: i,
-      emoji: CONFETTI_EMOJIS[i % CONFETTI_EMOJIS.length],
-      left: Math.random() * 100,
-      delay: Math.random() * 0.8,
-      duration: 2.2 + Math.random() * 1.5,
-      size: 1.2 + Math.random() * 1.3,
-    }));
+    return generateParticles(particleCount);
   }, [show, reducedMotion, particleCount]);
 
   if (!show) return null;

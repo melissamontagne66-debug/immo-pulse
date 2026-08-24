@@ -20,6 +20,11 @@ interface SkippedAction {
   reportDate: string;
 }
 
+// Clé ISO du lendemain (YYYY-MM-DD).
+function tomorrowDateKey(): string {
+  return new Date(Date.now() + 86400000).toISOString().split('T')[0];
+}
+
 // Langue lue depuis la session (iad-coach-session) puis le profil local
 // (iad-coach-profile-{email}) — le composant ne reçoit pas le profil en props.
 function readIsEs(): boolean {
@@ -94,7 +99,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
       return;
     }
     const plan: NextDayPlan = {
-      date: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      date: tomorrowDateKey(),
       actions: selectedActions,
       validated: true,
       skippedActions: skippedActions.map(s => ({

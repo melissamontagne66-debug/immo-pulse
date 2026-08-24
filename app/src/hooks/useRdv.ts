@@ -42,7 +42,10 @@ export function useRdv(userKeyProp?: string) {
   const userKey = resolveUserKey(userKeyProp);
   const [rdvs, setRdvs] = useState<Rdv[]>(() => loadRdvs(userKey));
   const rdvsRef = useRef(rdvs);
-  rdvsRef.current = rdvs;
+
+  useEffect(() => {
+    rdvsRef.current = rdvs;
+  }, [rdvs]);
 
   useEffect(() => {
     setRdvs(loadRdvs(userKey));

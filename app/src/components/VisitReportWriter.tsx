@@ -177,9 +177,7 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
   const [generatedMessage, setGeneratedMessage] = useState('');
   const [copied, setCopied] = useState(false);
   const topRef = useRef<HTMLDivElement>(null);
-  const agentRef = useRef<AgentInfo | null>(null);
-  if (agentRef.current === null) agentRef.current = readAgentInfo();
-  const agent = agentRef.current;
+  const [agent] = useState<AgentInfo>(() => readAgentInfo());
   const isEs = agent.language === 'es';
 
   const statusText = (s: VisitStatus) => (isEs ? statusLabelsEs[s] : statusLabels[s].label);
@@ -261,15 +259,15 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
 
 ${visitLine} Voici mon retour, en toute transparence.
 
-Statut de l'acquéreur : ${statusLabel}
+Statut de l'acquéreur\u00A0: ${statusLabel}
 
-Points de retour :
+Points de retour\u00A0:
 ${vigilanceLines.map(l => `• ${l}`).join('\n')}
 
-Les points faibles qui ont été soulevés sont :
+Les points faibles qui ont été soulevés sont\u00A0:
 ${splitLines(weakPoints).length > 0 ? splitLines(weakPoints).map(l => `• ${l}`).join('\n') : '• Aucun'}
 
-La suite : ${nextStep}
+La suite\u00A0: ${nextStep}
 
 N'hésitez pas si vous avez la moindre question — je suis joignable directement.
 

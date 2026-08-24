@@ -4,7 +4,6 @@
 // (remplacées manuellement lors de la mise en place du compte Firebase,
 // ou laissées telles quelles : le SW reste inerte sans config valide).
 
-/* eslint-disable no-undef */
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js');
 

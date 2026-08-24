@@ -28,6 +28,8 @@ interface CheckupDraft {
   step: number;
   actionVerifications: Record<string, boolean | null>;
   hadVisitsToday: boolean | null;
+  // Brouillon de bilan : forme libre (l'état `results` est inféré depuis son initialisation)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   results: any;
   nextDayTasks: string[];
 }
@@ -246,7 +248,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const monthsSinceStart = getMonthsSinceStart(profile.startDate);
   const shouldAskVideos = monthsSinceStart < 6 && !profile.watchedNetworkVideos;
 
-  const update = (field: keyof typeof results, value: any) => {
+  const update = (field: keyof typeof results, value: (typeof results)[keyof typeof results]) => {
     setHasInteracted(true);
     setResults((prev: typeof results) => ({ ...prev, [field]: value }));
   };
@@ -281,7 +283,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     if (results.watchedNetworkVideosToday === true && onUpdateProfile) {
       onUpdateProfile({ watchedNetworkVideos: true });
     }
-    onSave(results as any);
+    onSave(results as Parameters<typeof onSave>[0]);
     clearDraft(userKey, currentDay);
 
     // Le bilan validé fait foi : il réécrit les compteurs du jour (tuiles Dashboard / Aujourd'hui)

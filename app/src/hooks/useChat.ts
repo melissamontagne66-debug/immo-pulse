@@ -60,7 +60,7 @@ function extractRealQuestion(raw: string): string {
     "en tant que conseiller immobilier :",
     "pour mon activité immo :",
   ];
-  let cleaned = raw.toLowerCase().trim();
+  const cleaned = raw.toLowerCase().trim();
   for (const prefix of prefixes) {
     if (cleaned.startsWith(prefix)) {
       return raw.slice(prefix.length).trim();
@@ -91,7 +91,7 @@ function extractKeywords(text: string): string[] {
 
   return text
     .toLowerCase()
-    .replace(/[.,;:!?()\[\]{}"'\-–—/]/g, ' ')
+    .replace(/[.,;:!?()[\]{}"'\-–—/]/g, ' ')
     .split(/\s+/)
     .filter(w => w.length > 2 && !stopWords.has(w));
 }

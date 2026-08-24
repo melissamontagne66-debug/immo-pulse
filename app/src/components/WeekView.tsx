@@ -22,7 +22,7 @@ export function WeekView({
   // Find the week for currentDay
   let currentWeekIndex = 0;
   let currentMonthIndex = 0;
-  let allWeeks: { month: number; week: typeof onboardingPlan[0]['weeks'][0] }[] = [];
+  const allWeeks: { month: number; week: typeof onboardingPlan[0]['weeks'][0] }[] = [];
 
   onboardingPlan.forEach((month, mi) => {
     month.weeks.forEach((week) => {

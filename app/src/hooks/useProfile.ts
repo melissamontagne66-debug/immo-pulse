@@ -29,12 +29,15 @@ export function useProfile(userKey: string) {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
       const stored = loadProfile(userKey);
+      // Rechargement localStorage au changement d'utilisateur : le setState
+      // synchrone est volontaire (données locales disponibles immédiatement).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfileState(stored);
     }
   }, [userKey]);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
-  const loadFromCloud = useCallback((cloudProfile: any | null) => {
+  const loadFromCloud = useCallback((cloudProfile: Partial<UserProfile> | null) => {
     if (!cloudProfile) return;
     // Cloud data always wins over local
     setProfileState(prev => {

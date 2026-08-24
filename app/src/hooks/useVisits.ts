@@ -58,16 +58,19 @@ export function useVisits(userKey: string) {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
       const stored = loadVisits(userKey);
+      // Rechargement localStorage au changement d'utilisateur : le setState
+      // synchrone est volontaire (données locales disponibles immédiatement).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisits(stored);
     }
   }, [userKey]);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
-  const loadFromCloud = useCallback((cloudVisits: any[] | null) => {
+  const loadFromCloud = useCallback((cloudVisits: VisitReport[] | null) => {
     if (!cloudVisits || cloudVisits.length === 0) return;
     setVisits(prev => {
       // Merge: cloud visits + local visits not in cloud (by id)
-      const cloudIds = new Set(cloudVisits.map((v: any) => v.id));
+      const cloudIds = new Set(cloudVisits.map((v: VisitReport) => v.id));
       const localOnly = prev.filter(v => !cloudIds.has(v.id));
       const merged = [...cloudVisits, ...localOnly] as VisitReport[];
       saveVisits(loadedKey.current, merged);

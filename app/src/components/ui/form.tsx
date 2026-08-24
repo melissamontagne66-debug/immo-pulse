@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- utilitaires de formulaire exportés à côté des composants (structure shadcn) */
 "use client"
 
 import * as React from "react"

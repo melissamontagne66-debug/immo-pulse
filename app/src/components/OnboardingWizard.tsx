@@ -90,7 +90,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   // Question parrain/collaborateur : aucune réponse pré-sélectionnée
   const [hasMentor, setHasMentor] = useState<boolean | null>(draft?.hasMentor ?? null);
 
-  const update = (field: keyof UserProfile, value: any) => {
+  const update = (field: keyof UserProfile, value: UserProfile[keyof UserProfile]) => {
     setProfile(prêv => ({ ...prêv, [field]: value }));
   };
 
@@ -173,13 +173,16 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
 
   // Estimation du prix moyen pour la ville + type de secteur choisis
   const estimatedPrice = profile.city.trim()
-    ? Math.round(getCityPrice(profile.city, (profile.sectorType || 'centre-ville') as any, isEs ? 'spain' : 'france') * 75 / 10000) * 10000
+    ? Math.round(getCityPrice(profile.city, (profile.sectorType || 'centre-ville') as Parameters<typeof getCityPrice>[1], isEs ? 'spain' : 'france') * 75 / 10000) * 10000
     : null;
 
   // Pré-remplit le prix moyen avec l'estimation tant que la valeur est
   // restée au défaut (250 000 €) — toute saisie manuelle est conservée.
   useEffect(() => {
     if (!estimatedPrice) return;
+    // Mise à jour dérivée de la ville/secteur choisis : setState volontaire,
+    // conditionné pour ne pas écraser une saisie manuelle.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setProfile(prêv => prêv.averagePrice === defaultProfile.averagePrice
       ? { ...prêv, averagePrice: estimatedPrice }
       : prêv);
@@ -413,7 +416,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         onClick={() => {
                           update('sectorType', sector.id);
                           if (profile.city.trim()) {
-                            const suggested = getCityPrice(profile.city, sector.id as any, isEs ? 'spain' : 'france');
+                            const suggested = getCityPrice(profile.city, sector.id as Parameters<typeof getCityPrice>[1], isEs ? 'spain' : 'france');
                             const avgSize = 75;
                             update('averagePrice', Math.round(suggested * avgSize / 10000) * 10000);
                           }
@@ -436,7 +439,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                       <Lightbulb className="w-4 h-4 text-blue-600 flex-shrink-0 mt-0.5" />
                       <div>
                         <p className="text-sm font-medium text-blue-800">{isEs ? 'Estimación para' : 'Estimation pour'} {profile.city}</p>
-                        <p className="text-sm text-blue-700 mt-1">{getSuggestedPriceText(profile.city, profile.sectorType as any, isEs ? 'spain' : 'france', isEs ? 'es' : 'fr')}</p>
+                        <p className="text-sm text-blue-700 mt-1">{getSuggestedPriceText(profile.city, profile.sectorType as Parameters<typeof getSuggestedPriceText>[1], isEs ? 'spain' : 'france', isEs ? 'es' : 'fr')}</p>
                         {estimatedPrice !== null && (
                           <p className="text-sm text-blue-700 mt-1">
                             {isEs

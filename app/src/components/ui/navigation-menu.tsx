@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- variantes cva exportées à côté des composants (structure shadcn) */
 import * as React from "react"
 import * as NavigationMenuPrimitive from "@radix-ui/react-navigation-menu"
 import { cva } from "class-variance-authority"

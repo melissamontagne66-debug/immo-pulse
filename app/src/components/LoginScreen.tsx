@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -34,15 +34,20 @@ function readIsEs(): boolean {
   }
 }
 
+// Token de réinitialisation lu une fois dans l'URL (?reset=...) au montage.
+function readResetToken(): string {
+  return new URL(window.location.href).searchParams.get('reset')?.trim() || '';
+}
+
 export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
   const isEs = readIsEs();
-  const [mode, setMode] = useState<Mode>('login');
+  const [resetToken, setResetToken] = useState(readResetToken);
+  const [mode, setMode] = useState<Mode>(() => (resetToken ? 'reset' : 'login'));
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [resetEmail, setResetEmail] = useState('');
-  const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -115,15 +120,6 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       setError(result.error || (isEs ? 'Error durante el registro.' : 'Erreur lors de l\'inscription.'));
     }
   };
-
-  useEffect(() => {
-    const token = new URL(window.location.href).searchParams.get('reset')?.trim() || '';
-    if (token.length > 0) {
-      clearMessages();
-      setResetToken(token);
-      setMode('reset');
-    }
-  }, []);
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();

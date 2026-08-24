@@ -33,9 +33,15 @@ function saveState(state: PromptState): void {
   } catch { /* ignore */ }
 }
 
+// Événement beforeinstallprompt (non standard, Chrome/Android uniquement).
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => void;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
+}
+
 function isStandalone(): boolean {
   return window.matchMedia('(display-mode: standalone)').matches
-    || (navigator as any).standalone === true; // iOS
+    || (navigator as Navigator & { standalone?: boolean }).standalone === true; // iOS
 }
 
 function isIos(): boolean {
@@ -44,7 +50,7 @@ function isIos(): boolean {
 
 export function InstallAppPrompt() {
   const [visible, setVisible] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showIosSteps, setShowIosSteps] = useState(false);
   const isEs = (() => {
     try {
@@ -71,7 +77,7 @@ export function InstallAppPrompt() {
 
     const onBeforeInstall = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       setVisible(true);
     };
     window.addEventListener('beforeinstallprompt', onBeforeInstall);

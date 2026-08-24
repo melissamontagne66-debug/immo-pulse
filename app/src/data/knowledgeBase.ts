@@ -111,7 +111,7 @@ VERROUILLAGE R1:
 STRATÉGIE DES 3 SCENARIOS:
 1. Prix Attractif: déclencher compétition, vente sous 1 mois
 2. Prix Marché: prix juste optimal, vente 2-3 mois
-3. Prix Ambitieux: 10 % au-dessus max, risque de stagnation
+3. Prix Ambitieux: 10\u00A0% au-dessus max, risque de stagnation
 
 PREUVE IRREFUTABLE:
 - Ventes comparables: 3-5 biens vendus < 3 mois (non négociables)
@@ -124,7 +124,7 @@ CLOTURE PRIX:
 - "Compte tenu de votre objectif, quel scénario?"
 
 Si prix trop haut:
-- Stratégie de repli: accepter 10 % au-dessus avec point sous 1 semaine
+- Stratégie de repli: accepter 10\u00A0% au-dessus avec point sous 1 semaine
 - "S'il n'y a pas assez d'appels/visites, on ajuste immédiatement"
 - Savoir dire non si nécessaire`,
     keyPoints: [
@@ -158,7 +158,7 @@ MANDAT EXCLUSIF (objectif prioritaire):
 MANDAT SUCCES (variante):
 - Le vendeur peut trouver l'acquéreur
 - Doit le référer pour sécurisation transaction
-- Vente via contact vendeur = 50 % réduction honoraires
+- Vente via contact vendeur = 50\u00A0% réduction honoraires
 - "Mieux vaut la moitié de quelque chose que le tôtalité de rien"
 
 CLAUSE DE CONFIANCE:
@@ -169,7 +169,7 @@ CLAUSE DE CONFIANCE:
 
 15 Arguments Anti-Objection:
 1. Vente au prix fort (rareté)
-2. Sécurité juridique (70 % transactions PAP échouent)
+2. Sécurité juridique (70\u00A0% transactions PAP échouent)
 3. Garantie de performance (Clause Confiance)
 4. Qualification acheteur (pas de curieux)
 5. Transparence du suivi (CR après chaque visite)
@@ -195,7 +195,7 @@ CLAUSE DE CONFIANCE:
 
 STRUCTURE DU LPSI:
 1. Introduction: valider les objectifs "Vendre dans les meilleures conditions?"
-2. Présentation le réseau: stabilité, 98 % satisfaction, couverture
+2. Présentation le réseau: stabilité, 98\u00A0% satisfaction, couverture
 3. Mise en valeur: photos pro, home-staging 3D, vidéo
 4. Diffusion massive: 100+ portails, le réseau international
 5. Synergie réseau: 15000 conseillers, prèscription
@@ -204,10 +204,10 @@ STRUCTURE DU LPSI:
 8. Prix: preuve par biens vendus
 
 VALORISATION PHOTOS:
-- Les acheteurs passent 60 % de leur temps sur les photos
-- Mauvaise photo = baisse de 15 % de la valeur perçue
+- Les acheteurs passent 60\u00A0% de leur temps sur les photos
+- Mauvaise photo = baisse de 15\u00A0% de la valeur perçue
 - Photographe pro spécialisé immobilier
-- Home-staging virtuel 3D: 75 % des biens vendus mieux
+- Home-staging virtuel 3D: 75\u00A0% des biens vendus mieux
 
 DIFFUSION:
 - Vitrine le réseau + sites premium
@@ -256,7 +256,7 @@ MÉTHODE DES 3 ÉTAPES:
 → "Si je ne suis pas capable de défendre la valeur de mon travail, comment puis-je défendre votre prix?"
 
 3. "Je veux essayer de vendre seul (PAP)"
-→ "50 %+ des transactions PAP échouent. Mon rôle est d'éliminer ce risque."
+→ "50\u00A0%+ des transactions PAP échouent. Mon rôle est d'éliminer ce risque."
 
 4. "Envoyez-moi l'estimation par email"
 → "Le prix ne vaut rien sans la stratégie. L'estimation = plan d'action."
@@ -268,7 +268,7 @@ MÉTHODE DES 3 ÉTAPES:
 → "Prix trop haut = assurance de prix final bas. Mon expertise = vendre au max du marché."
 
 7. "Je n'aime pas l'idée du panneau"
-→ "50 % des acheteurs sont des voisins ou connaissent le quartier."
+→ "50\u00A0% des acheteurs sont des voisins ou connaissent le quartier."
 
 8. "Je dois y réfléchir / en parler à mon conjoint"
 → "Si votre conjoint était là, qu'est-ce qui le ferait hésiter le plus?"`,
@@ -423,8 +423,8 @@ STRATÉGIE DES FLUX:
 - "Excusez-moi, je termine avec la famille X qui vient de partir"
 
 RÈGLE 80/20:
-- L'acheteur parle 80 % du temps
-- Toi seulement 20 %
+- L'acheteur parle 80\u00A0% du temps
+- Toi seulement 20\u00A0%
 - S'il parle de décoration et travaux = bon signe (se projette)
 
 ITINERAIRE STRATEGIQUE:
@@ -582,7 +582,7 @@ SUIVI ACTIF:
 GESTION DES MEUBLES:
 - Liste détaillée pièce par pièce
 - Valoriser au prix d'occasion (pas neuf, pas achat d'époque)
-- Maximum 5 % du prix sans justificatifs détaillés
+- Maximum 5\u00A0% du prix sans justificatifs détaillés
 - Réduit les frais de mutation pour l'acquéreur`,
     keyPoints: [
       "Dossier complet sous 4h",
@@ -643,10 +643,10 @@ ACTE AUTHENTIQUE:
     content: `Les premières 72h après signature du mandat sont critiques.
 
 MISE EN VALEUR:
-- Désencombrement: 50 % des objets personnels en moins
+- Désencombrement: 50\u00A0% des objets personnels en moins
 - Nettoyage extrême (vitrès, miroirs, joints salle de bain)
 - Circulation sans obstacle (lignes de fuite)
-- Vendeurs absents pour 70 % des visites
+- Vendeurs absents pour 70\u00A0% des visites
 
 PHOTOS:
 - Grand-angle indispensable
@@ -704,8 +704,8 @@ INDICATEURS (après 2-3 semaines):
 - Visites mais pas de contre-visite/offre = prix trop haut
 - Ne jamais attendre plus de 3 semaines pour réagir
 
-STRATÉGIE DU 5 %:
-- Baisser d'au moins 5 % du prix initial
+STRATÉGIE DU 5\u00A0%:
+- Baisser d'au moins 5\u00A0% du prix initial
 - Répéter jusqu'à ce que le téléphone sonne
 - Garantit un effet "nouveauté" sur les alertes
 
@@ -805,7 +805,7 @@ ELECTRICITE + GAZ:
 
 LOI CARREZ:
 - Uniquement ventes lots de copropriété
-- Si surface réelle < 5 % surface acte = réduction prix possible
+- Si surface réelle < 5\u00A0% surface acte = réduction prix possible
 - Délai d'action: 1 an après acte authentique
 
 STRATÉGIE:
@@ -825,7 +825,7 @@ STRATÉGIE:
     id: "réseau-social",
     title: "Google Business Profile & Réseaux Sociaux",
     category: "prospection",
-    content: `80 % des parcours de vente commencent par une recherche locale.
+    content: `80\u00A0% des parcours de vente commencent par une recherche locale.
 
 GOOGLE MY BUSINESS:
 - Titre: [Prénom Nom] - Conseiller Immobilier [Ville]
@@ -873,8 +873,8 @@ FACEBOOK/INSTA:
     content: `Ce que tes clients achètent: ton ASSURANCE. Pas tes photos, pas tes annonces.
 
 LE TRANSFERT DE CERTITUDE:
-- Le client arrive avec 90 % d'incertitude
-- Si ta certitude est à 50 %, il ne signera jamais
+- Le client arrive avec 90\u00A0% d'incertitude
+- Si ta certitude est à 50\u00A0%, il ne signera jamais
 - Ton job: faire déborder ta certitude dans son réservoir
 
 ASSURANCE AU R1:

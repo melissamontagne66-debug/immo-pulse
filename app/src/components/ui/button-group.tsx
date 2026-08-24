@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- variantes cva exportées à côté du composant (structure shadcn) */
 import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 
