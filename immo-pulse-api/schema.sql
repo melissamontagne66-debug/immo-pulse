@@ -89,6 +89,14 @@ CREATE TABLE IF NOT EXISTS contacts (
   follow_up_date TEXT,
   status TEXT DEFAULT 'chaud',
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  first_name TEXT DEFAULT '',
+  email TEXT DEFAULT '',
+  birthdate TEXT DEFAULT '',
+  address TEXT DEFAULT '',
+  zip_code TEXT DEFAULT '',
+  city TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  updated_at DATETIME,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 

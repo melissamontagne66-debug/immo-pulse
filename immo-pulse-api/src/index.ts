@@ -25,7 +25,10 @@ export function corsHeaders(env: Env, request: Request): Record<string, string> 
   const origin = request.headers.get('Origin') || '';
   const allowedOrigin = env.FRONTEND_URL || '*';
   const allowedOrigins = allowedOrigin.split(',').map((entry) => entry.trim()).filter(Boolean);
-  const isAllowed = allowedOrigins.includes('*') || allowedOrigins.includes(origin);
+  // Les origines chrome-extension:// (extension Bridge CRM) ne peuvent pas être
+  // listées dans FRONTEND_URL (ID variable) : on les accepte ici. Avec
+  // Allow-Credentials, l'origine renvoyée ne doit jamais être '*'.
+  const isAllowed = allowedOrigins.includes('*') || allowedOrigins.includes(origin) || origin.startsWith('chrome-extension://');
   const finalOrigin = isAllowed ? (origin || allowedOrigins[0] || '*') : (allowedOrigins[0] || '*');
   return {
     'Access-Control-Allow-Origin': finalOrigin,
@@ -40,6 +43,67 @@ function json(data: any, status = 200, cors: Record<string, string> = {}): Respo
     status,
     headers: { ...cors, 'Content-Type': 'application/json' },
   });
+}
+
+// --- Session par cookie (extension Chrome « Bridge CRM ») ---
+// Le cookie transporte le même JWT que l'en-tête Bearer ; la durée doit donc
+// être identique à celle du token (30 jours, voir createJWT).
+export const SESSION_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
+
+export function buildSessionCookie(token: string): string {
+  return `session=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
+}
+
+export function getCookieValue(cookieHeader: string | null, name: string): string | null {
+  if (!cookieHeader) return null;
+  for (const part of cookieHeader.split(';')) {
+    const eq = part.indexOf('=');
+    if (eq === -1) continue;
+    if (part.slice(0, eq).trim() !== name) continue;
+    const value = part.slice(eq + 1).trim();
+    return value || null;
+  }
+  return null;
+}
+
+// --- Helpers Bridge CRM (fonctions pures, testées dans index.test.ts) ---
+
+// 10 chiffres FR sans espaces ni +33 : « +33 6 12 34 56 78 » -> « 0612345678 ».
+export function normalizePhoneFR(raw: string): string {
+  let digits = (raw || '').replace(/[^\d+]/g, '');
+  if (digits.startsWith('+33')) digits = '0' + digits.slice(3);
+  else if (digits.startsWith('0033')) digits = '0' + digits.slice(4);
+  return digits.replace(/\D/g, '');
+}
+
+// YYYY-MM-DD -> JJ/MM/AAAA. Retourne '' si vide ou date réellement invalide
+// (ex. 2001-02-29), pour ne jamais exposer une date fausse au CRM.
+export function formatBirthdateFR(iso: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
+  if (!m) return '';
+  const [, y, mo, d] = m;
+  const date = new Date(Date.UTC(+y, +mo - 1, +d));
+  if (date.getUTCFullYear() !== +y || date.getUTCMonth() !== +mo - 1 || date.getUTCDate() !== +d) return '';
+  return `${d}/${mo}/${y}`;
+}
+
+// Paramètre ?since=YYYY-MM-DD. Choix documenté : un format invalide est
+// ignoré (on retourne tous les prospects) plutôt qu'une 400 — une extension
+// qui envoie un since mal formé préfère re-synchroniser tout que rien.
+export function parseSinceParam(raw: string | null): string | null {
+  if (!raw) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(raw.trim());
+  if (!m) return null;
+  const [, y, mo, d] = m;
+  const date = new Date(Date.UTC(+y, +mo - 1, +d));
+  if (date.getUTCFullYear() !== +y || date.getUTCMonth() !== +mo - 1 || date.getUTCDate() !== +d) return null;
+  return `${y}-${mo}-${d}`;
+}
+
+// « 24 rue de la République » + « 69006 » + « Lyon » -> « 24 rue de la République, 69006 Lyon ».
+export function formatAddressLine(address: string, zipCode: string, city: string): string {
+  const zipCity = [zipCode.trim(), city.trim()].filter(Boolean).join(' ');
+  return [address.trim(), zipCity].filter(Boolean).join(', ');
 }
 
 // --- Password hashing ---
@@ -415,7 +479,7 @@ export async function createJWT(userId: string, email: string, env: Env): Promis
     sub: userId,
     email,
     iat: now,
-    exp: now + 30 * 24 * 60 * 60, // 30 days
+    exp: now + SESSION_MAX_AGE_SECONDS, // 30 days
   }));
   const signature = await signHMAC(key, `${header}.${payload}`);
   return `${header}.${payload}.${signature}`;
@@ -445,8 +509,14 @@ export async function verifyJWT(token: string, env: Env): Promise<{ userId: stri
 
 async function getUserId(request: Request, env: Env): Promise<string | null> {
   const auth = request.headers.get('Authorization');
-  if (!auth || !auth.startsWith('Bearer ')) return null;
-  const decoded = await verifyJWT(auth.slice(7), env);
+  if (auth && auth.startsWith('Bearer ')) {
+    const decoded = await verifyJWT(auth.slice(7), env);
+    return decoded?.userId || null;
+  }
+  // Fallback cookie `session` (extension Chrome Bridge CRM, credentials: 'include').
+  const sessionToken = getCookieValue(request.headers.get('Cookie'), 'session');
+  if (!sessionToken) return null;
+  const decoded = await verifyJWT(sessionToken, env);
   return decoded?.userId || null;
 }
 
@@ -493,7 +563,7 @@ export default {
         }
 
         const token = await createJWT(id, email.toLowerCase().trim(), env);
-        return json({ success: true, token, user: { id, email: email.toLowerCase().trim(), firstName, lastName, experienceLevel, startDate } }, 200, cors);
+        return json({ success: true, token, user: { id, email: email.toLowerCase().trim(), firstName, lastName, experienceLevel, startDate } }, 200, { ...cors, 'Set-Cookie': buildSessionCookie(token) });
       }
 
       // ===== CGU: preuve d'acceptation (usage interne — récupération par l'utilisateur) =====
@@ -562,7 +632,7 @@ export default {
             experienceLevel: user.experience_level,
             startDate: user.start_date,
           }
-        }, 200, cors);
+        }, 200, { ...cors, 'Set-Cookie': buildSessionCookie(token) });
       }
 
       // ===== AUTH: Reset password =====
@@ -715,6 +785,14 @@ export default {
           followUpDate: r.follow_up_date,
           status: r.status,
           createdAt: r.created_at,
+          firstName: r.first_name || '',
+          email: r.email || '',
+          birthdate: r.birthdate || '',
+          address: r.address || '',
+          zipCode: r.zip_code || '',
+          city: r.city || '',
+          notes: r.notes || '',
+          updatedAt: r.updated_at || r.created_at,
         }));
 
         return json({ success: true, profile, progress: progressData || {
@@ -779,13 +857,18 @@ export default {
         }
         const id = body.id || `contact-${Date.now()}`;
 
+        // Nouveaux champs CRM (migration 0005) : acceptés s'ils sont présents,
+        // tolérés vides sinon. updated_at suit chaque upsert pour le ?since= du Bridge.
         await env.DB.prepare(
           `INSERT OR REPLACE INTO contacts
-            (id, user_id, name, phone, context, origin, follow_up_date, status, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            (id, user_id, name, phone, context, origin, follow_up_date, status, created_at,
+             first_name, email, birthdate, address, zip_code, city, notes, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
         ).bind(
           id, userId, String(body.name).trim(), body.phone || '', body.context || '', body.origin || '',
-          body.followUpDate || null, body.status || 'chaud', body.createdAt || new Date().toISOString()
+          body.followUpDate || null, body.status || 'chaud', body.createdAt || new Date().toISOString(),
+          body.firstName || '', body.email || '', body.birthdate || '', body.address || '',
+          body.zipCode || '', body.city || '', body.notes || ''
         ).run();
 
         return json({ success: true, id }, 200, cors);
@@ -802,6 +885,42 @@ export default {
 
         await env.DB.prepare('DELETE FROM contacts WHERE id = ? AND user_id = ?').bind(id, userId).run();
         return json({ success: true }, 200, cors);
+      }
+
+      // ===== BRIDGE CRM: prospects (extension Chrome, auth cookie ou Bearer) =====
+      if (path === '/api/bridge/prospects' && request.method === 'GET') {
+        const userId = await getUserId(request, env);
+        if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
+
+        // ?since=YYYY-MM-DD -> sync incrémentale ; format invalide ignoré (tout renvoyer).
+        const since = parseSinceParam(url.searchParams.get('since'));
+        const rows = since
+          ? await env.DB.prepare(
+              'SELECT * FROM contacts WHERE user_id = ? AND updated_at >= ? ORDER BY updated_at DESC LIMIT 100'
+            ).bind(userId, since).all()
+          : await env.DB.prepare(
+              'SELECT * FROM contacts WHERE user_id = ? ORDER BY updated_at DESC LIMIT 100'
+            ).bind(userId).all();
+
+        const prospects = (rows.results || []).map((r: any) => {
+          // Legacy : first_name vide -> tout le nom dans lastname, firstname ''.
+          const prospect: Record<string, unknown> = {
+            id: String(r.id),
+            firstname: (r.first_name as string) || '',
+            lastname: String(r.name),
+            phone: normalizePhoneFR((r.phone as string) || ''),
+          };
+          // civility/job : pas de donnée en base, champs omis (tolérés par le spec).
+          const birthdate = formatBirthdateFR((r.birthdate as string) || '');
+          if (birthdate) prospect.birthdate = birthdate;
+          if (r.email) prospect.email = r.email;
+          const address = formatAddressLine((r.address as string) || '', (r.zip_code as string) || '', (r.city as string) || '');
+          if (address) prospect.address = address;
+          if (r.notes) prospect.notes = r.notes;
+          return prospect;
+        });
+
+        return json(prospects, 200, cors);
       }
 
       // ===== PUSH: subscribe =====
