@@ -49,6 +49,7 @@ function getStorageKey(userKey: string): string {
 
 // Migration douce : les contacts créés avant l'enrichissement reçoivent
 // les nouveaux champs vides par défaut.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function migrateContact(raw: any): Contact {
   const origines: ContactOrigine[] = ['pige', 'porte-a-porte', 'bouche-a-oreille', 'apporteur'];
   return {
@@ -77,6 +78,7 @@ function migrateContact(raw: any): Contact {
 function loadContacts(userKey: string): Contact[] {
   try {
     const stored = localStorage.getItem(getStorageKey(userKey));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (stored) return (JSON.parse(stored) as any[]).map(migrateContact);
   } catch { /* ignore */ }
   return [];
@@ -94,6 +96,13 @@ function lastInteractionKey(c: Contact): string {
   const candidates = [c.createdAt?.slice(0, 10) ?? '', c.dateDerniereRelance ?? ''];
   for (const n of c.notes ?? []) if (n.date) candidates.push(n.date);
   return candidates.filter(Boolean).sort().pop() ?? '';
+}
+
+// Date de « dernière mise à jour » d'une fiche = dernière interaction
+// (relance effective ou note), fallback createdAt — utilisée par le filtre
+// « Dernière mise à jour » de ContactsView.
+export function getContactLastUpdate(c: Contact): string {
+  return lastInteractionKey(c) || (c.createdAt?.slice(0, 10) ?? '');
 }
 
 function purgeExpired(userKey: string, contacts: Contact[]): Contact[] {
@@ -160,7 +169,16 @@ function toApiContact(contact: Contact) {
   return {
     id: contact.id,
     name: contact.nom,
+    firstName: contact.prenom,
     phone: contact.telephone,
+    email: contact.email,
+    birthdate: contact.anniversaire,
+    address: contact.adresse,
+    zipCode: contact.codePostal,
+    city: contact.ville,
+    // Notes aplaties en texte lisible (« 2026-08-24: … ») — le Bridge CRM
+    // les renvoie telles quelles dans le champ `notes` de l'endpoint.
+    notes: (contact.notes ?? []).map(n => `${n.date}: ${n.texte}`).join('\n'),
     context: contact.contexte,
     origin: contact.origine,
     followUpDate: contact.dateRelance || null,
@@ -170,11 +188,18 @@ function toApiContact(contact: Contact) {
 }
 
 // Mapping API (EN) → front (FR) — avec migration douce vers le modèle enrichi
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function fromApiContact(raw: any): Contact {
   return migrateContact({
     id: raw.id,
     nom: raw.name || '',
+    prenom: raw.firstName || '',
     telephone: raw.phone || '',
+    email: raw.email || '',
+    anniversaire: raw.birthdate || '',
+    adresse: raw.address || '',
+    codePostal: raw.zipCode || '',
+    ville: raw.city || '',
     contexte: raw.context || '',
     origine: raw.origin || '',
     dateRelance: raw.followUpDate || '',
@@ -201,6 +226,7 @@ export function useContacts(userKey: string) {
   useEffect(() => {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setContacts(purgeExpired(userKey, loadContacts(userKey)));
     }
   }, [userKey]);
@@ -208,10 +234,10 @@ export function useContacts(userKey: string) {
   // Purge RGPD à l'ouverture (une fois par session)
   useEffect(() => {
     setContacts(prev => purgeExpired(loadedKey.current, prev));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Inject cloud data (called from App.tsx after apiSyncLoad)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const loadFromCloud = useCallback((cloudContacts: any[] | null) => {
     if (!cloudContacts || cloudContacts.length === 0) return;
     const mapped = cloudContacts.map(fromApiContact);

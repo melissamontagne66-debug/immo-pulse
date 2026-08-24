@@ -4,8 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Phone, Pencil, Trash2, ShieldAlert, CalendarClock, Download, Search, StickyNote, Mail, MapPin, Cake } from 'lucide-react';
-import { useContacts, type Contact, type ContactStatut, type ContactOrigine, type ContactTypeProspect, type ContactOccupancy, type DelaiRelance } from '@/hooks/useContacts';
+import { Users, Plus, Phone, Pencil, Trash2, ShieldAlert, CalendarClock, Download, Search, StickyNote, Mail, MapPin, Cake, MessageSquarePlus } from 'lucide-react';
+import { useContacts, getContactLastUpdate, type Contact, type ContactStatut, type ContactOrigine, type ContactTypeProspect, type ContactOccupancy, type DelaiRelance } from '@/hooks/useContacts';
+import { Textarea } from '@/components/ui/textarea';
 import { toLocalDateKey } from '@/lib/utils';
 
 // ============================================
@@ -50,6 +51,14 @@ const DELAIS: { value: Exclude<DelaiRelance, ''>; label: string; labelEs: string
   { value: '1-mois', label: '1 mois', labelEs: '1 mes' },
   { value: '3-mois', label: '3 mois', labelEs: '3 meses' },
   { value: 'personnalise', label: 'Personnaliser (date exacte)', labelEs: 'Personalizar (fecha exacta)' },
+];
+
+type FiltreMaj = '' | 'today' | '7j' | '30j';
+
+const FILTRES_MAJ: { value: Exclude<FiltreMaj, ''>; label: string; labelEs: string }[] = [
+  { value: 'today', label: 'Aujourd\'hui', labelEs: 'Hoy' },
+  { value: '7j', label: '7 derniers jours', labelEs: '7 últimos días' },
+  { value: '30j', label: '30 derniers jours', labelEs: '30 últimos días' },
 ];
 
 // Langue lue depuis le profil local (iad-coach-profile-{userKey})
@@ -119,6 +128,8 @@ interface FormState {
   dateDerniereRelance: string;
   delaiRelance: DelaiRelance;
   dateRelanceExacte: string;
+  // Nouvelle note (création : 1re note de la fiche ; édition : ajoutée à l'historique)
+  note: string;
 }
 
 // Par défaut : dernière relance = aujourd'hui (la fiche est créée au moment du
@@ -129,6 +140,7 @@ const DEFAULTS_FORM = (): FormState => ({
   origine: 'autre', typeProspect: '', occupancy: '',
   adresse: '', codePostal: '', ville: '', quartier: '', anniversaire: '',
   statut: 'chaud', dateDerniereRelance: toLocalDateKey(new Date()), delaiRelance: '3-mois', dateRelanceExacte: '',
+  note: '',
 });
 
 function computeDateRelance(delai: DelaiRelance, dateExacte: string): string {
@@ -155,6 +167,11 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
   const [filterOrigine, setFilterOrigine] = useState<ContactOrigine | ''>('');
   const [filterStatut, setFilterStatut] = useState<ContactStatut | ''>('');
   const [filterType, setFilterType] = useState<ContactTypeProspect | ''>('');
+  const [filterMaj, setFilterMaj] = useState<FiltreMaj>('');
+
+  // Ajout rapide de note (inline sur la carte, sans ouvrir la modale)
+  const [quickNoteId, setQuickNoteId] = useState<string | null>(null);
+  const [quickNoteText, setQuickNoteText] = useState('');
 
   // Notes par fiche (texte en cours de saisie)
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
@@ -189,6 +206,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
       dateDerniereRelance: contact.dateDerniereRelance,
       delaiRelance: contact.dateRelance ? 'personnalise' : '',
       dateRelanceExacte: contact.dateRelance,
+      note: '',
     });
     setFormOpen(true);
   };
@@ -215,8 +233,16 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
     };
     if (editingId) {
       updateContact(editingId, data);
+      // Édition : la note saisie s'AJOUTE à l'historique (les notes existantes
+      // ne sont jamais écrasées), puis le champ repart vide.
+      if (form.note.trim()) addNote(editingId, form.note);
     } else {
-      addContact({ ...data, notes: [] });
+      // Création : la note saisie devient la première note de la fiche.
+      const texte = form.note.trim();
+      addContact({
+        ...data,
+        notes: texte ? [{ id: `note-${Date.now()}`, date: toLocalDateKey(new Date()), texte }] : [],
+      });
     }
     setFormOpen(false);
     setEditingId(null);
@@ -225,16 +251,25 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
+    const todayKey = toLocalDateKey(new Date());
+    const cutoff = new Date();
+    cutoff.setDate(cutoff.getDate() - (filterMaj === '7j' ? 7 : 30));
+    const cutoffKey = toLocalDateKey(cutoff);
     return sortedContacts().filter(c => {
       if (q && ![c.nom, c.prenom, c.telephone, c.ville, c.email].some(v => (v ?? '').toLowerCase().includes(q))) return false;
       if (filterOrigine && c.origine !== filterOrigine) return false;
       if (filterStatut && c.statut !== filterStatut) return false;
       if (filterType && c.typeProspect !== filterType) return false;
+      if (filterMaj) {
+        const last = getContactLastUpdate(c);
+        if (!last) return false;
+        if (filterMaj === 'today' ? last !== todayKey : last < cutoffKey) return false;
+      }
       return true;
     });
-  }, [sortedContacts, search, filterOrigine, filterStatut, filterType]);
+  }, [sortedContacts, search, filterOrigine, filterStatut, filterType, filterMaj]);
 
-  const hasFilters = search.trim() !== '' || filterOrigine !== '' || filterStatut !== '' || filterType !== '';
+  const hasFilters = search.trim() !== '' || filterOrigine !== '' || filterStatut !== '' || filterType !== '' || filterMaj !== '';
 
   return (
     <div className="space-y-6">
@@ -299,7 +334,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                 className="pl-9"
               />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
               <select
                 value={filterOrigine}
                 onChange={e => setFilterOrigine(e.target.value as ContactOrigine | '')}
@@ -326,6 +361,15 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
               >
                 <option value="">{isEs ? 'Tipo: todos' : 'Type : tous'}</option>
                 {TYPES_PROSPECT.map(t => <option key={t.value} value={t.value}>{isEs ? t.labelEs : t.label}</option>)}
+              </select>
+              <select
+                value={filterMaj}
+                onChange={e => setFilterMaj(e.target.value as FiltreMaj)}
+                className="text-sm border border-gray-200 rounded-lg px-3 py-2 bg-white text-gray-700"
+                aria-label={isEs ? 'Filtrar por última actualización' : 'Filtrer par dernière mise à jour'}
+              >
+                <option value="">{isEs ? 'Actualización: todas' : 'Dernière màj : toutes'}</option>
+                {FILTRES_MAJ.map(f => <option key={f.value} value={f.value}>{isEs ? f.labelEs : f.label}</option>)}
               </select>
             </div>
             {hasFilters && (
@@ -451,6 +495,26 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
               </p>
             )}
 
+            {/* Note */}
+            <div>
+              <Label htmlFor="contact-note">{isEs ? 'Añadir una nota' : 'Ajouter une note'}</Label>
+              <Textarea
+                id="contact-note"
+                value={form.note}
+                onChange={e => setForm({ ...form, note: e.target.value })}
+                placeholder={isEs ? 'Ej.: quiere vender antes de septiembre, volver a llamar la semana próxima…' : 'Ex : visite prévue mardi, rappeler la semaine prochaine…'}
+                rows={2}
+                className="mt-1 text-sm"
+              />
+              {editingId && (
+                <p className="text-xs text-gray-500 mt-1">
+                  {isEs
+                    ? 'La nota se añadirá al historial (las notas existentes se conservan).'
+                    : 'La note sera ajoutée à l\'historique (les notes existantes sont conservées).'}
+                </p>
+              )}
+            </div>
+
             {/* Statut */}
             <div>
               <Label>{isEs ? 'Estado' : 'Statut'}</Label>
@@ -568,6 +632,13 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                         </span>
                       ) : (
                         <>
+                          <button
+                            onClick={() => { setQuickNoteId(contact.id); setQuickNoteText(''); }}
+                            className="text-gray-400 hover:text-green-600 p-2"
+                            aria-label={isEs ? 'Añadir una nota' : 'Ajouter une note'}
+                          >
+                            <MessageSquarePlus className="w-4 h-4" />
+                          </button>
                           <button onClick={() => openEditForm(contact)} className="text-gray-400 hover:text-blue-500 p-2" aria-label={isEs ? 'Modificar' : 'Modifier'}>
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -578,6 +649,50 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                       )}
                     </div>
                   </div>
+
+                  {/* Ajout rapide de note (inline, sans ouvrir la modale) */}
+                  {quickNoteId === contact.id && (
+                    <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
+                      <Textarea
+                        autoFocus
+                        value={quickNoteText}
+                        onChange={e => setQuickNoteText(e.target.value)}
+                        placeholder={isEs ? 'Añadir una nota…' : 'Ajouter une note…'}
+                        rows={2}
+                        className="text-sm"
+                        onKeyDown={e => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            if (quickNoteText.trim()) {
+                              addNote(contact.id, quickNoteText);
+                              setQuickNoteId(null);
+                              setQuickNoteText('');
+                            }
+                          } else if (e.key === 'Escape') {
+                            setQuickNoteId(null);
+                            setQuickNoteText('');
+                          }
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          className="bg-red-600 hover:bg-red-700"
+                          disabled={!quickNoteText.trim()}
+                          onClick={() => {
+                            addNote(contact.id, quickNoteText);
+                            setQuickNoteId(null);
+                            setQuickNoteText('');
+                          }}
+                        >
+                          {isEs ? 'Validar' : 'Valider'}
+                        </Button>
+                        <Button size="sm" variant="outline" onClick={() => { setQuickNoteId(null); setQuickNoteText(''); }}>
+                          {isEs ? 'Cancelar' : 'Annuler'}
+                        </Button>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Zone dépliée : notes + replanification */}
                   {expanded && (

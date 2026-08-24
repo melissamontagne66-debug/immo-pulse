@@ -18,6 +18,10 @@ export interface Sale {
 
 const STORAGE_PREFIX = 'immo-pulse-sales';
 const LEGACY_STORAGE_PREFIX = 'immo-pulse-simulations';
+// Sync entre instances du hook (App.tsx pour le dashboard, CommissionCalculator
+// pour la saisie) : sans ça, une vente enregistrée ne mettait pas à jour le
+// « CA réalisé ce mois » du dashboard avant rechargement.
+const SALES_EVENT = 'immo-pulse-sales-changed';
 
 function getStorageKey(userKey: string): string {
   return `${STORAGE_PREFIX}-${userKey}`;
@@ -94,9 +98,24 @@ export function useSales(userKey: string) {
   useEffect(() => {
     if (userKey !== loadedKey.current) {
       loadedKey.current = userKey;
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setSales(loadSales(userKey));
     }
   }, [userKey]);
+
+  // Sync inter-instances (custom event) et inter-onglets (storage)
+  useEffect(() => {
+    const reload = () => setSales(loadSales(loadedKey.current));
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === getStorageKey(loadedKey.current)) reload();
+    };
+    window.addEventListener(SALES_EVENT, reload);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(SALES_EVENT, reload);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const addSale = useCallback((sale: Sale) => {
     setSales(prev => {
@@ -104,6 +123,7 @@ export function useSales(userKey: string) {
       saveSales(loadedKey.current, updated);
       return updated;
     });
+    window.dispatchEvent(new CustomEvent(SALES_EVENT));
   }, []);
 
   const removeSale = useCallback((id: string) => {
@@ -112,6 +132,7 @@ export function useSales(userKey: string) {
       saveSales(loadedKey.current, updated);
       return updated;
     });
+    window.dispatchEvent(new CustomEvent(SALES_EVENT));
   }, []);
 
   // Ventes triées de la plus récente à la plus ancienne

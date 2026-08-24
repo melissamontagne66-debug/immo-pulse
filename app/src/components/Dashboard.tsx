@@ -9,6 +9,7 @@ import { getGoals, plural } from '@/lib/goals';
 import type { UserProgress, DailyResults } from '@/types';
 import type { WeekPlan } from '@/types';
 import { Flame, Target, AlertTriangle, ArrowRight, Sunrise, Minus, Plus, Banknote } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { formatEuro, toLocalDateKey, parseLocalDateKey } from '@/lib/utils';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { InstallAppPrompt } from '@/components/InstallAppPrompt';
@@ -19,8 +20,7 @@ import { ConseilDuJour } from '@/components/ConseilDuJour';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
 import { getProtocole, getVictoireAleatoire } from '@/lib/antiDecrochage';
-import { getJoursDepuisDerniereOuverture, getNiveau, getSemaineProgramme, touchLastOpen } from '@/lib/jalons';
-import { RdvList } from '@/components/RdvList';
+import { getJoursDepuisDerniereOuverture, getNiveau, touchLastOpen } from '@/lib/jalons';
 
 interface DashboardProps {
   progress: UserProgress;
@@ -43,6 +43,9 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   const isEs = profile.language === 'es';
   const { counters, increment } = useDailyCounters();
 
+  // +1 contact physique → proposition d'enregistrer la fiche (nouveau ou existant)
+  const [contactPromptOpen, setContactPromptOpen] = useState(false);
+
   // Objectifs — source unique : src/lib/goals.ts (MOD-19)
   // MOD-27 : protocole anti-décrochage actif → objectifs allégés 48 h.
   // Recalculé à chaque rendu (lecture localStorage) : un bilan enregistré
@@ -55,9 +58,8 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   const [joursAbsence] = useState(() => getJoursDepuisDerniereOuverture(progress.streak.lastBilanDate));
   useEffect(() => { touchLastOpen(); }, []);
 
-  // MOD-31 — niveau de carrière + semaine de programme (header).
+  // MOD-31 — niveau de carrière (header).
   const niveau = getNiveau(progress, sales);
-  const semaine = getSemaineProgramme(profile.startDate);
 
   // MOD-33 — victoire passée rappelée sur la carte de soutien.
   const victoireSouvenir = useMemo(() => getVictoireAleatoire(dailyResults), [dailyResults]);
@@ -103,7 +105,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
     : undefined;
 
   // Objectifs quotidiens (sans mandat qui est maintenant mensuel) — depuis goals.ts
-  const objectiveStyle: Record<CounterKey, { icon: any; color: string; bg: string; border: string }> = {
+  const objectiveStyle: Record<CounterKey, { icon: LucideIcon; color: string; bg: string; border: string }> = {
     conversations: { icon: Phone, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-200' },
     contacts: { icon: DoorOpen, color: 'text-orange-600', bg: 'bg-orange-50', border: 'border-orange-200' },
     r1: { icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
@@ -172,11 +174,8 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           <h2 className="text-2xl font-bold text-gray-900">
             {profile.firstName ? `Bienvenue ${profile.firstName} !` : 'Objectifs du jour'}
           </h2>
-          <p
-            className="text-gray-500 mt-1"
-            title={isEs ? 'Basado en tus balances completados y tus hitos.' : 'Basé sur tes bilans complétés et tes jalons.'}
-          >
-            Jour {currentDay} · {isEs ? `Programa 6 meses — semana ${semaine}/26` : `Programme 6 mois — semaine ${semaine}/26`}
+          <p className="text-gray-500 mt-1">
+            Jour {currentDay}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -212,7 +211,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
               <p className="text-sm text-emerald-800">
                 {isEs
                   ? `💚 ${profile.firstName ? `${profile.firstName}, ayer` : 'Ayer'} no fue un día fácil — es normal, este trabajo sacude. Hoy aligeramos: un solo objetivo, el tuyo.`
-                  : `💚 ${profile.firstName ? `${profile.firstName}, hier` : 'Hier'} n'était pas un jour facile — c'est normal, ce métier secoue. Aujourd'hui, on allège : un seul objectif, le tien.`}
+                  : `💚 ${profile.firstName ? `${profile.firstName}, hier` : 'Hier'} n'était pas un jour facile — c'est normal, ce métier secoue. Aujourd'hui, on allège\u00A0: un seul objectif, le tien.`}
               </p>
             ) : (
               <div className="space-y-1">
@@ -318,13 +317,18 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           {dailyObjectives.map(obj => {
             const count = counters[obj.key];
-            const done = count >= obj.value;
+            // Contacts physiques : compteur libre, sans cible — le conseiller
+            // ne doit pas être bridé par un objectif préétabli.
+            const freeCounter = obj.key === 'contacts';
+            const done = !freeCounter && count >= obj.value;
             return (
               <Card key={obj.key} className={`${done ? 'border-green-300 bg-green-50' : `${obj.border} ${obj.bg}`} hover:shadow-md transition-shadow cursor-pointer`} onClick={() => onNavigate('today')}>
                 <CardContent className="p-4 text-center">
                   <obj.icon className={`w-6 h-6 ${done ? 'text-green-600' : obj.color} mx-auto mb-2`} />
                   <p className="text-2xl font-bold text-gray-900">
-                    {count}<span className="text-base font-semibold text-gray-500">/{obj.value}</span>
+                    {freeCounter
+                      ? count
+                      : <>{count}<span className="text-base font-semibold text-gray-500">/{obj.value}</span></>}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5 flex items-center justify-center gap-1">
                     {obj.label}
@@ -340,7 +344,12 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
                       <Minus className="w-4 h-4" />
                     </button>
                     <button
-                      onClick={e => { e.stopPropagation(); increment(obj.key, 1); }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        increment(obj.key, 1);
+                        // +1 contact physique → proposer d'enregistrer la fiche
+                        if (freeCounter) setContactPromptOpen(true);
+                      }}
                       aria-label={isEs ? `Añadir 1 ${obj.label}` : `Ajouter 1 ${obj.label}`}
                       className="w-11 h-11 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:ring-offset-2 focus-visible:outline-none"
                     >
@@ -364,10 +373,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         <ArrowRight className="w-4 h-4" />
       </button>
 
-      {/* Mini-agenda — version mobile (sur desktop, il est dans le panneau du bas) */}
-      <div className="lg:hidden">
-        <RdvList />
-      </div>
+      {/* Mini-agenda « Mes RDV à venir » retiré (demande utilisateur). */}
 
       {/* MOD-34 — Conseil du jour (déterministe, pool de 15, src/data/conseils.ts) */}
       <ConseilDuJour day={currentDay} isEs={isEs} />
@@ -403,31 +409,73 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
       <section className="hidden lg:block">
         <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Aujourd'hui en un coup d'œil</h3>
         <div className="grid grid-cols-2 gap-4 items-start">
-          <RdvList />
-          <div className="space-y-4">
-            {relancesCard}
-            {/* Récap compact des 5 compteurs du jour (synthèse, distinct des tuiles) */}
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-sm font-semibold text-gray-900 mb-2">⚡ Progression du jour</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-1">
-                  {dailyObjectives.map(obj => {
-                    const done = counters[obj.key] >= obj.value;
+          {relancesCard}
+          {/* Récap compact des 5 compteurs du jour (synthèse, distinct des tuiles) */}
+          <Card>
+            <CardContent className="p-4">
+              <p className="text-sm font-semibold text-gray-900 mb-2">⚡ Progression du jour</p>
+              <div className="flex flex-wrap gap-x-4 gap-y-1">
+                {dailyObjectives.map(obj => {
+                  // Contacts physiques : compteur libre, sans objectif à atteindre
+                  if (obj.key === 'contacts') {
                     return (
-                      <span key={obj.key} className={`text-sm ${done ? 'text-green-600 font-semibold' : 'text-gray-600'}`}>
-                        {obj.label}&nbsp;: {counters[obj.key]}/{obj.value}
+                      <span key={obj.key} className="text-sm text-gray-600">
+                        {obj.label}&nbsp;: {counters[obj.key]}
                       </span>
                     );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                  }
+                  const done = counters[obj.key] >= obj.value;
+                  return (
+                    <span key={obj.key} className={`text-sm ${done ? 'text-green-600 font-semibold' : 'text-gray-600'}`}>
+                      {obj.label}&nbsp;: {counters[obj.key]}/{obj.value}
+                    </span>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
 
       {/* Proposition d'ajout à l'écran d'accueil (PWA) — discrète, en bas */}
       <InstallAppPrompt />
+
+      {/* +1 contact physique → proposer de renseigner la fiche tout de suite
+          (nouveau contact ou contact existant à mettre à jour) */}
+      {contactPromptOpen && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" onClick={() => setContactPromptOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-gray-900">
+              {isEs ? '¿Registrar este contacto?' : 'Enregistrer ce contact ?'}
+            </h3>
+            <p className="text-sm text-gray-600 mt-2">
+              {isEs
+                ? 'Un contacto anotado vale oro: crea su ficha o actualiza un contacto existente mientras está fresco.'
+                : 'Un contact noté, c\'est de l\'or : crée sa fiche ou mets à jour un contact existant pendant que c\'est frais.'}
+            </p>
+            <div className="flex flex-col gap-2 mt-5">
+              <button
+                onClick={() => { setContactPromptOpen(false); onNavigate('contacts'); }}
+                className="w-full px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+              >
+                {isEs ? 'Crear una nueva ficha' : 'Créer une nouvelle fiche'}
+              </button>
+              <button
+                onClick={() => { setContactPromptOpen(false); onNavigate('contacts'); }}
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+              >
+                {isEs ? 'Actualizar un contacto existente' : 'Modifier un contact existant'}
+              </button>
+              <button
+                onClick={() => setContactPromptOpen(false)}
+                className="w-full px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-gray-600"
+              >
+                {isEs ? 'Más tarde' : 'Plus tard'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

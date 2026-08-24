@@ -48,6 +48,11 @@ interface DailyActionsProps {
 }
 
 // Idées de contenu réseaux sociaux — une par jour, cycle de 30 idées
+// Choix aléatoire hors du composant (règle react-hooks/purity)
+function pickRandom<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
 function getSocialContent(day: number, isEs: boolean): string {
   // Cycle de 5 jours : chaque jour un pilier différent
   const dayOfWeek = ((day - 1) % 5);
@@ -229,6 +234,12 @@ export function DailyActions({
   // Tâche « anniversaire du jour » — message ou appel sans faute
   const anniversaires = useMemo(() => getContactsAnniversaireDuJour(contactsState.contacts), [contactsState.contacts]);
 
+  // Relances du jour : contacts dont la date de relance est due (ou en retard)
+  const relances = useMemo(() => contactsState.getDueContacts(), [contactsState]);
+
+  // +1 contact physique → proposition d'enregistrer la fiche (nouveau ou existant)
+  const [contactPromptOpen, setContactPromptOpen] = useState(false);
+
   // Check if today's checkup was done
   const todayStr = toLocalDateKey(new Date());
   const todayCheckupDone = dailyResults.some(r => r.date === todayStr);
@@ -314,7 +325,7 @@ export function DailyActions({
   // R1 — Description courte + contenu détaillé pour l'accordéon
   const r1Desc = isEs
     ? `Cita de descubrimiento vendedor. Objetivo: comprender el proyecto, cualificar el bien, fijar el R2. NUNCA des el precio en el R1. Escucha 80%, habla 20%. Deja que el vendedor se confíe.`
-    : `Rendez-vous de découverte vendeur. Objectif : comprendre le projet, qualifier le bien, fixer le R2. Ne donne JAMAIS le prix au R1. Écoute 80 %, parle 20 %. Laisse le vendeur se confier.`;
+    : `Rendez-vous de découverte vendeur. Objectif : comprendre le projet, qualifier le bien, fixer le R2. Ne donne JAMAIS le prix au R1. Écoute 80\u00A0%, parle 20\u00A0%. Laisse le vendeur se confier.`;
   const r1Tip = isEs
     ? `**Bueno saber para tu R1:**
 → Antes de llegar, prepárate: búsqueda de comparables, conocimiento del sector, preguntas abiertas listas
@@ -398,6 +409,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
   ];
 
   // Textes longs rattachés à chaque action du plan partagé (src/lib/goals.ts)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dailyTasks: any[] = goals.dailyActions
     .filter(def => def.type !== 'crm') // la carte CRM est rendue séparément plus bas
     .map(def => {
@@ -580,7 +592,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
           : `✅ ${done}/${total} — journée parfaite ! 🌟`,
         `Bien joué ${profile.firstName}, tu avances.`,
       ];
-      toast.success(encouragements[Math.floor(Math.random() * encouragements.length)], { duration: 3000 });
+      toast.success(pickRandom(encouragements), { duration: 3000 });
       // MOD-29 : proposition douce des rappels push au moment de satisfaction
       // (jour ≥ 2, jamais au 1er lancement, une seule carte non bloquante).
       if (shouldPromptForPush(userEmail ?? '', currentDay)) {
@@ -688,6 +700,56 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Relances du jour — affichées directement dans la liste des tâches,
+          avec appel / SMS en 1 tap (même logique que la carte du dashboard) */}
+      {relances.length > 0 && (
+        <Card className="bg-amber-50 border-amber-200">
+          <CardContent className="p-4 space-y-2">
+            <p className="text-sm font-semibold text-amber-800">
+              📞 {isEs ? 'Llamadas pendientes hoy :' : 'À relancer aujourd\'hui :'}
+            </p>
+            {relances.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3 bg-white/70 rounded-lg px-3 py-2">
+                <p className="text-sm text-gray-800 min-w-0 truncate">
+                  <span className="font-medium">{`${c.prenom} ${c.nom}`.trim() || (isEs ? 'Sin nombre' : 'Sans nom')}</span>
+                  {c.contexte && <> — {c.contexte.length > 60 ? `${c.contexte.slice(0, 60)}…` : c.contexte}</>}
+                </p>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {c.telephone && (
+                    <>
+                      <a
+                        href={`tel:${c.telephone.replace(/\s+/g, '')}`}
+                        className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        {isEs ? 'Llamar' : 'Appeler'}
+                      </a>
+                      <a
+                        href={`sms:${c.telephone.replace(/\s+/g, '')}`}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        SMS
+                      </a>
+                    </>
+                  )}
+                  <button
+                    onClick={() => contactsState.postponeContact(c.id)}
+                    className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'Posponer' : 'Repousser'}
+                  </button>
+                  <button
+                    onClick={() => contactsState.updateContact(c.id, { dateRelance: '' })}
+                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'Hecho' : 'Fait'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -907,10 +969,13 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                         {isEs ? '✏️ Anotar un resultado' : '✏️ Noter un résultat'}
                       </button>
                     )}
-                    {/* Compteurs rapides (tap = +1) — partagés avec le Dashboard et le bilan */}
+                    {/* Compteurs rapides (tap = +1) — partagés avec le Dashboard et le bilan.
+                        Contacts physiques : compteur libre, sans cible affichée. */}
                     {task.counterKeys && (
                       <div className="mt-2 flex flex-wrap gap-2">
-                        {(task.counterKeys as CounterKey[]).map(k => (
+                        {(task.counterKeys as CounterKey[]).map(k => {
+                          const freeCounter = k === 'contacts';
+                          return (
                           <div key={k} className="flex items-center gap-1.5 bg-white/80 border border-gray-200 rounded-full px-2 py-1">
                             <span className="text-xs text-gray-500">{counterMeta[k].label}</span>
                             <button
@@ -921,18 +986,23 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                             >
                               <Minus className="w-3 h-3" />
                             </button>
-                            <span className={`text-xs font-bold min-w-[2.5rem] text-center ${counters[k] >= counterMeta[k].target ? 'text-green-600' : 'text-gray-900'}`}>
-                              {counters[k]}/{counterMeta[k].target}
+                            <span className={`text-xs font-bold min-w-[2.5rem] text-center ${!freeCounter && counters[k] >= counterMeta[k].target ? 'text-green-600' : 'text-gray-900'}`}>
+                              {freeCounter ? counters[k] : `${counters[k]}/${counterMeta[k].target}`}
                             </span>
                             <button
-                              onClick={() => increment(k, 1)}
+                              onClick={() => {
+                                increment(k, 1);
+                                // +1 contact physique → proposer d'enregistrer la fiche
+                                if (freeCounter) setContactPromptOpen(true);
+                              }}
                               aria-label={isEs ? `Añadir 1 ${counterMeta[k].label}` : `Ajouter 1 ${counterMeta[k].label}`}
                               className="w-8 h-8 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-700 focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
                             >
                               <Plus className="w-3 h-3" />
                             </button>
                           </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -1054,6 +1124,43 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
           isEs={isEs}
           onClose={() => setShowRelanceModal(false)}
         />
+      )}
+
+      {/* +1 contact physique → proposer de renseigner la fiche tout de suite
+          (nouveau contact ou contact existant à mettre à jour) */}
+      {contactPromptOpen && (
+        <div className="fixed inset-0 z-[70] bg-black/60 flex items-center justify-center p-4" onClick={() => setContactPromptOpen(false)}>
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm" onClick={e => e.stopPropagation()}>
+            <h3 className="text-base font-bold text-gray-900">
+              {isEs ? '¿Registrar este contacto?' : 'Enregistrer ce contact ?'}
+            </h3>
+            <p className="text-sm text-gray-600 mt-2">
+              {isEs
+                ? 'Un contacto anotado vale oro: crea su ficha o actualiza un contacto existente mientras está fresco.'
+                : 'Un contact noté, c\'est de l\'or : crée sa fiche ou mets à jour un contact existant pendant que c\'est frais.'}
+            </p>
+            <div className="flex flex-col gap-2 mt-5">
+              <button
+                onClick={() => { setContactPromptOpen(false); onNavigate?.('contacts'); }}
+                className="w-full px-4 py-2.5 rounded-lg bg-red-600 hover:bg-red-700 text-white text-sm font-medium"
+              >
+                {isEs ? 'Crear una nueva ficha' : 'Créer une nouvelle fiche'}
+              </button>
+              <button
+                onClick={() => { setContactPromptOpen(false); onNavigate?.('contacts'); }}
+                className="w-full px-4 py-2.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium"
+              >
+                {isEs ? 'Actualizar un contacto existente' : 'Modifier un contact existant'}
+              </button>
+              <button
+                onClick={() => setContactPromptOpen(false)}
+                className="w-full px-4 py-2 rounded-lg text-xs text-gray-400 hover:text-gray-600"
+              >
+                {isEs ? 'Más tarde' : 'Plus tard'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
