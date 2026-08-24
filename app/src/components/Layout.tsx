@@ -4,7 +4,6 @@ import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
 import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell } from 'lucide-react';
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
-import { getSemaineProgramme } from '@/lib/jalons';
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
 
@@ -68,9 +67,6 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
     } catch { /* ignore */ }
     window.location.reload();
   };
-
-  // MOD-31 : semaine du programme (remplace le « Progression % » opaque)
-  const semaineProgramme = getSemaineProgramme(profile.startDate);
 
   const handleTabClick = (tabId: string) => {
     onTabChange(tabId);
@@ -209,17 +205,6 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
         {/* Footer */}
         <div className="p-4 border-t border-gray-100">
           <div className="space-y-3">
-            <div>
-              <div title={profile.language === 'es' ? 'Basado en tus balances completados y tus hitos.' : 'Basé sur tes bilans complétés et tes jalons.'}>
-                <div className="flex justify-between text-xs text-gray-500 mb-1">
-                  <span>{profile.language === 'es' ? 'Programa 6 meses' : 'Programme 6 mois'}</span>
-                  <span className="font-medium">{profile.language === 'es' ? `semana ${semaineProgramme}/26` : `semaine ${semaineProgramme}/26`}</span>
-                </div>
-                <div className="w-full bg-gray-100 rounded-full h-2">
-                  <div className="bg-gradient-to-r from-red-500 to-red-600 h-2 rounded-full transition-all duration-500" style={{ width: `${Math.round((semaineProgramme / 26) * 100)}%` }} />
-                </div>
-              </div>
-            </div>
             {niveauLabel && (
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>{profile.language === 'es' ? 'Nivel' : 'Niveau'} : <strong className="text-gray-700">{niveauLabel}</strong></span>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, Calendar, MessageCircle, TrendingUp, HomeIcon, CheckCircle, ArrowRight } from 'lucide-react';
+import { Home, Calendar, TrendingUp, HomeIcon, CheckCircle, ArrowRight } from 'lucide-react';
 
 interface FirstTimeOnboardingProps {
   onComplete: () => void;
@@ -28,46 +28,46 @@ const getSteps = (isEs: boolean) => [
     icon: Home,
     color: 'text-red-600',
     bg: 'bg-red-50',
-    title: isEs ? 'Su panel de control' : 'Ton tableau de bord',
+    title: isEs ? 'Cada mañana: su plan' : 'Chaque matin : ton plan',
     description: isEs
-      ? 'Aquí encuentra cada mañana sus objetivos del día, su acción de prospección y los consejos adaptados a su nivel.'
-      : 'Ici tu retrouves chaque matin tes objectifs du jour, ton action de prospection, et les conseils adaptés à ton niveau.',
+      ? 'Abra la app y encuentre sus objetivos y sus acciones del día, adaptados a su nivel y a sus resultados.'
+      : 'Ouvre l\'app et retrouve tes objectifs et tes actions du jour, adaptés à ton niveau et à tes résultats.',
   },
   {
     icon: Calendar,
     color: 'text-blue-600',
     bg: 'bg-blue-50',
-    title: isEs ? 'Sus acciones del día' : 'Tes actions du jour',
+    title: isEs ? 'Marque a lo largo del día' : 'Coche au fil de la journée',
     description: isEs
-      ? 'En "Hoy", tiene su lista de acciones para marcar. Un reto cada día para superarse. ¡Márquelas a medida que las completa!'
-      : 'Dans "Aujourd\'hui", tu as ta liste d\'actions à cocher. Un défi chaque jour pour te challenger. Coche-les au fur et à mesure !',
-  },
-  {
-    icon: MessageCircle,
-    color: 'text-green-600',
-    bg: 'bg-green-50',
-    title: isEs ? 'El Coach Immo le acompaña cada día' : 'Le Coach Immo t’accompagne chaque jour',
-    description: isEs
-      ? 'Encuentre un plan de acción personalizado cada mañana y un balance guiado cada noche: es este seguimiento diario el que le hace progresar.'
-      : 'Retrouve un plan d’action personnalisé chaque matin et un bilan guidé chaque soir : c’est ce suivi quotidien qui te fait progresser.',
-  },
-  {
-    icon: HomeIcon,
-    color: 'text-purple-600',
-    bg: 'bg-purple-50',
-    title: isEs ? 'Informes de visita' : 'Comptes rendus de visite',
-    description: isEs
-      ? 'Después de cada visita, registre las impresiones del comprador. La herramienta genera un mensaje diplomático para el vendedor.'
-      : 'Après chaque visite, enregistre les retours de l\'acheteur. L\'outil génère un message diplomatique pour le vendeur.',
+      ? 'En « Hoy », marque cada acción en cuanto la complete. Un toque basta — sin formularios de más.'
+      : 'Dans « Aujourd\'hui », coche chaque action dès qu\'elle est faite. Un tap suffit — pas de formulaire en plus.',
   },
   {
     icon: TrendingUp,
     color: 'text-orange-600',
     bg: 'bg-orange-50',
-    title: isEs ? 'Balance de la noche' : 'Bilan du soir',
+    title: isEs ? 'Cada noche: su balance (lo esencial)' : 'Chaque soir : ton bilan (l\'essentiel)',
     description: isEs
-      ? 'Cada noche, haga su balance. Es LO QUE MARCA LA DIFERENCIA entre los buenos y los mejores. ¡Y desbloquea el día siguiente!'
-      : 'Chaque soir, fais ton bilan. C\'est CE QUI FAIT LA DIFFÉRENCE entre les bons et les meilleurs. Ça débloque le lendemain !',
+      ? 'Haga su balance al final del día: es lo que permite a la app proponerle nuevas acciones cada día y evolucionar según sus resultados anteriores.'
+      : 'Fais ton bilan en fin de journée : c\'est ce qui permet à l\'app de te proposer de nouvelles choses chaque jour et d\'évoluer en fonction de tes résultats précédents.',
+  },
+  {
+    icon: HomeIcon,
+    color: 'text-purple-600',
+    bg: 'bg-purple-50',
+    title: isEs ? 'Visitas, contactos, comisión' : 'Visites, contacts, commission',
+    description: isEs
+      ? 'Registre sus visitas (la app redacta el mensaje para el vendedor), guarde sus contactos, calcule su comisión neta.'
+      : 'Enregistre tes visites (l\'app rédige le message pour le vendeur), garde tes contacts, calcule ta commission nette.',
+  },
+  {
+    icon: CheckCircle,
+    color: 'text-green-600',
+    bg: 'bg-green-50',
+    title: isEs ? 'Eso es todo' : 'C\'est tout',
+    description: isEs
+      ? 'Plan por la mañana, acciones marcadas, balance por la noche. La constancia hace el resto.'
+      : 'Plan le matin, actions cochées, bilan le soir. La constance fait le reste.',
   },
 ];
 

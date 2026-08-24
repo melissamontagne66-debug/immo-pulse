@@ -139,7 +139,15 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const verificationComplete = countersUsed && dailyActions.every(a => actionHasStatus(a.id));
 
   // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning
-  const [step, setStep] = useState<number>(() => draft?.step ?? (verificationComplete ? 1 : 0));
+  const [step, setStepState] = useState<number>(() => draft?.step ?? (verificationComplete ? 1 : 0));
+  // Scroll en haut à chaque changement de step (le contenu du modal scrolle)
+  const setStep = (s: number) => {
+    setStepState(s);
+    requestAnimationFrame(() => {
+      document.getElementById('checkup-scroll')?.scrollTo(0, 0);
+      window.scrollTo(0, 0);
+    });
+  };
   const [verificationSkipped] = useState(() => !draft && verificationComplete);
   const [recapOpen, setRecapOpen] = useState(false);
 

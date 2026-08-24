@@ -61,6 +61,11 @@ function App() {
     try {
       localStorage.setItem('immo-pulse-active-tab', tab);
     } catch { /* ignore */ }
+    // Scroll en haut à chaque changement d'onglet (le main scrolle, pas la fenêtre)
+    requestAnimationFrame(() => {
+      window.scrollTo(0, 0);
+      document.querySelector('main')?.scrollTo(0, 0);
+    });
   };
   const [showGoalSetter, setShowGoalSetter] = useState(false);
   const [modalView, setModalView] = useState<ModalView>('none');
@@ -607,7 +612,7 @@ function App() {
               </div>
               <button onClick={requestCloseCheckup} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto">
+            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto" id="checkup-scroll">
               <DailyCheckup
                 userKey={userKey}
                 profile={profile}
@@ -671,7 +676,7 @@ function App() {
               </div>
               <button onClick={() => setModalView('none')} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
-            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto">
+            <div className="p-6 max-h-[70vh] max-sm:max-h-none overflow-y-auto" id="checkup-scroll">
               <NextDayPlanner
                 currentDay={progress.currentDay}
                 onPlan={handlePlanNextDay}

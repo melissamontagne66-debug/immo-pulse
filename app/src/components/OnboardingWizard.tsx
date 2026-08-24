@@ -73,7 +73,12 @@ function saveDraft(email: string, draft: OnboardingDraft) {
 export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   const [sessionInfo] = useState(getSessionInfo);
   const [draft] = useState<OnboardingDraft | null>(() => loadDraft(sessionInfo.email));
-  const [step, setStep] = useState<Step>(draft?.step ?? 'language');
+  const [step, setStepState] = useState<Step>(draft?.step ?? 'language');
+  // Scroll en haut à chaque changement d'étape (sinon on atterrit au milieu)
+  const setStep = (s: Step) => {
+    setStepState(s);
+    requestAnimationFrame(() => window.scrollTo(0, 0));
+  };
   const [profile, setProfile] = useState<UserProfile>({
     ...defaultProfile,
     ...(draft?.profile || {}),
@@ -294,22 +299,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 </div>
 
                 <div>
-                  <Label className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /> {isEs ? 'Tu red (iad, SAFTI, otra…)' : 'Ton réseau (iad, SAFTI, autre…)'}</Label>
-                  <Input
-                    value={profile.réseau ?? ''}
-                    onChange={e => update('réseau', e.target.value)}
-                    placeholder={isEs ? 'Opcional — ej. iad' : 'Optionnel — ex. iad'}
-                    className="mt-1"
-                  />
-                  <p className="text-xs text-gray-400 mt-1.5">
-                    {isEs
-                      ? 'Se usará para personalizar los textos (« tu red », « tu herramienta interna »).'
-                      : 'Il servira à personnaliser les textes (« ton réseau », « ton outil interne »).'}
-                  </p>
-                </div>
-
-                <div>
-                  <Label className="flex items-center gap-2 mb-3"><PlayCircle className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has visto todos los vídeos de la red?' : `As-tu vu toutes les vidéos ${profile.réseau?.trim() ? `de ${profile.réseau.trim()}` : 'du réseau'} ?`}</Label>
+                  <Label className="flex items-center gap-2 mb-3"><PlayCircle className="w-4 h-4 text-gray-400" /> {isEs ? '¿Has visto todos los vídeos de la red?' : 'As-tu vu toutes les vidéos du réseau ?'}</Label>
                   <div className="flex gap-2">
                     {[
                       { val: true, label: isEs ? 'Sí, todos' : 'Oui, toutes', color: 'green' },
@@ -493,17 +483,6 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                   </p>
                 </div>
 
-                {/* Message Mois 2 affiché seulement si débutant/progression ET vidéos non vues */}
-                {(profile.expérienceLevel === 'débutant' || profile.expérienceLevel === 'quelques-semaines') && !profile.watchedNetworkVideos && (
-                  <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-                    <p className="text-sm text-blue-800">
-                      📅 <strong>{isEs ? '¿Cuándo uso Immo Pulse?' : "Quand est-ce que j'utilise Immo Pulse ?"}</strong><br />
-                      {isEs
-                        ? <>Esta herramienta te acompaña a partir del <strong>Mes 2 de tu integración</strong>, para apoyarte en el terreno. El Mes 1, es para seguir las formaciones de la red y aprender el método. ¡A partir del Mes 2, pasamos a la acción con Immo Pulse!</>
-                        : <>Cet outil t'accompagne à partir du <strong>Mois 2 de ton intégration</strong>, pour te soutenir sur le terrain. Le Mois 1, c'est pour suivre les formations du réseau et apprendre la méthode. À partir du Mois 2, on passe à l'action avec Immo Pulse !</>}
-                    </p>
-                  </div>
-                )}
 
                 <div>
                   <div className="flex items-center justify-between mb-2">

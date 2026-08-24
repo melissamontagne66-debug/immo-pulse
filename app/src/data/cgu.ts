@@ -84,5 +84,5 @@ export const CGU_CHECKBOX_LABEL_FR = 'J\'accepte les CGU et je reconnais que cet
 export const CGU_CHECKBOX_LABEL_ES = 'Acepto las CGU y reconozco que esta herramienta no sustituye la intranet de mi red.';
 
 // Rappel affiché dans l'interface (footer / dashboard)
-export const CGU_REMINDER_FR = 'Rappel : cet outil conserve tes prospects inactifs pendant 90 jours max. Pense à basculer tes RDV d\'estimation sur l\'intranet de ton réseau.';
-export const CGU_REMINDER_ES = 'Recordatorio: esta herramienta conserva tus prospectos inactivos durante 90 días máx. Recuerda transferir tus citas de estimación a la intranet de tu red.';
+export const CGU_REMINDER_FR = 'Prospects inactifs conservés 90 jours max — bascule tes RDV sur l\'intranet.';
+export const CGU_REMINDER_ES = 'Prospectos inactivos conservados 90 días máx. — traslada tus citas a la intranet.';
