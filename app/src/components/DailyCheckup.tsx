@@ -8,7 +8,7 @@ import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
-import { getDailyActionsForDay, getMonthsSinceStart, plural } from '@/lib/goals';
+import { getDailyActionsForDay, getMonthsSinceStart, plural, type DailyAction } from '@/lib/goals';
 import { getDefiForDay } from '@/data/defis';
 import { getTemoignageForUser } from '@/lib/temoignages';
 import { TemoignageCard } from '@/components/TemoignageCard';
@@ -100,12 +100,15 @@ interface DailyCheckupProps {
   onUpdateProfile?: (updates: Partial<UserProfile>) => void;
   // MOD-35 — persiste les tâches reportées (affichées en tête de « Aujourd'hui » le lendemain)
   onPlanNextDay?: (tasks: string[]) => void;
+  // Rattrapage : date cible imposée quand le bilan est ouvert pour un jour
+  // passé (bilan oublié — ouverture via la flèche « jour suivant » bloquée).
+  bilanDate?: string;
 }
 
 // Liste des actions du jour à vérifier — source unique partagée avec l'écran
 // « Aujourd'hui » : getDailyActionsForDay dans src/lib/goals.ts (MOD-19).
 
-export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile, onPlanNextDay }: DailyCheckupProps) {
+export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile, onPlanNextDay, bilanDate }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
 
   // Compteurs d'objectifs du jour (partagés avec Dashboard / Aujourd'hui)
@@ -121,6 +124,14 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const temoignage = useMemo(() => getTemoignageForUser(profile, { email: userKey }), [profile, userKey]);
   // Actions prévues demain — affichées en fin de bilan pour préparer la journée
   const actionsDemain = getDailyActionsForDay(currentDay + 1, profile, dailyResults, isEs);
+
+  // 3 priorités mises en avant pour demain (demande cliente — ne pas surcharger) :
+  // 1 terrain, 1 réseaux sociaux, 1 apporteurs d'affaires (ou primo liste).
+  const prioritesDemain = [
+    { ...actionsDemain.find(a => a.type === 'prospection'), tag: isEs ? 'Terreno' : 'Terrain' },
+    { ...actionsDemain.find(a => a.type === 'social'), tag: isEs ? 'Redes sociales' : 'Réseaux sociaux' },
+    { ...actionsDemain.find(a => a.type === 'apporteurs') ?? actionsDemain.find(a => a.type === 'primo'), tag: isEs ? 'Colaboradores / lista primo' : 'Apporteurs / primo liste' },
+  ].filter(p => p.id) as (DailyAction & { tag: string })[];
 
   // Une action a un statut si elle est cochée dans « Aujourd'hui » ou si son
   // compteur du jour a été incrémenté (R1, R2, visites/retours).
@@ -190,8 +201,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     .map(a => `${a.label} : ${actionNotes[a.id]}`)
     .join('\n');
 
-  const [results, setResults] = useState(() => draft?.results ?? {
-    date: toLocalDateKey(new Date()),
+  const [results, setResults] = useState(() => {
+    // En rattrapage, pas de brouillon : il appartiendrait au bilan du jour.
+    const base = (bilanDate ? null : draft?.results) ?? {
+      date: toLocalDateKey(new Date()),
     // Pré-remplissage depuis les compteurs du jour (modifiables — le bilan fait foi)
     callsMade: counters.conversations,
     contactsApproached: counters.contacts,
@@ -212,6 +225,23 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     primoListeChecked: undefined as boolean | undefined,
     primoListeRestant: undefined as boolean | undefined,
     r1EstimationBloquee: undefined as boolean | undefined,
+    };
+    // Rattrapage (bilan oublié d'un jour passé) : la date cible prime, et les
+    // compteurs du jour ne s'appliquent pas — ils concernent aujourd'hui.
+    // Nouvel objet (jamais de mutation du brouillon mémoïsé).
+    if (bilanDate) {
+      return {
+        ...base,
+        date: bilanDate,
+        callsMade: 0,
+        contactsApproached: 0,
+        rdvR1Done: 0,
+        rdvR2Done: 0,
+        visitesDone: 0,
+        notes: '',
+      };
+    }
+    return base;
   });
 
   // Next day planning state
@@ -345,6 +375,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     { id: 'soir', label: '17 h – 19 h', desc: 'Créneau du soir' },
     { id: 'les-deux', label: 'Les deux', desc: '11 h – 13 h 30 + 17 h – 19 h' },
     { id: 'autre', label: 'Autre horaire', desc: 'Terrain hors créneaux' },
+    { id: 'pas-de-terrain', label: 'Pas fait de terrain aujourd\'hui', desc: 'Journée sans porte-à-porte' },
   ];
 
   // Step 0: Action Verification — porte sur la liste complète des actions du jour
@@ -511,6 +542,17 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <strong>Bilan de ta journée — Jour {currentDay}</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
           </p>
         </div>
+
+        {/* Rattrapage : bilan ouvert pour une date passée (bilan oublié) */}
+        {bilanDate && bilanDate !== toLocalDateKey(new Date()) && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-800">
+              🕐 {isEs
+                ? `Balance olvidado : estás rellenando el del ${new Date(bilanDate + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}. Después podrás pasar al día siguiente.`
+                : `Bilan oublié : tu remplis celui du ${new Date(bilanDate + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}. Ensuite tu pourras passer au jour suivant.`}
+            </p>
+          </div>
+        )}
 
         {/* Récapitulatif repliable — affiché quand la vérification a été escamotée
             (journée déjà saisie au fil de l'eau). Permet de corriger en rouvrant la vérification. */}
@@ -1113,15 +1155,35 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <p className="text-sm text-blue-700 mb-3">
               Regarde les actions prévues pour demain et finis d'organiser ton planning maintenant, pendant que ta journée est encore fraîche en tête.
             </p>
-            <p className="text-xs font-semibold text-blue-800 mb-1.5">📋 Prévu demain :</p>
-            <div className="space-y-1.5">
-              {actionsDemain.map(a => (
-                <div key={a.id} className="flex items-center gap-2 text-sm text-blue-700">
-                  <span>{a.icon}</span>
-                  <span>{a.label}</span>
+            {/* 3 priorités mises en avant — la liste complète reste disponible
+                mais repliée pour ne pas surcharger la préparation du planning */}
+            {prioritesDemain.length > 0 && (
+              <>
+                <p className="text-xs font-semibold text-blue-800 mb-1.5">🎯 {isEs ? 'Tus 3 prioridades para mañana :' : 'Tes 3 priorités pour demain :'}</p>
+                <div className="space-y-1.5 mb-3">
+                  {prioritesDemain.map(p => (
+                    <div key={p.id} className="flex items-center gap-2 text-sm bg-white/70 rounded-lg px-3 py-2 border border-blue-200">
+                      <span>{p.icon}</span>
+                      <span className="font-medium text-blue-900">{p.label}</span>
+                      <span className="ml-auto text-[11px] font-semibold text-blue-500 uppercase tracking-wide">{p.tag}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </>
+            )}
+            <details className="text-sm">
+              <summary className="text-xs font-semibold text-blue-800 cursor-pointer select-none">
+                📋 {isEs ? 'Ver todas las acciones previstas mañana' : 'Voir toutes les actions prévues demain'}
+              </summary>
+              <div className="space-y-1.5 mt-2">
+                {actionsDemain.map(a => (
+                  <div key={a.id} className="flex items-center gap-2 text-sm text-blue-700">
+                    <span>{a.icon}</span>
+                    <span>{a.label}</span>
+                  </div>
+                ))}
+              </div>
+            </details>
             <div className="mt-3 bg-white/60 rounded-lg p-3 border border-blue-200">
               <p className="text-xs text-blue-600">
                 💡 <strong>Conseil :</strong> Les meilleurs planifient leur lendemain le soir même. Note tes RDV et tes 3 priorités dans ton agenda.

@@ -78,6 +78,9 @@ function App() {
   // Confirmation avant fermeture du bilan si une saisie est en cours
   const [checkupDirty, setCheckupDirty] = useState(false);
   const [showCheckupCloseConfirm, setShowCheckupCloseConfirm] = useState(false);
+  // Rattrapage : date ciblée quand le bilan est ouvert via la flèche
+  // « jour suivant » bloquée (bilan oublié). null = bilan du jour.
+  const [checkupDate, setCheckupDate] = useState<string | null>(null);
 
   const requestCloseCheckup = () => {
     if (checkupDirty) {
@@ -109,6 +112,7 @@ function App() {
     if (modalView !== 'checkup') {
       setShowCheckupCloseConfirm(false);
       setCheckupDirty(false);
+      setCheckupDate(null);
     }
   }, [modalView]);
 
@@ -495,6 +499,7 @@ function App() {
             onAddDebrief={addDebrief}
             onDayChange={setCurrentDay}
             onOpenCheckup={() => setModalView('checkup')}
+            onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
             onNavigate={setActiveTab}
             userEmail={currentUser?.email}
             onCreateContact={(note) => {
@@ -613,7 +618,11 @@ function App() {
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden my-auto max-sm:rounded-none max-sm:border-0 max-sm:min-h-screen max-sm:my-0">
             <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white">Bilan de ta journée — Jour {progress.currentDay}</h2>
+                <h2 className="text-lg font-bold text-white">
+                  {checkupDate && checkupDate !== toLocalDateKey(new Date())
+                    ? `Bilan oublié — rattrapage du ${new Date(checkupDate + 'T12:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
+                    : `Bilan de ta journée — Jour ${progress.currentDay}`}
+                </h2>
                 <p className="text-red-100 text-sm">Fais le point sur tes résultats réels</p>
               </div>
               <button onClick={requestCloseCheckup} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
@@ -625,6 +634,7 @@ function App() {
                 currentDay={progress.currentDay}
                 completedDays={progress.completedDays}
                 dailyResults={progress.dailyResults}
+                bilanDate={checkupDate ?? undefined}
                 onSave={handleSaveCheckup}
                 onClose={handleCloseCheckup}
                 onRequestClose={requestCloseCheckup}

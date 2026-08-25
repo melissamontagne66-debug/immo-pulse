@@ -172,11 +172,11 @@ export async function apiSaveContact(contact: unknown) {
   return await res.json();
 }
 
-export async function apiDeleteContact(id: string) {
+export async function apiDeleteContact(id: string, hard = false) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
   }
-  const res = await fetchWithTimeout(`${API_URL}/api/contacts?id=${id}`, {
+  const res = await fetchWithTimeout(`${API_URL}/api/contacts?id=${id}${hard ? '&hard=1' : ''}`, {
     method: 'DELETE',
     headers: headers(),
   });

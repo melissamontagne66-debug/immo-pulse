@@ -114,7 +114,10 @@ function purgeExpired(userKey: string, contacts: Contact[]): Contact[] {
     return last && last < cutoffKey;
   });
   if (expired.length === 0) return contacts;
-  expired.forEach(c => deleteFromCloud(c.id));
+  // Purge RGPD : suppression TOTALE (hard delete) — un prospect sans
+  // interaction depuis 90 jours ne doit persister nulle part, pas même
+  // en tombstone pour le Bridge CRM.
+  expired.forEach(c => deleteFromCloud(c.id, true));
   const kept = contacts.filter(c => !expired.some(e => e.id === c.id));
   saveContacts(userKey, kept);
   return kept;
@@ -213,9 +216,9 @@ function pushToCloud(contact: Contact) {
   apiSaveContact(toApiContact(contact)).catch(() => { /* silencieux : local déjà à jour */ });
 }
 
-function deleteFromCloud(id: string) {
+function deleteFromCloud(id: string, hard = false) {
   if (!isCloudEnabled()) return;
-  apiDeleteContact(id).catch(() => { /* silencieux : local déjà à jour */ });
+  apiDeleteContact(id, hard).catch(() => { /* silencieux : local déjà à jour */ });
 }
 
 export function useContacts(userKey: string) {

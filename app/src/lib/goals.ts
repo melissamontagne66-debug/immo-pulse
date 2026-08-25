@@ -193,8 +193,10 @@ export function getDailyActionsForDay(
       catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
       askResult: false,
     }] : []),
-    // GMB hebdomadaire : 1 h dédiée chaque semaine (publication + demande d'avis)
-    ...(day % 7 === 2 ? [{
+    // GMB hebdomadaire : 1 h dédiée chaque semaine (publication + demande d'avis).
+    // day > 7 : la création de la fiche est déjà la tâche du jour 1 — sans ce
+    // garde-fou, la tâche hebdo revenait dès le lendemain (jour 2 = 2 % 7).
+    ...(day % 7 === 2 && day > 7 ? [{
       id: `gmb-hebdo-jour-${day}`, type: 'gmb-hebdo' as const,
       label: 'Google Business Profile (1 h)', icon: '🌐',
       catLabel: 'Google Business',

@@ -38,6 +38,9 @@ interface DailyActionsProps {
   onAddDebrief: (debrief: DebriefEntry) => void;
   onDayChange: (day: number) => void;
   onOpenCheckup: () => void;
+  // Bilan manquant exigé avant d'avancer : ouvre le bilan pour la date
+  // indiquée (rattrapage du bilan oublié) au lieu de changer de jour.
+  onOpenMissedCheckup?: (date: string) => void;
   onNavigate?: (tab: string) => void;
   userEmail?: string;
   onCreateContact?: (contexte: string) => void;
@@ -199,6 +202,7 @@ export function DailyActions({
   onUncompleteDay,
   onDayChange,
   onOpenCheckup,
+  onOpenMissedCheckup,
   onNavigate,
   userEmail,
   onCreateContact,
@@ -252,6 +256,23 @@ export function DailyActions({
     return () => clearInterval(id);
   }, []);
   const currentHour = now.getHours();
+
+  // Bilan exigé avant d'avancer au jour suivant (sauf admin) :
+  // — le soir (à partir de 17 h), celui du jour en cours doit être rempli ;
+  // — le lendemain matin, si celui d'hier a été oublié, la flèche propose de
+  //   le remplir (rattrapage) au lieu de changer de jour.
+  // Jour 1 tout premier accès : pas de bilan « d'hier » à exiger.
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = toLocalDateKey(yesterday);
+  const hasYesterdayBilan = dailyResults.some(r => r.date === yesterdayStr);
+  const isFirstEverDay = currentDay === 1 && dailyResults.length === 0;
+  const missedBilanDate: string | null =
+    !isFirstEverDay && !hasYesterdayBilan
+      ? yesterdayStr
+      : currentHour >= 17 && !todayCheckupDone
+        ? todayStr
+        : null;
 
   // Série de bilans consécutifs (en remontant depuis hier si celui du jour
   // n'est pas encore fait) — utilisée par la variante après 21 h.
@@ -831,14 +852,20 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
           </div>
           <button
             onClick={() => {
-              if (isAdmin || todayCheckupDone) {
+              if (isAdmin || !missedBilanDate) {
                 onDayChange(currentDay + 1);
+              } else if (onOpenMissedCheckup) {
+                onOpenMissedCheckup(missedBilanDate);
               } else {
                 onOpenCheckup();
               }
             }}
-            className={`p-2 rounded-lg transition-colors ${isAdmin || todayCheckupDone ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'}`}
-            title={isAdmin || todayCheckupDone ? (isEs ? 'Día siguiente' : 'Jour suivant') : (isEs ? 'Haz primero tu balance para avanzar' : 'Fais d\'abord ton bilan pour avancer')}
+            className={`p-2 rounded-lg transition-colors ${isAdmin || !missedBilanDate ? 'hover:bg-gray-100' : 'opacity-50 cursor-not-allowed'}`}
+            title={isAdmin || !missedBilanDate
+              ? (isEs ? 'Día siguiente' : 'Jour suivant')
+              : missedBilanDate === todayStr
+                ? (isEs ? 'Haz primero tu balance para avanzar' : 'Fais d\'abord ton bilan pour avancer')
+                : (isEs ? 'Rellena el balance olvidado de ayer para avanzar' : 'Remplis le bilan oublié d\'hier pour avancer')}
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
           </button>

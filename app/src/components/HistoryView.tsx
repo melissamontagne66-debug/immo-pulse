@@ -120,7 +120,7 @@ export function HistoryView({ dailyResults, profile, sales }: HistoryViewProps) 
               {result.prospectionTime && (
                 <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
                   <Clock className="w-3 h-3" />
-                  {isEs ? 'Prospección' : 'Prospection'} : {result.prospectionTime === 'matin' ? '11 h – 13 h 30' : result.prospectionTime === 'soir' ? '17 h – 19 h' : result.prospectionTime === 'les-deux' ? '11 h – 13 h 30 + 17 h – 19 h' : (isEs ? 'Otro horario' : 'Autre horaire')}
+                  {isEs ? 'Prospección' : 'Prospection'} : {result.prospectionTime === 'matin' ? '11 h – 13 h 30' : result.prospectionTime === 'soir' ? '17 h – 19 h' : result.prospectionTime === 'les-deux' ? '11 h – 13 h 30 + 17 h – 19 h' : result.prospectionTime === 'pas-de-terrain' ? (isEs ? 'Sin trabajo de campo hoy' : 'Pas de terrain ce jour-là') : (isEs ? 'Otro horario' : 'Autre horaire')}
                 </div>
               )}
 
