@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { formatEuro, clampNumber } from '@/lib/utils';
+import { formatEuro, clampNumber, toLocalDateKey } from '@/lib/utils';
 import { Euro, Calculator, TrendingUp, User, Percent, Minus, Equal, Trash2, Save, AlertCircle, HandCoins } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
 import { SaleCelebration } from '@/components/SaleCelebration';
@@ -142,12 +142,23 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       net: netFinal,
       fees: commissionTTC, // honoraires TTC = prix × taux de commission
       palier: pallier,
-      date: new Date().toISOString().split('T')[0],
+      date: toLocalDateKey(new Date()),
       countsAsMandat,
     });
     setMandatDialogOpen(false);
     setNomVente('');
     setCelebration({ net: netFinal });
+    // Reset des champs propres au bien pour permettre un nouvel enregistrement
+    // (pallier, charges et impôt sont conservés : réglages personnels).
+    setPrixVenteInput('');
+    setPrixVente(0);
+    setPrixVenteError(null);
+    setTauxCommissionManual(null);
+    setTauxCommissionInput('');
+    setCommissionError(null);
+    setApporteurEuro(0);
+    setApporteurPct(0);
+    setFraisNotaire(0);
     // MOD-30 : paliers « première vente » / « premier mandat » → email de félicitations
     if (isCloudEnabled()) {
       if (sales.length === 0) apiMilestone('first_vente').catch(() => { /* silencieux */ });
@@ -452,7 +463,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
                   }`}
                 >
-                  {p}\u00A0%
+                  {p} %
                   <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en tu bolsillo' : 'dans ta poche'}</span>
                 </button>
               ))}
@@ -605,7 +616,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                         )}
                       </p>
                       <p className="text-sm text-gray-500">
-                        {formatEuro(sale.price)} · {isSpain ? 'Honorarios' : 'Honoraires'} {formatEuro(sale.fees)} · Palier {sale.palier}\u00A0%
+                        {formatEuro(sale.price)} · {isSpain ? 'Honorarios' : 'Honoraires'} {formatEuro(sale.fees)} · Palier {sale.palier} %
                         {sale.date && ` · ${new Date(`${sale.date}T12:00:00`).toLocaleDateString(isSpain ? 'es-ES' : 'fr-FR', { day: 'numeric', month: 'short' })}`}
                       </p>
                     </div>

@@ -6,7 +6,7 @@ import { Slider } from '@/components/ui/slider';
 import type { UserProfile } from '@/types/profile';
 import { defaultProfile, calculateTargetsFromCA6Months } from '@/types/profile';
 import { getCityPrice, getSuggestedPriceText } from '@/data/cityPrices';
-import { formatEuro } from '@/lib/utils';
+import { formatEuro, toLocalDateKey } from '@/lib/utils';
 import { getGoals, plural } from '@/lib/goals';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import {
@@ -85,7 +85,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
     // Pré-remplit prénom/nom avec les valeurs du compte (saisies à l'inscription)
     firstName: draft?.profile?.firstName ?? sessionInfo.firstName,
     lastName: draft?.profile?.lastName ?? sessionInfo.lastName,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: toLocalDateKey(new Date()),
   });
   // Question parrain/collaborateur : aucune réponse pré-sélectionnée
   const [hasMentor, setHasMentor] = useState<boolean | null>(draft?.hasMentor ?? null);

@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
 import { getPlanificationAdaptative } from '@/lib/planificationAdaptative';
+import { toLocalDateKey } from '@/lib/utils';
 
 export type InsightType = 'encouragement' | 'conseil' | 'alerte' | 'admin' | 'picking' | 'défi' | 'suivi';
 
@@ -56,8 +57,16 @@ export function useSmartDashboard(
     const seed = currentDay * 137 + (dailyRésultats.length * 31);
 
     // === 1. ANALYSE DE LA VEILLE ===
-    const yesterday = dailyRésultats[0]; // Plus récent
-    const dayBefore = dailyRésultats[1]; // Avant-hier
+    // « Hier » = la veille réelle, pas le bilan le plus récent : si le bilan
+    // du jour est déjà validé, dailyRésultats[0] est aujourd'hui et les
+    // insights « Hier tu as fait X » décriraient le jour même.
+    const d = new Date();
+    d.setDate(d.getDate() - 1);
+    const yesterdayKey = toLocalDateKey(d);
+    const yesterdayIdx = dailyRésultats.findIndex(r => r.date === yesterdayKey);
+    const yesterday = yesterdayIdx >= 0 ? dailyRésultats[yesterdayIdx] : undefined;
+    // Tableau trié par date décroissante : l'entrée qui suit = avant-hier.
+    const dayBefore = yesterdayIdx >= 0 ? dailyRésultats[yesterdayIdx + 1] : undefined;
 
     if (yesterday) {
       const totalRdv = yesterday.rdvR1Done + yesterday.rdvR2Done;

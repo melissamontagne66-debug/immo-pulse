@@ -47,20 +47,35 @@ function App() {
 
   const { visits, addVisit, updateVisit: updateVisitReport, deleteVisit, deleteProperty, stats: visitStats, loadFromCloud: loadVisitsFromCloud } = useVisits(userKey);
   const contactsState = useContacts(userKey);
-  const { sales } = useSales(userKey);
+  const { sales, loadFromCloud: loadSalesFromCloud } = useSales(userKey);
 
   // 6.7 — Persistance de la vue : l'écran courant survit au rechargement (F5).
+  // La clé est namespacée par compte : un nouveau compte ne doit pas hériter
+  // de l'onglet du compte précédent sur le même appareil.
+  const activeTabKey = `immo-pulse-active-tab-${userKey}`;
   const [activeTab, setActiveTabState] = useState(() => {
     try {
-      return localStorage.getItem('immo-pulse-active-tab') || 'dashboard';
+      return localStorage.getItem(activeTabKey) || 'dashboard';
     } catch {
       return 'dashboard';
     }
   });
+  // Changement de compte sans rechargement (inscription) : repartir sur
+  // l'onglet mémorisé du compte — « dashboard » pour un compte neuf.
+  const previousTabUser = useRef(userKey);
+  useEffect(() => {
+    if (previousTabUser.current === userKey) return;
+    previousTabUser.current = userKey;
+    let tab = 'dashboard';
+    try {
+      tab = localStorage.getItem(`immo-pulse-active-tab-${userKey}`) || 'dashboard';
+    } catch { /* ignore */ }
+    setActiveTabState(tab);
+  }, [userKey]);
   const setActiveTab = (tab: string) => {
     setActiveTabState(tab);
     try {
-      localStorage.setItem('immo-pulse-active-tab', tab);
+      localStorage.setItem(activeTabKey, tab);
     } catch { /* ignore */ }
     // Scroll en haut à chaque changement d'onglet (le main scrolle, pas la fenêtre)
     requestAnimationFrame(() => {
@@ -192,12 +207,6 @@ function App() {
     registerPushServiceWorker();
   }, [isAuthenticated]);
 
-  useEffect(() => {
-    if (hasProfile && showFirstTimeOnboarding) {
-      setShowFirstTimeOnboarding(false);
-    }
-  }, [hasProfile, showFirstTimeOnboarding]);
-
   // ===== CHARGEMENT CLOUD =====
   // State (et non ref) : la fin du chargement DOIT déclencher un re-render,
   // sinon l'écran "Chargement de ton compte..." reste affiché indéfiniment
@@ -257,11 +266,15 @@ function App() {
         if (data.contacts && data.contacts.length > 0) {
           contactsState.loadFromCloud(data.contacts);
         }
+        if (data.sales && data.sales.length > 0) {
+          loadSalesFromCloud(data.sales);
+        }
 
         // Migration: if cloud is empty but local has data → push to cloud
-        const hasLocalData = progress.dailyResults.length > 0 || visits.length > 0 || hasProfile || progress.currentDay > 1 || progress.nextDayPlans.length > 0;
+        const hasLocalData = progress.dailyResults.length > 0 || visits.length > 0 || hasProfile || progress.currentDay > 1 || progress.nextDayPlans.length > 0 || sales.length > 0;
         const cloudEmpty = (!data.dailyResults || data.dailyResults.length === 0)
           && (!data.visits || data.visits.length === 0)
+          && (!data.sales || data.sales.length === 0)
           && !cloudProfile;
 
         if (cloudEmpty && hasLocalData) {
@@ -270,6 +283,7 @@ function App() {
             profile: hasProfile ? profile : null,
             progress,
             visits,
+            sales,
           });
           toast.success('Données synchronisées !', { duration: 3000 });
         } else if (data.dailyResults?.length > 0 || data.visits?.length > 0) {
@@ -302,13 +316,14 @@ function App() {
         profile: hasProfile ? profile : null,
         progress,
         visits,
+        sales,
       });
     } catch {
       // Silencieux — si le réseau est down, les données restent en localStorage
     } finally {
       isSyncing.current = false;
     }
-  }, [progress, profile, visits, currentUser, hasProfile]);
+  }, [progress, profile, visits, sales, currentUser, hasProfile]);
 
   useEffect(() => {
     if (!isCloudEnabled() || !currentUser) return;

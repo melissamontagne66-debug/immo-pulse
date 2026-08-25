@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { ChatMessage } from '@/types';
 import { searchKnowledge, getDailyTip, aiPersona, knowledgeModules } from '@/data/knowledgeBase';
 
@@ -389,6 +389,18 @@ Pose-moi une question précise sur l'un de ces sujets !`;
 export function useChat(userKey: string) {
   const [messages, setMessages] = useState<ChatMessage[]>(() => loadMessages(userKey));
   const [isTyping, setIsTyping] = useState(false);
+  const loadedKey = useRef(userKey);
+
+  // React to userKey changes
+  useEffect(() => {
+    if (userKey !== loadedKey.current) {
+      loadedKey.current = userKey;
+      // Rechargement localStorage au changement d'utilisateur : le setState
+      // synchrone est volontaire (données locales disponibles immédiatement).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setMessages(loadMessages(userKey));
+    }
+  }, [userKey]);
 
   const sendMessage = useCallback((content: string) => {
     const userMsg: ChatMessage = {

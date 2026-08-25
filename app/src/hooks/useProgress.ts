@@ -67,6 +67,14 @@ export function useProgress(userKey: string) {
     if (!cloudProgress) return;
     setProgress(prev => {
       const merged = { ...defaultProgress, ...prev, ...cloudProgress };
+      // Un bilan validé hors-ligne ne doit pas être écrasé par le chargement
+      // cloud : union par date, le local gagne à date égale (saisie la plus
+      // récente sur cet appareil). Tri décroissant : dailyResults[0] = plus récent.
+      const resultsByDate = new Map<string, DailyResults>();
+      (cloudProgress.dailyResults ?? []).forEach(r => resultsByDate.set(r.date, r));
+      prev.dailyResults.forEach(r => resultsByDate.set(r.date, r));
+      merged.dailyResults = [...resultsByDate.values()].sort((a, b) => b.date.localeCompare(a.date));
+      merged.completedDays = [...new Set([...prev.completedDays, ...(cloudProgress.completedDays ?? [])])];
       merged.streak = migrateStreak(merged.streak, merged.dailyResults);
       saveProgress(loadedKey.current, merged);
       return merged;
@@ -114,7 +122,10 @@ export function useProgress(userKey: string) {
       registration.current = registerBilan(prev.streak, results.date);
       return {
         ...prev,
-        dailyResults: [results, ...filtered],
+        // Tri décroissant par date : les états dérivés lisent dailyResults[0]
+        // comme le bilan le plus récent (faux si un bilan de rattrapage,
+        // daté d'un jour passé, était placé en tête).
+        dailyResults: [results, ...filtered].sort((a, b) => b.date.localeCompare(a.date)),
         streak: registration.current.streak,
         totalCalls: newTotalCalls,
         totalRdv: newTotalRdv,

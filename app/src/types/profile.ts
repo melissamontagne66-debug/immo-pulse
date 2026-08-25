@@ -1,3 +1,5 @@
+import { toLocalDateKey } from '@/lib/utils';
+
 export interface MonthlyGoal {
   month: number;
   caTarget: number;        // CA mensuel visé en €
@@ -78,7 +80,7 @@ export const defaultProfile: UserProfile = {
     conversionRate: 2.5,
   },
   monthlyGoals: [],
-  startDate: new Date().toISOString().split('T')[0],
+  startDate: toLocalDateKey(new Date()),
 };
 
 // Calcul automatique des objectifs à partir du CA vise

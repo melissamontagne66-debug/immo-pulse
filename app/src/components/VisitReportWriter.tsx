@@ -13,6 +13,7 @@ import { toast } from 'sonner';
 import type { VisitReport, VisitStatus } from '@/types';
 import type { VisitStats } from '@/types';
 import { VisitHistory } from './VisitHistory';
+import { toLocalDateKey } from '@/lib/utils';
 
 type ViewMode = 'form' | 'history';
 
@@ -138,18 +139,24 @@ const DIPLOMATIC_RULES: { pattern: RegExp; replacement: { fr: string; es: string
 // Retours catégorisés qui sonnent positifs → ils alimentent les points positifs
 const POSITIVE_PATTERN = /adore|adoré|coup de cœur|parfait|dans le budget|dans son budget|bien placé|calme|lumineux|aime|plaît|plait|super|top|ravi|conquis|ok\b/i;
 
-function diplomatize(raw: string, isEs: boolean): string {
+// Formulation neutre du point abordé par l'acquéreur, par catégorie de retour
+// (demande cliente : « retour sur le prix », « retour sur l'emplacement »… —
+// jamais « il a émis une réserve », trop connoté).
+interface FeedbackContext { fr: string; es: string }
+const DEFAULT_CONTEXT: FeedbackContext = { fr: 'un point du bien', es: 'un punto del inmueble' };
+
+function diplomatize(raw: string, isEs: boolean, context: FeedbackContext = DEFAULT_CONTEXT): string {
   const trimmed = raw.trim();
   if (!trimmed) return '';
   for (const rule of DIPLOMATIC_RULES) {
     if (rule.pattern.test(trimmed)) return isEs ? rule.replacement.es : rule.replacement.fr;
   }
-  // Fallback : on encadre la réserve sans recracher la note brute.
+  // Fallback : on restitue la note sous un intitulé neutre de la catégorie.
   // Minuscule en tête si la note commence par une majuscule non nécessaire.
   const note = trimmed.charAt(0).toLowerCase() + trimmed.slice(1);
   return isEs
-    ? `Ha expresado una reserva sobre este punto: « ${note} »`
-    : `Il a émis une réserve sur ce point : « ${note} »`;
+    ? `Comentario sobre ${context.es}: « ${note} »`
+    : `Retour sur ${context.fr} : « ${note} »`;
 }
 
 // Découpe une note en lignes/puces exploitables
@@ -211,16 +218,16 @@ export function VisitReportWriter({ visits, stats, onAddVisit, onUpdateVisit, on
     // Points de retour : points faibles + retours catégorisés négatifs/neutres
     const vigilanceLines: string[] = splitLines(weakPoints).map(l => diplomatize(l, isEs));
 
-    const categories: { label: string; value: string }[] = [
-      { label: 'Prix', value: priceFeedback },
-      { label: 'Emplacement', value: locationFeedback },
-      { label: 'Travaux', value: workFeedback },
-      { label: 'Général', value: generalFeedback },
+    const categories: { label: string; value: string; context: FeedbackContext }[] = [
+      { label: 'Prix', value: priceFeedback, context: { fr: 'le prix', es: 'el precio' } },
+      { label: 'Emplacement', value: locationFeedback, context: { fr: "l'emplacement", es: 'la ubicación' } },
+      { label: 'Travaux', value: workFeedback, context: { fr: 'les travaux', es: 'los trabajos' } },
+      { label: 'Général', value: generalFeedback, context: { fr: 'le bien en général', es: 'el inmueble en general' } },
     ];
     for (const cat of categories) {
       for (const line of splitLines(cat.value)) {
         if (!POSITIVE_PATTERN.test(line)) {
-          vigilanceLines.push(diplomatize(line, isEs));
+          vigilanceLines.push(diplomatize(line, isEs, cat.context));
         }
       }
     }
@@ -304,7 +311,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
 
     const newVisit: VisitReport = {
       id: `visit-${Date.now()}`,
-      date: new Date().toISOString().split('T')[0],
+      date: toLocalDateKey(new Date()),
       propertyAddress: propertyAddress.trim(),
       sellerName: sellerName.trim(),
       sellerPhone: '',

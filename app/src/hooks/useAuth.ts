@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { apiLogin, apiRegister, logoutCloud, isApiConfigured } from '@/services/api';
+import { toLocalDateKey } from '@/lib/utils';
 
 const SESSION_KEY = 'iad-coach-session';
 const LOCAL_USERS_KEY = 'immo-pulse-local-users';
@@ -108,7 +109,7 @@ function checkDefaultAccount(email: string, password: string): UserInfo | null {
     firstName: defaultUser.firstName,
     lastName: defaultUser.lastName,
     experienceLevel: defaultUser.experienceLevel,
-    startDate: new Date().toISOString().split('T')[0],
+    startDate: toLocalDateKey(new Date()),
   };
 }
 
@@ -314,7 +315,7 @@ export function useAuth() {
             firstName: defaultDef.firstName,
             lastName: defaultDef.lastName,
             experienceLevel: defaultDef.experienceLevel,
-            startDate: new Date().toISOString().split('T')[0],
+            startDate: toLocalDateKey(new Date()),
           });
         }
       }

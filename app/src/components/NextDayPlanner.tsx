@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { NextDayPlan } from '@/types';
 import { onboardingPlan } from '@/data/onboardingPlan';
+import { toLocalDateKey } from '@/lib/utils';
 import { Sun, Check, AlertTriangle, ChevronRight } from 'lucide-react';
 
 interface NextDayPlannerProps {
@@ -20,9 +21,12 @@ interface SkippedAction {
   reportDate: string;
 }
 
-// Clé ISO du lendemain (YYYY-MM-DD).
+// Clé locale du lendemain (YYYY-MM-DD) — pas toISOString() (UTC) : entre
+// 00h et 02h locales, le plan « de demain » serait daté d'aujourd'hui.
 function tomorrowDateKey(): string {
-  return new Date(Date.now() + 86400000).toISOString().split('T')[0];
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return toLocalDateKey(d);
 }
 
 // Langue lue depuis la session (iad-coach-session) puis le profil local
@@ -87,7 +91,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
       actionId: currentSkipAction,
       reason: skipReason,
       detail: skipDetail,
-      reportDate: skipReason === 'report' ? new Date(Date.now() + 86400000).toISOString().split('T')[0] : '',
+      reportDate: skipReason === 'report' ? tomorrowDateKey() : '',
     }]);
     setCurrentSkipAction(null);
   };

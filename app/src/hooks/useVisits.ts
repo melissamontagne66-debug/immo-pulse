@@ -104,14 +104,15 @@ export function useVisits(userKey: string) {
 
   const deleteProperty = useCallback((address: string) => {
     setVisits(prev => {
-      const updated = prev.filter(v => v.propertyAddress.toLowerCase().trim() !== address.toLowerCase().trim());
+      // Garde sur propertyAddress : les données cloud peuvent ne pas l'avoir.
+      const updated = prev.filter(v => (v.propertyAddress || '').toLowerCase().trim() !== address.toLowerCase().trim());
       saveVisits(loadedKey.current, updated);
       return updated;
     });
   }, []);
 
   const getVisitsByProperty = useCallback((address: string): VisitReport[] => {
-    return visits.filter(v => v.propertyAddress.toLowerCase().trim() === address.toLowerCase().trim());
+    return visits.filter(v => (v.propertyAddress || '').toLowerCase().trim() === address.toLowerCase().trim());
   }, [visits]);
 
   const stats: VisitStats = useMemo(() => {

@@ -69,7 +69,8 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
         const key = localStorage.key(i);
         if (!key) continue;
         const isAppKey = key.startsWith('iad-coach-') || key.startsWith('immo-pulse-');
-        if (isAppKey && userKey && key.includes(userKey)) {
+        // endsWith et non includes : « a@b.co » ne doit pas matcher la clé de « a@b.com ».
+        if (isAppKey && userKey && key.endsWith(`-${userKey}`)) {
           keysToRemove.push(key);
         }
       }
