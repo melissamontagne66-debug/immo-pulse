@@ -561,7 +561,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             )}
 
             <div className="flex gap-3 mt-6">
-              {step !== 'identity' && (
+              {step !== 'language' && (
                 <Button variant="outline" onClick={prêvStep} className="flex-1">{isEs ? 'Atrás' : 'Retour'}</Button>
               )}
               <Button onClick={nextStep} disabled={!isStepValid()} className="flex-1 bg-red-600 hover:bg-red-700">

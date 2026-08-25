@@ -2,10 +2,14 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
-import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell } from 'lucide-react';
+import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell, Puzzle } from 'lucide-react';
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
+
+// URL de l'extension Chrome Bridge CRM — à remplacer par l'URL exacte du
+// Chrome Web Store dès publication (en attendant : recherche webstore).
+const BRIDGE_CRM_EXTENSION_URL = 'https://chromewebstore.google.com/search/Bridge%20CRM%20ImmoPulse';
 
 interface LayoutProps {
   children: ReactNode;
@@ -54,12 +58,18 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
         await apiDeleteAccount();
       }
     } catch { /* on purge le local quoi qu'il arrive */ }
-    // Purge du localStorage (toutes les clés de l'app) puis retour à la connexion
+    // Purge du localStorage limitée au compte supprimé : les données des
+    // autres comptes éventuels sur l'appareil sont conservées (persistance
+    // par compte — seule la suppression explicite efface, et seulement le sien).
     try {
-      const keysToRemove: string[] = [];
+      const userKey = userEmail ?? '';
+      const sharedKeys = ['iad-coach-session', 'immo-pulse-token'];
+      const keysToRemove: string[] = [...sharedKeys];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && (key.startsWith('iad-coach-') || key.startsWith('immo-pulse-'))) {
+        if (!key) continue;
+        const isAppKey = key.startsWith('iad-coach-') || key.startsWith('immo-pulse-');
+        if (isAppKey && userKey && key.includes(userKey)) {
           keysToRemove.push(key);
         }
       }
@@ -140,6 +150,17 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
 
         {/* Navigation */}
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {/* Bilan de la journée — premier raccourci, une seule ligne (mobile inclus) */}
+          {onOpenCheckup && (
+            <button
+              onClick={() => { onOpenCheckup(); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all whitespace-nowrap"
+            >
+              <ClipboardCheck className="w-5 h-5 flex-shrink-0" />
+              <span className="truncate">Faire le bilan du jour</span>
+            </button>
+          )}
+
           {tabs.map(tab => (
             <button
               key={tab.id}
@@ -164,19 +185,6 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
             </button>
           ))}
 
-          {/* Bilan de la journée */}
-          {onOpenCheckup && (
-            <div className="px-3 pt-2">
-              <button
-                onClick={() => { onOpenCheckup(); setMobileMenuOpen(false); }}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-all"
-              >
-                <ClipboardCheck className="w-5 h-5" />
-                <span>Faire le bilan du jour</span>
-              </button>
-            </div>
-          )}
-
           <div className="pt-4 border-t border-gray-100 mt-4">
             <p className="px-4 text-xs text-gray-400 uppercase tracking-wide mb-2">Ressources</p>
             <a
@@ -186,7 +194,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all"
             >
               <span>📝</span>
-              <span>Mes mémos</span>
+              <span>Mes mémos <span className="text-xs text-gray-400">(compte formation requis)</span></span>
               <ExternalLink className="w-3 h-3 ml-auto text-gray-400" />
             </a>
             <a
@@ -246,6 +254,18 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
             <p className="text-[11px] text-gray-400 leading-relaxed">
               {profile.language === 'es' ? CGU_REMINDER_ES : CGU_REMINDER_FR}
             </p>
+            {/* Raccourci vers l'extension Chrome Bridge CRM (récupération des
+                prospects dans le CRM du réseau) */}
+            <a
+              href={BRIDGE_CRM_EXTENSION_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 text-[11px] text-blue-500 hover:text-blue-700 transition-colors"
+            >
+              <Puzzle className="w-3 h-3 flex-shrink-0" />
+              {profile.language === 'es' ? 'Extensión Bridge CRM para Chrome' : 'Extension Bridge CRM pour Chrome'}
+              <ExternalLink className="w-2.5 h-2.5 ml-auto flex-shrink-0" />
+            </a>
             {/* Sélecteur de langue */}
             <div className="flex items-center justify-center gap-1 mt-2">
               <button

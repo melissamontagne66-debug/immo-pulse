@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Sparkles, Mail, Lock, ArrowRight, LogIn, UserPlus, Key } from 'lucide-react';
+import { Sparkles, Mail, Lock, ArrowRight, ArrowLeft, LogIn, UserPlus, Key } from 'lucide-react';
 import { apiForgotPassword, apiResetPassword, isApiConfigured } from '@/services/api';
 import { CGU_ARTICLES, CGU_VERSION, CGU_DATE, CGU_CHECKBOX_LABEL_FR, CGU_CHECKBOX_LABEL_ES } from '@/data/cgu';
 
@@ -206,6 +206,16 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
+          {/* Retour à l'écran de connexion depuis les autres modes */}
+          {mode !== 'login' && (
+            <button
+              onClick={() => switchMode('login')}
+              className="flex items-center gap-1 text-sm text-gray-400 hover:text-gray-600 mb-4 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {isEs ? 'Volver a la conexión' : 'Retour à la connexion'}
+            </button>
+          )}
           <div className="flex items-center justify-center gap-2 mb-6">
             {mode === 'login' ? (
               <><LogIn className="w-5 h-5 text-red-600" /><h2 className="text-lg font-semibold text-gray-900">{isEs ? 'Iniciar sesión' : 'Connexion'}</h2></>

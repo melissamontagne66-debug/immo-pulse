@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, Calendar, TrendingUp, HomeIcon, CheckCircle, ArrowRight } from 'lucide-react';
+import { Home, Calendar, TrendingUp, HomeIcon, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface FirstTimeOnboardingProps {
   onComplete: () => void;
@@ -115,16 +115,28 @@ export function FirstTimeOnboarding({ onComplete }: FirstTimeOnboardingProps) {
           </div>
 
           {/* Button */}
-          <Button
-            onClick={next}
-            className="w-full bg-red-600 hover:bg-red-700 py-3 text-base"
-          >
-            {currentStep < steps.length - 1 ? (
-              <>{isEs ? 'Siguiente' : 'Suivant'} <ArrowRight className="w-4 h-4 ml-2" /></>
-            ) : (
-              <>{isEs ? '¡Empezamos!' : "C'est parti !"} <CheckCircle className="w-4 h-4 ml-2" /></>
+          <div className="flex items-center gap-2">
+            {currentStep > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="py-3"
+                aria-label={isEs ? 'Volver' : 'Retour'}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
             )}
-          </Button>
+            <Button
+              onClick={next}
+              className="flex-1 bg-red-600 hover:bg-red-700 py-3 text-base"
+            >
+              {currentStep < steps.length - 1 ? (
+                <>{isEs ? 'Siguiente' : 'Suivant'} <ArrowRight className="w-4 h-4 ml-2" /></>
+              ) : (
+                <>{isEs ? '¡Empezamos!' : "C'est parti !"} <CheckCircle className="w-4 h-4 ml-2" /></>
+              )}
+            </Button>
+          </div>
 
           {/* Skip */}
           {currentStep < steps.length - 1 && (
