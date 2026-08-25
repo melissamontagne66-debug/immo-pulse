@@ -80,10 +80,12 @@ async function getMessaging(): Promise<import('firebase/messaging').Messaging> {
 }
 
 // Enregistre le service worker FCM (sans demander la permission).
+// Scope dédié : le scope racine './' est déjà pris par sw.js (PWA) —
+// deux scripts sur le même scope se remplaceraient l'un l'autre.
 export async function registerPushServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!isPushConfigured()) return null;
   try {
-    return await navigator.serviceWorker.register('./firebase-messaging-sw.js');
+    return await navigator.serviceWorker.register('./firebase-messaging-sw.js', { scope: './firebase-push/' });
   } catch (err) {
     console.warn('Push : échec enregistrement du service worker', err);
     return null;

@@ -9,6 +9,7 @@ import { apiSyncSave, apiSyncLoad, isCloudEnabled } from '@/services/api';
 import { Chat } from '@/components/Chat';
 import { OnboardingWizard } from '@/components/OnboardingWizard';
 import { FirstTimeOnboarding } from '@/components/FirstTimeOnboarding';
+import { InstallAppPrompt } from '@/components/InstallAppPrompt';
 import { MonthlyGoalSetter } from '@/components/MonthlyGoalSetter';
 import { DailyCheckup } from '@/components/DailyCheckup';
 import { NextDayPlanner } from '@/components/NextDayPlanner';
@@ -335,6 +336,11 @@ function App() {
     return (
       <>
         <LoginScreen onLogin={login} onRegister={register} />
+        {/* Proposition d'installation PWA dès la visite navigateur,
+            avant même la connexion */}
+        <div className="fixed bottom-4 inset-x-4 z-40 max-w-md mx-auto">
+          <InstallAppPrompt />
+        </div>
         <Toaster position="bottom-center" richColors />
       </>
     );

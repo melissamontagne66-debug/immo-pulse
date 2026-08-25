@@ -229,81 +229,108 @@ export function useAuth() {
     setIsLoading(true);
     const normalizedEmail = email.toLowerCase().trim();
 
-    // 1. Check default accounts (pre-registered)
+    // Compte connu localement (pré-enregistré démo ou créé hors-ligne) dont le
+    // mot de passe saisi est le bon. Ces comptes doivent AUSSI obtenir un
+    // token API : sans JWT, isCloudEnabled() est faux et leurs données ne sont
+    // jamais synchronisées vers D1 (persistance par compte inexistante).
     const defaultMatch = checkDefaultAccount(normalizedEmail, password);
-    if (defaultMatch) {
-      // Save to local storage for future logins
-      const defaultDef = DEFAULT_USERS[normalizedEmail];
-      if (defaultDef) {
-        saveLocalUser(normalizedEmail, {
-          email: normalizedEmail,
-          passwordHash: simpleHash('123456'),
-          firstName: defaultDef.firstName,
-          lastName: defaultDef.lastName,
-          experienceLevel: defaultDef.experienceLevel,
-          startDate: new Date().toISOString().split('T')[0],
-        });
-      }
-      setCurrentUser(defaultMatch);
-      saveSession(defaultMatch);
-      setIsLoading(false);
-      // Force rechargement pour bien réinitialiser toute l'app
-      setTimeout(() => { window.location.reload(); }, 100);
-      return { success: true };
-    }
+    const localUser = getLocalUsers()[normalizedEmail];
+    const localMatch: UserInfo | null = defaultMatch
+      ?? (localUser && localUser.passwordHash === simpleHash(password)
+        ? {
+            id: `local-${normalizedEmail}`,
+            email: normalizedEmail,
+            firstName: localUser.firstName,
+            lastName: localUser.lastName,
+            experienceLevel: localUser.experienceLevel,
+            startDate: localUser.startDate,
+          }
+        : null);
 
-    // 2. Check local accounts
-    const localUsers = getLocalUsers();
-    const localUser = localUsers[normalizedEmail];
-    if (localUser) {
-      if (localUser.passwordHash !== simpleHash(password)) {
-        setIsLoading(false);
-        return { success: false, error: 'Mot de passe incorrect.' };
-      }
+    const startCloudSession = (data: { user?: Partial<UserInfo>; }, fallback: UserInfo | null): UserInfo => {
       const user: UserInfo = {
-        id: `local-${normalizedEmail}`,
-        email: normalizedEmail,
-        firstName: localUser.firstName,
-        lastName: localUser.lastName,
-        experienceLevel: localUser.experienceLevel,
-        startDate: localUser.startDate,
+        id: data.user?.id || fallback?.id || normalizedEmail,
+        email: data.user?.email || normalizedEmail,
+        firstName: data.user?.firstName || fallback?.firstName || '',
+        lastName: data.user?.lastName || fallback?.lastName || '',
+        experienceLevel: data.user?.experienceLevel ?? fallback?.experienceLevel,
+        startDate: data.user?.startDate ?? fallback?.startDate,
       };
+      setIsOfflineMode(false);
       setCurrentUser(user);
       saveSession(user);
-      setIsLoading(false);
-      // Force rechargement pour bien réinitialiser toute l'app
-      setTimeout(() => { window.location.reload(); }, 100);
-      return { success: true };
-    }
+      return user;
+    };
 
-    // 3. Try API if configured
     if (isApiConfigured()) {
       try {
         const data = await apiLogin(normalizedEmail, password);
         if (data.token) {
-          setIsOfflineMode(false);
-          const user: UserInfo = {
-            id: data.user?.id || email,
-            email: data.user?.email || email,
-            firstName: data.user?.firstName || '',
-            lastName: data.user?.lastName || '',
-            experienceLevel: data.user?.experienceLevel,
-            startDate: data.user?.startDate,
-          };
-          setCurrentUser(user);
-          saveSession(user);
+          startCloudSession(data, localMatch);
           setIsLoading(false);
           // Force rechargement pour bien réinitialiser toute l'app
           setTimeout(() => { window.location.reload(); }, 100);
           return { success: true };
         }
-        if (data.error) {
+        // Compte valide localement mais inconnu du serveur (comptes
+        // pré-enregistrés ou créés hors-ligne) → migration transparente :
+        // on crée le compte côté API avec les mêmes identifiants. Au premier
+        // chargement, le cloud vide déclenche l'envoi des données locales
+        // existantes (cf. « Migration » dans App.tsx).
+        if (localMatch) {
+          try {
+            const reg = await apiRegister(
+              normalizedEmail, password,
+              localMatch.firstName, localMatch.lastName,
+              localMatch.experienceLevel, localMatch.startDate
+            );
+            if (reg.token) {
+              startCloudSession(reg, localMatch);
+              setIsLoading(false);
+              setTimeout(() => { window.location.reload(); }, 100);
+              return { success: true };
+            }
+          } catch {
+            // Réseau coupé entre login et register → session locale ci-dessous
+          }
+        } else if (data.error) {
           setIsLoading(false);
           return { success: false, error: data.error };
         }
       } catch {
-        // API failed, fall through to error
+        // API injoignable → session locale ci-dessous (mode hors-ligne)
       }
+    }
+
+    // Fallback local : compte pré-enregistré/local et API absente ou injoignable
+    if (localMatch) {
+      if (defaultMatch) {
+        // Save to local storage for future logins
+        const defaultDef = DEFAULT_USERS[normalizedEmail];
+        if (defaultDef) {
+          saveLocalUser(normalizedEmail, {
+            email: normalizedEmail,
+            passwordHash: simpleHash('123456'),
+            firstName: defaultDef.firstName,
+            lastName: defaultDef.lastName,
+            experienceLevel: defaultDef.experienceLevel,
+            startDate: new Date().toISOString().split('T')[0],
+          });
+        }
+      }
+      setCurrentUser(localMatch);
+      saveSession(localMatch);
+      setIsLoading(false);
+      // Force rechargement pour bien réinitialiser toute l'app
+      setTimeout(() => { window.location.reload(); }, 100);
+      return { success: true };
+    }
+
+    // Compte local connu mais mauvais mot de passe (API absente/injoignable,
+    // sinon l'erreur de l'API a déjà été renvoyée plus haut)
+    if (localUser) {
+      setIsLoading(false);
+      return { success: false, error: 'Mot de passe incorrect.' };
     }
 
     setIsLoading(false);
