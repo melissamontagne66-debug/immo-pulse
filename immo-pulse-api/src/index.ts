@@ -100,6 +100,15 @@ export function parseSinceParam(raw: string | null): string | null {
   return `${y}-${mo}-${d}`;
 }
 
+// Paramètre ?offset= pour paginer au-delà des 100 premiers prospects
+// (LIMIT fixe côté Bridge). Invalide ou négatif → 0, plafonné à 10000.
+export function parseOffsetParam(raw: string | null): number {
+  if (!raw) return 0;
+  const n = Number.parseInt(raw.trim(), 10);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.min(n, 10000);
+}
+
 // « 24 rue de la République » + « 69006 » + « Lyon » -> « 24 rue de la République, 69006 Lyon ».
 export function formatAddressLine(address: string, zipCode: string, city: string): string {
   const zipCity = [zipCode.trim(), city.trim()].filter(Boolean).join(' ');
@@ -772,9 +781,10 @@ export default {
           generatedMessage: r.generated_message,
         }));
 
-        // Contacts chauds
+        // Contacts chauds (les soft-deletés — deleted_at — restent en base
+        // uniquement comme tombstones pour le Bridge CRM, jamais renvoyés à l'app)
         const contactsRows = await env.DB.prepare(
-          'SELECT * FROM contacts WHERE user_id = ? ORDER BY follow_up_date ASC'
+          'SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL ORDER BY follow_up_date ASC'
         ).bind(userId).all();
         const contacts = (contactsRows.results || []).map((r: any) => ({
           id: r.id,
@@ -883,7 +893,20 @@ export default {
         const id = url.searchParams.get('id');
         if (!id) return json({ error: 'ID manquant.' }, 400, cors);
 
-        await env.DB.prepare('DELETE FROM contacts WHERE id = ? AND user_id = ?').bind(id, userId).run();
+        if (url.searchParams.get('hard') === '1') {
+          // Suppression totale (purge RGPD 90 jours) : la ligne est effacée
+          // physiquement — un prospect inactif ne doit persister nulle part.
+          await env.DB.prepare('DELETE FROM contacts WHERE id = ? AND user_id = ?').bind(id, userId).run();
+          return json({ success: true }, 200, cors);
+        }
+
+        // Soft-delete (migration 0006) : la ligne reste avec deleted_at pour que
+        // le Bridge CRM voie la suppression en sync incrémentale (?since=).
+        // Un hard delete la rendrait invisible et le CRM garderait le prospect.
+        await env.DB.prepare(
+          `UPDATE contacts SET deleted_at = datetime('now'), updated_at = datetime('now')
+           WHERE id = ? AND user_id = ?`
+        ).bind(id, userId).run();
         return json({ success: true }, 200, cors);
       }
 
@@ -893,14 +916,16 @@ export default {
         if (!userId) return json({ error: 'Non autorisé.' }, 401, cors);
 
         // ?since=YYYY-MM-DD -> sync incrémentale ; format invalide ignoré (tout renvoyer).
+        // ?offset=N -> pagination au-delà des 100 premiers prospects.
         const since = parseSinceParam(url.searchParams.get('since'));
+        const offset = parseOffsetParam(url.searchParams.get('offset'));
         const rows = since
           ? await env.DB.prepare(
-              'SELECT * FROM contacts WHERE user_id = ? AND updated_at >= ? ORDER BY updated_at DESC LIMIT 100'
-            ).bind(userId, since).all()
+              'SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL AND updated_at >= ? ORDER BY updated_at DESC LIMIT 100 OFFSET ?'
+            ).bind(userId, since, offset).all()
           : await env.DB.prepare(
-              'SELECT * FROM contacts WHERE user_id = ? ORDER BY updated_at DESC LIMIT 100'
-            ).bind(userId).all();
+              'SELECT * FROM contacts WHERE user_id = ? AND deleted_at IS NULL ORDER BY updated_at DESC LIMIT 100 OFFSET ?'
+            ).bind(userId, offset).all();
 
         const prospects = (rows.results || []).map((r: any) => {
           // Legacy : first_name vide -> tout le nom dans lastname, firstname ''.
@@ -919,6 +944,17 @@ export default {
           if (r.notes) prospect.notes = r.notes;
           return prospect;
         });
+
+        // Tombstones : les suppressions sont signalées en sync incrémentale
+        // (inutile en sync complète — un prospect absent est simplement à créer).
+        if (since && offset === 0) {
+          const deletedRows = await env.DB.prepare(
+            'SELECT id FROM contacts WHERE user_id = ? AND deleted_at IS NOT NULL AND deleted_at >= ?'
+          ).bind(userId, since).all();
+          for (const r of deletedRows.results || []) {
+            prospects.push({ id: String((r as any).id), deleted: true });
+          }
+        }
 
         return json(prospects, 200, cors);
       }

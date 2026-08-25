@@ -17,6 +17,7 @@ import {
   normalizePhoneFR,
   formatBirthdateFR,
   parseSinceParam,
+  parseOffsetParam,
   formatAddressLine,
   SESSION_MAX_AGE_SECONDS,
   type Env,
@@ -294,6 +295,27 @@ describe('parseSinceParam', () => {
 
   it('ignores (null) a well-formed but impossible date', () => {
     expect(parseSinceParam('2026-02-30')).toBeNull();
+  });
+});
+
+describe('parseOffsetParam', () => {
+  it('returns 0 when absent or empty', () => {
+    expect(parseOffsetParam(null)).toBe(0);
+    expect(parseOffsetParam('')).toBe(0);
+  });
+
+  it('accepts a positive integer', () => {
+    expect(parseOffsetParam('100')).toBe(100);
+    expect(parseOffsetParam(' 200 ')).toBe(200);
+  });
+
+  it('returns 0 for invalid or negative input instead of rejecting the request', () => {
+    expect(parseOffsetParam('abc')).toBe(0);
+    expect(parseOffsetParam('-5')).toBe(0);
+  });
+
+  it('caps the offset to bound query cost', () => {
+    expect(parseOffsetParam('999999')).toBe(10000);
   });
 });
 

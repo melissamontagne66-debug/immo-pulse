@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Home, Calendar, TrendingUp, HomeIcon, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Target, ClipboardCheck, Flame, Users, FileText, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 
 interface FirstTimeOnboardingProps {
   onComplete: () => void;
@@ -25,16 +25,16 @@ function readIsEs(): boolean {
 
 const getSteps = (isEs: boolean) => [
   {
-    icon: Home,
+    icon: Target,
     color: 'text-red-600',
     bg: 'bg-red-50',
     title: isEs ? 'Cada mañana: su plan' : 'Chaque matin : ton plan',
     description: isEs
-      ? 'Abra la app y encuentre sus objetivos y sus acciones del día, adaptados a su nivel y a sus resultados.'
-      : 'Ouvre l\'app et retrouve tes objectifs et tes actions du jour, adaptés à ton niveau et à tes résultats.',
+      ? 'Abra la app y encuentre sus objetivos y sus acciones del día en « Objetivos » y « Hoy », adaptados a su nivel y a sus resultados.'
+      : 'Ouvre l\'app et retrouve tes objectifs et tes actions du jour dans « Objectifs » et « Aujourd\'hui », adaptés à ton niveau et à tes résultats.',
   },
   {
-    icon: Calendar,
+    icon: ClipboardCheck,
     color: 'text-blue-600',
     bg: 'bg-blue-50',
     title: isEs ? 'Marque a lo largo del día' : 'Coche au fil de la journée',
@@ -43,22 +43,31 @@ const getSteps = (isEs: boolean) => [
       : 'Dans « Aujourd\'hui », coche chaque action dès qu\'elle est faite. Un tap suffit — pas de formulaire en plus.',
   },
   {
-    icon: TrendingUp,
+    icon: Flame,
     color: 'text-orange-600',
     bg: 'bg-orange-50',
-    title: isEs ? 'Cada noche: su balance (lo esencial)' : 'Chaque soir : ton bilan (l\'essentiel)',
+    title: isEs ? 'Cada noche: su balance — el ritual clave' : 'Chaque soir : ton bilan — le rituel clé',
     description: isEs
-      ? 'Haga su balance al final del día: es lo que permite a la app proponerle nuevas acciones cada día y evolucionar según sus resultados anteriores.'
-      : 'Fais ton bilan en fin de journée : c\'est ce qui permet à l\'app de te proposer de nouvelles choses chaque jour et d\'évoluer en fonction de tes résultats précédents.',
+      ? 'Tómese 2 minutos para hacer su balance del día. Es él quien lo cambia todo : permite al algoritmo adaptarse a su evolución, a su ritmo y a sus necesidades, para proponerle nuevas ideas y acciones cada día — cada vez más pertinentes para usted.'
+      : 'Prends 2 minutes pour faire ton bilan du jour. C\'est lui qui change tout : il permet à l\'algorithme de s\'adapter à ton évolution, à ton rythme et à tes besoins, pour te proposer de nouvelles idées et actions chaque jour — de plus en plus pertinentes pour toi.',
   },
   {
-    icon: HomeIcon,
+    icon: Users,
     color: 'text-purple-600',
     bg: 'bg-purple-50',
-    title: isEs ? 'Visitas, contactos, comisión' : 'Visites, contacts, commission',
+    title: isEs ? 'Sus contactos y sus llamadas de seguimiento' : 'Tes contacts et tes relances',
     description: isEs
-      ? 'Registre sus visitas (la app redacta el mensaje para el vendedor), guarde sus contactos, calcule su comisión neta.'
-      : 'Enregistre tes visites (l\'app rédige le message pour le vendeur), garde tes contacts, calcule ta commission nette.',
+      ? 'Registre cada prospecto en « Contactos » : la app le dice a quién llamar y cuándo, y le avisa antes de que un contacto se enfríe.'
+      : 'Enregistre chaque prospect dans « Contacts » : l\'app te dit qui relancer et quand, et t\'alerte avant qu\'un contact ne refroidisse.',
+  },
+  {
+    icon: FileText,
+    color: 'text-indigo-600',
+    bg: 'bg-indigo-50',
+    title: isEs ? 'Visitas y comisión' : 'Visites et commission',
+    description: isEs
+      ? 'Después de cada visita, la app redacta el mensaje para el vendedor. Y en « Comisión », calcule su remuneración neta en 30 segundos.'
+      : 'Après chaque visite, l\'app rédige le message pour le vendeur. Et dans « Commission », calcule ta rémunération nette en 30 secondes.',
   },
   {
     icon: CheckCircle,
@@ -66,8 +75,8 @@ const getSteps = (isEs: boolean) => [
     bg: 'bg-green-50',
     title: isEs ? 'Eso es todo' : 'C\'est tout',
     description: isEs
-      ? 'Plan por la mañana, acciones marcadas, balance por la noche. La constancia hace el resto.'
-      : 'Plan le matin, actions cochées, bilan le soir. La constance fait le reste.',
+      ? 'Plan por la mañana, acciones marcadas, balance por la noche. La constancia hace el resto — y la app se adapta a usted día tras día.'
+      : 'Plan le matin, actions cochées, bilan le soir. La constance fait le reste — et l\'app s\'adapte à toi jour après jour.',
   },
 ];
 

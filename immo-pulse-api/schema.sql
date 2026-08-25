@@ -97,6 +97,7 @@ CREATE TABLE IF NOT EXISTS contacts (
   city TEXT DEFAULT '',
   notes TEXT DEFAULT '',
   updated_at DATETIME,
+  deleted_at DATETIME,
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
