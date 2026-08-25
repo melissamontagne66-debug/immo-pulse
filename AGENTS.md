@@ -40,9 +40,15 @@ utilisé pour modifier ce projet. Merci de le lire avant toute modification.
   (`OnboardingWizard.onComplete`). Ne pas le déclencher à la connexion
   (un compte existant ne doit jamais le voir).
 - **Avance au jour suivant** : bloquée tant que le bilan n'est pas rempli
-  (le soir ≥ 17 h : bilan du jour ; le matin : bilan d'hier oublié → la
-  flèche ouvre le bilan manquant en rattrapage daté). Exception : le compte
-  admin `melissa.montagne66@gmail.com`.
+  (le soir ≥ 17 h : bilan du jour ; le matin : bilan du précédent **jour
+  ouvré** oublié → la flèche ouvre le bilan manquant en rattrapage daté).
+  Exception : le compte admin `melissa.montagne66@gmail.com`.
+- **Semaine = lundi → vendredi** : aucune tâche proposée le week-end (vue
+  dédiée repos/discipline dans « Aujourd'hui », `lib/weekend.ts`). Les RDV
+  du week-end (R1/R2/visites) peuvent être notés et sont reportés dans le
+  bilan de lundi (`iad-coach-weekend-pending-{email}`, pré-rempli puis
+  purgé à la validation du bilan). La vue « Par semaine » de l'historique
+  des bilans s'arrête au vendredi.
 - **Onglet actif** : clé localStorage namespacée par compte
   (`immo-pulse-active-tab-{email}`) — une clé globale ferait hériter un
   nouveau compte de l'écran du compte précédent.

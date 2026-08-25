@@ -8,6 +8,7 @@ import type { DailyResults } from '@/types';
 import type { UserProfile } from '@/types/profile';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
+import { loadWeekendPending, clearWeekendPending } from '@/lib/weekend';
 import { getDailyActionsForDay, getMonthsSinceStart, plural, type DailyAction } from '@/lib/goals';
 import { getDefiForDay } from '@/data/defis';
 import { getTemoignageForUser } from '@/lib/temoignages';
@@ -201,6 +202,13 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     .map(a => `${a.label} : ${actionNotes[a.id]}`)
     .join('\n');
 
+  // Report du week-end : les R1/R2/visites notés samedi/dimanche sont
+  // pré-remplis dans le bilan du lundi cible (puis effacés à l'enregistrement).
+  const weekendApplied = useMemo(() => {
+    const pending = loadWeekendPending(userKey);
+    return pending && pending.date === (bilanDate ?? toLocalDateKey(new Date())) ? pending : null;
+  }, [userKey, bilanDate]);
+
   const [results, setResults] = useState(() => {
     // En rattrapage, pas de brouillon : il appartiendrait au bilan du jour.
     const base = (bilanDate ? null : draft?.results) ?? {
@@ -226,11 +234,20 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     primoListeRestant: undefined as boolean | undefined,
     r1EstimationBloquee: undefined as boolean | undefined,
     };
+    // Ajoute le report du week-end aux compteurs pré-remplis (bilan du lundi).
+    const withWeekend = (r: typeof base) => weekendApplied
+      ? {
+          ...r,
+          rdvR1Done: (r.rdvR1Done || 0) + weekendApplied.rdvR1Done,
+          rdvR2Done: (r.rdvR2Done || 0) + weekendApplied.rdvR2Done,
+          visitesDone: (r.visitesDone || 0) + weekendApplied.visitesDone,
+        }
+      : r;
     // Rattrapage (bilan oublié d'un jour passé) : la date cible prime, et les
     // compteurs du jour ne s'appliquent pas — ils concernent aujourd'hui.
     // Nouvel objet (jamais de mutation du brouillon mémoïsé).
     if (bilanDate) {
-      return {
+      return withWeekend({
         ...base,
         date: bilanDate,
         callsMade: 0,
@@ -239,9 +256,9 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         rdvR2Done: 0,
         visitesDone: 0,
         notes: '',
-      };
+      });
     }
-    return base;
+    return withWeekend(base);
   });
 
   // Next day planning state
@@ -315,6 +332,8 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     }
     onSave(results as Parameters<typeof onSave>[0]);
     clearDraft(userKey, currentDay);
+    // Le report du week-end est consommé : les RDV sont dans le bilan validé.
+    if (weekendApplied) clearWeekendPending(userKey);
 
     // Le bilan validé fait foi : il réécrit les compteurs du jour (tuiles Dashboard / Aujourd'hui)
     setAllCounters({
@@ -550,6 +569,20 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
               🕐 {isEs
                 ? `Balance olvidado : estás rellenando el del ${new Date(bilanDate + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}. Después podrás pasar al día siguiente.`
                 : `Bilan oublié : tu remplis celui du ${new Date(bilanDate + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}. Ensuite tu pourras passer au jour suivant.`}
+            </p>
+          </div>
+        )}
+
+        {/* Report du week-end : RDV notés samedi/dimanche, inclus dans ce bilan */}
+        {weekendApplied && (weekendApplied.rdvR1Done + weekendApplied.rdvR2Done + weekendApplied.visitesDone > 0) && (
+          <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+            <p className="text-sm text-indigo-800">
+              🌿 {isEs ? 'Tus RDV del fin de semana ya están incluidos' : 'Tes RDV du week-end sont déjà inclus'}
+              {' '}({[
+                weekendApplied.rdvR1Done > 0 ? `${weekendApplied.rdvR1Done} R1` : '',
+                weekendApplied.rdvR2Done > 0 ? `${weekendApplied.rdvR2Done} R2` : '',
+                weekendApplied.visitesDone > 0 ? `${weekendApplied.visitesDone} ${isEs ? 'visitas' : 'visites'}` : '',
+              ].filter(Boolean).join(', ')})
             </p>
           </div>
         )}

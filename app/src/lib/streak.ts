@@ -163,11 +163,27 @@ export function checkStreakOnOpen(streak: StreakState, todayKey: string): { stre
     return { streak: s, event: null };
   }
 
-  const missedDays = diffDays(s.lastBilanDate, todayKey) - 1;
-  if (s.count > 0 && missedDays === 1 && hasFreezeAvailable(s, todayKey)) {
+  // Jours manqués hors week-end : aucun bilan n'est attendu samedi/dimanche
+  // (semaine = lundi → vendredi) — sans ça, la série cassait chaque lundi.
+  let missedDays = 0;
+  let lastMissedWorkday: string | null = null;
+  let cursor = addDays(s.lastBilanDate, 1);
+  while (cursor < todayKey) {
+    const dow = new Date(`${cursor}T12:00:00`).getDay();
+    if (dow !== 0 && dow !== 6) {
+      missedDays++;
+      lastMissedWorkday = cursor;
+    }
+    cursor = addDays(cursor, 1);
+  }
+  if (missedDays === 0) {
+    return { streak: s, event: null };
+  }
+
+  if (s.count > 0 && missedDays === 1 && lastMissedWorkday && hasFreezeAvailable(s, todayKey)) {
     const next: StreakState = {
       ...s,
-      lastBilanDate: yesterday,
+      lastBilanDate: lastMissedWorkday,
       freezesAvailable: 0,
       freezesUsedThisWeek: s.freezesUsedThisWeek + 1,
       lastFreezeDate: todayKey,

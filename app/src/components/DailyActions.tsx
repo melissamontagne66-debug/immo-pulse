@@ -15,6 +15,7 @@ import {
 import { getProspectionActionForDay, getProspectionCategoryInfo } from '@/data/prospectionActions';
 import { getDefiForDay } from '@/data/defis';
 import { DailyMorningAction } from '@/components/DailyMorningAction';
+import { WeekendView } from '@/components/WeekendView';
 import type { DailyResults } from '@/types';
 import { useDailyCounters, useActionNotes, type CounterKey } from '@/hooks/useDailyCounters';
 import { toLocalDateKey } from '@/lib/utils';
@@ -258,19 +259,23 @@ export function DailyActions({
   const currentHour = now.getHours();
 
   // Bilan exigé avant d'avancer au jour suivant (sauf admin) :
-  // — le soir (à partir de 17 h), celui du jour en cours doit être rempli ;
-  // — le lendemain matin, si celui d'hier a été oublié, la flèche propose de
-  //   le remplir (rattrapage) au lieu de changer de jour.
-  // Jour 1 tout premier accès : pas de bilan « d'hier » à exiger.
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = toLocalDateKey(yesterday);
-  const hasYesterdayBilan = dailyResults.some(r => r.date === yesterdayStr);
+  // — le soir (à partir de 17 h, jour ouvré), celui du jour en cours doit être rempli ;
+  // — le matin, celui du précédent JOUR OUVRÉ s'il a été oublié — la flèche
+  //   propose alors de le remplir (rattrapage) au lieu de changer de jour.
+  // Aucun bilan n'est attendu le week-end : la semaine court du lundi au
+  // vendredi (le lundi, le précédent jour ouvré est vendredi).
+  // Jour 1 tout premier accès : pas de bilan précédent à exiger.
+  const currentDow = now.getDay();
+  const isWeekendDay = currentDow === 0 || currentDow === 6;
+  const prevWorkday = new Date();
+  prevWorkday.setDate(prevWorkday.getDate() - (currentDow === 1 ? 3 : currentDow === 0 ? 2 : 1));
+  const prevWorkdayStr = toLocalDateKey(prevWorkday);
+  const hasPrevWorkdayBilan = dailyResults.some(r => r.date === prevWorkdayStr);
   const isFirstEverDay = currentDay === 1 && dailyResults.length === 0;
   const missedBilanDate: string | null =
-    !isFirstEverDay && !hasYesterdayBilan
-      ? yesterdayStr
-      : currentHour >= 17 && !todayCheckupDone
+    !isFirstEverDay && !hasPrevWorkdayBilan
+      ? prevWorkdayStr
+      : !isWeekendDay && currentHour >= 17 && !todayCheckupDone
         ? todayStr
         : null;
 
@@ -798,8 +803,8 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         </Card>
       )}
 
-      {/* Bannière bilan en attente — uniquement à partir de 17 h, ton orange discret */}
-      {!todayCheckupDone && currentHour >= 17 && (
+      {/* Bannière bilan en attente — uniquement à partir de 17 h un jour ouvré */}
+      {!isWeekendDay && !todayCheckupDone && currentHour >= 17 && (
         <Card className="bg-orange-50 border-orange-200">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
@@ -865,7 +870,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
               ? (isEs ? 'Día siguiente' : 'Jour suivant')
               : missedBilanDate === todayStr
                 ? (isEs ? 'Haz primero tu balance para avanzar' : 'Fais d\'abord ton bilan pour avancer')
-                : (isEs ? 'Rellena el balance olvidado de ayer para avanzar' : 'Remplis le bilan oublié d\'hier pour avancer')}
+                : (isEs ? 'Rellena el balance olvidado para avanzar' : 'Remplis le bilan oublié pour avancer')}
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
           </button>
@@ -876,6 +881,11 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         </div>
       </div>
 
+      {/* Week-end : aucune tâche — message repos/discipline + report des RDV
+          vers le bilan de lundi */}
+      {isWeekendDay && <WeekendView userKey={userEmail ?? 'anonymous'} isEs={isEs} />}
+
+      {!isWeekendDay && (<>
       {/* Action du jour — message du coach */}
       <DailyMorningAction currentDay={currentDay} profile={profile} dailyTargets={targets} dailyResults={dailyResults} />
 
@@ -1076,6 +1086,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
           </div>
         </CardContent>
       </Card>
+      </>)}
 
       {/* Résultat Dialog (pour prospection seulement) */}
       <Dialog open={showResultDialog} onOpenChange={setShowResultDialog}>

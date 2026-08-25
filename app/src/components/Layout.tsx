@@ -7,9 +7,10 @@ import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled }
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
 
-// URL de l'extension Chrome Bridge CRM — à remplacer par l'URL exacte du
-// Chrome Web Store dès publication (en attendant : recherche webstore).
-const BRIDGE_CRM_EXTENSION_URL = 'https://chromewebstore.google.com/search/Bridge%20CRM%20ImmoPulse';
+// Extension Chrome Bridge CRM — zip hébergé par l'app en attendant la
+// publication sur le Chrome Web Store (le lien déclenche le téléchargement ;
+// à remplacer par l'URL du store dès publication).
+const BRIDGE_CRM_EXTENSION_URL = './bridge-crm-immopulse.zip';
 
 interface LayoutProps {
   children: ReactNode;
