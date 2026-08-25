@@ -72,11 +72,11 @@ GET /api/bridge/prospects?since=YYYY-MM-DD&offset=N
 
 ## À savoir
 
-- Le conseiller supprime un prospect dans l'app → soft-delete : la
-  tombstone apparaît dans la sync incrémentale (voir ci-dessus).
-- Exception : la purge RGPD (prospect sans aucune interaction depuis 90
-  jours) est une suppression **totale**, sans tombstone — ces prospects
-  sont censés avoir été basculés sur l'intranet avant.
+- **Suppressions totales** : un prospect supprimé dans l'app (par le
+  conseiller ou par la purge RGPD des 90 jours) est effacé physiquement,
+  sans tombstone. Les entrées `{ "id": "...", "deleted": true }` ne
+  concernent que d'éventuelles lignes supprimées avant cette règle — le
+  CRM doit quand même les traiter si elles apparaissent.
 - Erreurs : `401 {"error": "Non autorisé."}` si le token/cookie est
   absent ou expiré → redemander un login.
 - Le cookie session dure 30 jours ; prévoir un écran de reconnexion.

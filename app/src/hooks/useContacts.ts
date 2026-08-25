@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { apiSaveContact, apiDeleteContact, isCloudEnabled } from '@/services/api';
+import { toLocalDateKey } from '@/lib/utils';
 
 // ============================================
 // Mini-carnet de contacts chauds (MOD-14)
@@ -108,7 +109,7 @@ export function getContactLastUpdate(c: Contact): string {
 function purgeExpired(userKey: string, contacts: Contact[]): Contact[] {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - PURGE_DAYS);
-  const cutoffKey = cutoff.toISOString().slice(0, 10);
+  const cutoffKey = toLocalDateKey(cutoff);
   const expired = contacts.filter(c => {
     const last = lastInteractionKey(c);
     return last && last < cutoffKey;
@@ -285,14 +286,16 @@ export function useContacts(userKey: string) {
       saveContacts(loadedKey.current, updated);
       return updated;
     });
-    deleteFromCloud(id);
+    // Suppression totale (hard delete), comme la purge RGPD : un contact
+    // supprimé par le conseiller ne doit persister nulle part.
+    deleteFromCloud(id, true);
   }, []);
 
   // Repousse la relance au lendemain
   const postponeContact = useCallback((id: string) => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    updateContact(id, { dateRelance: tomorrow.toISOString().split('T')[0] });
+    updateContact(id, { dateRelance: toLocalDateKey(tomorrow) });
   }, [updateContact]);
 
   // Ajoute une note à l'historique du prospect
@@ -302,7 +305,7 @@ export function useContacts(userKey: string) {
     setContacts(prev => {
       const updated = prev.map(c => {
         if (c.id !== id) return c;
-        const note = { id: `note-${Date.now()}`, date: new Date().toISOString().split('T')[0], texte: trimmed };
+        const note = { id: `note-${Date.now()}`, date: toLocalDateKey(new Date()), texte: trimmed };
         return { ...c, notes: [note, ...(c.notes ?? [])] };
       });
       saveContacts(loadedKey.current, updated);
@@ -322,7 +325,7 @@ export function useContacts(userKey: string) {
     if (jours === 0) return;
     const d = new Date();
     d.setDate(d.getDate() + jours);
-    updateContact(id, { dateRelance: d.toISOString().split('T')[0] });
+    updateContact(id, { dateRelance: toLocalDateKey(d) });
   }, [updateContact]);
 
   // Contacts triés par date de relance (les plus urgents d'abord, sans date à la fin)
@@ -337,7 +340,7 @@ export function useContacts(userKey: string) {
 
   // Contacts à relancer aujourd'hui (ou en retard)
   const getDueContacts = useCallback((): Contact[] => {
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     return contacts.filter(c => c.dateRelance && c.dateRelance <= today);
   }, [contacts]);
 

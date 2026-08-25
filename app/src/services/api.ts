@@ -111,6 +111,7 @@ export async function apiSyncSave(payload: {
   profile: unknown;
   progress: unknown;
   visits: unknown[];
+  sales?: unknown[];
 }) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');

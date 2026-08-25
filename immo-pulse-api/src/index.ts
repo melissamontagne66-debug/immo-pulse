@@ -721,6 +721,14 @@ export default {
           }
         }
 
+        // Ventes enregistrées (calculateur de commission) : tableau JSON
+        // complet par utilisateur — même pattern que profiles (une ligne/user).
+        if (Array.isArray(body.sales)) {
+          await env.DB.prepare(
+            'INSERT OR REPLACE INTO sales (user_id, data, updated_at) VALUES (?, ?, datetime("now"))'
+          ).bind(userId, JSON.stringify(body.sales)).run();
+        }
+
         return json({ success: true, message: 'Données sauvegardées.' }, 200, cors);
       }
 
@@ -805,6 +813,11 @@ export default {
           updatedAt: r.updated_at || r.created_at,
         }));
 
+        // Ventes enregistrées (tableau JSON par utilisateur)
+        const salesRow = await env.DB.prepare('SELECT data FROM sales WHERE user_id = ?').bind(userId).first();
+        let sales: unknown[] = [];
+        try { sales = salesRow ? JSON.parse(salesRow.data as string) : []; } catch { sales = []; }
+
         return json({ success: true, profile, progress: progressData || {
           dailyResults,
           completedDays,
@@ -815,7 +828,7 @@ export default {
           totalRdv: dailyResults.reduce((s: number, r: any) => s + r.rdv_r1_done + r.rdv_r2_done, 0),
           totalMandats: dailyResults.reduce((s: number, r: any) => s + r.mandats_signed, 0),
           totalVisites: dailyResults.reduce((s: number, r: any) => s + r.visites_done, 0),
-        }, completedDays, visits, contacts }, 200, cors);
+        }, completedDays, visits, contacts, sales }, 200, cors);
       }
 
       // ===== VISITS: POST =====
@@ -1039,6 +1052,7 @@ export default {
           'completed_actions',
           'visit_reports',
           'daily_results',
+          'sales',
           'profiles',
           'password_resets',
         ];

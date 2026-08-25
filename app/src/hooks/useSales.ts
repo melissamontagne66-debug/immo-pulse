@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { toLocalDateKey } from '@/lib/utils';
 
 // ============================================
 // Ventes enregistrées (calculateur de commission)
@@ -49,7 +50,7 @@ function migrateLegacySimulations(userKey: string): Sale[] {
     if (!stored) return [];
     const legacy = JSON.parse(stored) as LegacySimulation[];
     if (!Array.isArray(legacy) || legacy.length === 0) return [];
-    const today = new Date().toISOString().split('T')[0];
+    const today = toLocalDateKey(new Date());
     const migrated: Sale[] = legacy.map(sim => {
       const netPallier = Math.round(sim.commissionHT * (sim.pallier / 100));
       const charges = Math.round(netPallier * 0.212);
@@ -135,6 +136,21 @@ export function useSales(userKey: string) {
     window.dispatchEvent(new CustomEvent(SALES_EVENT));
   }, []);
 
+  // Injecte les ventes du cloud (appelé par App.tsx après apiSyncLoad) :
+  // union par id — les ventes saisies hors-ligne sur cet appareil et
+  // absentes du cloud sont conservées, puis repoussées à la prochaine sync.
+  const loadFromCloud = useCallback((cloudSales: Sale[]) => {
+    if (!Array.isArray(cloudSales)) return;
+    setSales(prev => {
+      const byId = new Map<string, Sale>();
+      for (const s of cloudSales) if (s && s.id) byId.set(s.id, s);
+      for (const s of prev) if (s && s.id && !byId.has(s.id)) byId.set(s.id, s);
+      const merged = [...byId.values()].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      saveSales(loadedKey.current, merged);
+      return merged;
+    });
+  }, []);
+
   // Ventes triées de la plus récente à la plus ancienne
   const listSales = useCallback((): Sale[] => {
     return [...sales].sort((a, b) => b.date.localeCompare(a.date));
@@ -156,6 +172,7 @@ export function useSales(userKey: string) {
     sales,
     addSale,
     removeSale,
+    loadFromCloud,
     listSales,
     feesForMonth,
     mandatsForMonth,

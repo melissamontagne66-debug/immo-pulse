@@ -110,6 +110,14 @@ CREATE TABLE IF NOT EXISTS completed_actions (
   FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
+-- Ventes enregistrées (calculateur de commission) — tableau JSON par utilisateur
+CREATE TABLE IF NOT EXISTS sales (
+  user_id TEXT PRIMARY KEY,
+  data TEXT NOT NULL DEFAULT '[]',
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
 -- Abonnements aux notifications push (tokens FCM par appareil)
 CREATE TABLE IF NOT EXISTS push_subscriptions (
   id TEXT PRIMARY KEY,
