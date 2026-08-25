@@ -40,7 +40,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
   // Get period dates
   const getPeriodDates = () => {
     if (viewMode === 'week') {
-      // Week starts on Monday
+      // Semaine = lundi → vendredi (jours ouvrés, demande cliente)
       const startOfWeek = new Date(today);
       const dayOfWeek = startOfWeek.getDay(); // 0 = Sunday, 1 = Monday
       const diff = startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1); // Adjust to Monday
@@ -48,7 +48,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
       startOfWeek.setHours(0, 0, 0, 0);
 
       const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6);
+      endOfWeek.setDate(startOfWeek.getDate() + 4); // vendredi
       endOfWeek.setHours(23, 59, 59, 999);
 
       return { start: startOfWeek, end: endOfWeek };
