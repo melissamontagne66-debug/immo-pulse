@@ -9,9 +9,43 @@ utilisé pour modifier ce projet. Merci de le lire avant toute modification.
   Build : `npm run build` (= `tsc -b && vite build`). Lint : `npm run lint`.
 - `immo-pulse-api/` — backend Cloudflare Worker (TypeScript) + base D1
   (SQLite), auth JWT maison, endpoints REST (`/api/auth/*`, `/api/sync`,
-  `/api/visits`, `/api/contacts`).
+  `/api/visits`, `/api/contacts`, `/api/bridge/prospects` pour l'extension
+  Chrome — spec dans `BRIDGE-CRM.md`). La table `sales` (migration 0007)
+  stocke les ventes enregistrées, synchronisées via `/api/sync` comme le
+  profil, les bilans, les visites et les contacts.
 - Déploiement **automatique** sur push vers `main` (Cloudflare Pages +
   Workers Builds) — il n'y a pas d'étape de review avant la prod.
+- Les migrations D1 ne sont **pas** appliquées par le déploiement : après
+  avoir poussé une migration, l'appliquer à la main avec
+  `cd immo-pulse-api && npx wrangler d1 migrations apply immo-pulse-db --remote`.
+
+## Décisions récentes — à ne pas casser
+
+- **Auth** : les comptes pré-enregistrés (`DEFAULT_USERS`) et locaux passent
+  par l'API au login, avec création de compte côté serveur au premier login
+  (migration transparente). Ne jamais réintroduire un chemin de connexion
+  purement local : sans token JWT, `isCloudEnabled()` est faux et rien ne se
+  synchronise (c'était le bug de persistance historique).
+- **Persistance** : tout ce qu'un conseiller saisit doit être synchronisé par
+  compte (profil, progression/bilans, visites, contacts, **ventes**). Au
+  chargement cloud, les bilans (`dailyResults`) et ventes font l'UNION avec
+  le local (par date / par id) — jamais d'écrasement « cloud wins », sinon
+  une saisie hors-ligne est perdue.
+- **Suppressions de contacts** : toujours totales (hard delete), que ce soit
+  par le conseiller ou par la purge RGPD 90 jours. La colonne `deleted_at`
+  (migration 0006) ne sert plus que d'éventuelles tombstones historiques
+  pour le bridge — ne pas réintroduire de soft-delete côté app.
+- **Tour de découverte** (`FirstTimeOnboarding`) : réservé aux NOUVEAUX
+  comptes, déclenché uniquement à la fin du wizard de profil
+  (`OnboardingWizard.onComplete`). Ne pas le déclencher à la connexion
+  (un compte existant ne doit jamais le voir).
+- **Avance au jour suivant** : bloquée tant que le bilan n'est pas rempli
+  (le soir ≥ 17 h : bilan du jour ; le matin : bilan d'hier oublié → la
+  flèche ouvre le bilan manquant en rattrapage daté). Exception : le compte
+  admin `melissa.montagne66@gmail.com`.
+- **Onglet actif** : clé localStorage namespacée par compte
+  (`immo-pulse-active-tab-{email}`) — une clé globale ferait hériter un
+  nouveau compte de l'écran du compte précédent.
 
 ## Règle n°1 — Ne jamais résoudre un conflit de merge à l'aveugle
 

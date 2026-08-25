@@ -144,17 +144,13 @@ function App() {
     return () => window.removeEventListener('navigate-to-tab', handler);
   }, []);
 
-  // Reset onboarding state when user changes
+  // Le tour de découverte (FirstTimeOnboarding) est réservé aux NOUVEAUX
+  // comptes : il n'est déclenché qu'à la fin du wizard de profil
+  // (OnboardingWizard onComplete), jamais automatiquement à la connexion —
+  // un compte existant ne doit pas le voir.
   useEffect(() => {
     if (!isAuthenticated || !currentUser) {
       setShowFirstTimeOnboarding(false);
-      return;
-    }
-    try {
-      const seen = localStorage.getItem(`immo-pulse-onboarding-seen-${userKey}`);
-      setShowFirstTimeOnboarding(!seen);
-    } catch {
-      setShowFirstTimeOnboarding(true);
     }
   }, [userKey, isAuthenticated, currentUser]);
 
