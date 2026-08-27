@@ -108,6 +108,7 @@ function renderIcon(size, { maskable }) {
 }
 
 for (const { name, size, maskable } of [
+  { name: 'icon-180.png', size: 180, maskable: false },
   { name: 'icon-192.png', size: 192, maskable: false },
   { name: 'icon-512.png', size: 512, maskable: false },
   { name: 'icon-maskable-512.png', size: 512, maskable: true },
