@@ -161,7 +161,12 @@ export function getContactsInactifs(contacts: Contact[]): ContactInactif[] {
 export function getContactsAnniversaireDuJour(contacts: Contact[]): Contact[] {
   const now = new Date();
   const jourMois = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  return contacts.filter(c => c.anniversaire && c.anniversaire.slice(5) === jourMois);
+  const todayKey = toLocalDateKey(now);
+  // « Fait » = souhaité aujourd'hui (dernière interaction datée du jour) →
+  // la carte disparaît pour ne pas relancer un contact déjà appelé.
+  return contacts.filter(c =>
+    c.anniversaire && c.anniversaire.slice(5) === jourMois && c.dateDerniereRelance !== todayKey
+  );
 }
 
 function saveContacts(userKey: string, contacts: Contact[]) {

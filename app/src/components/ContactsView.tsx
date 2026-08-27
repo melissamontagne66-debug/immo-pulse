@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -53,12 +53,14 @@ const DELAIS: { value: Exclude<DelaiRelance, ''>; label: string; labelEs: string
   { value: 'personnalise', label: 'Personnaliser (date exacte)', labelEs: 'Personalizar (fecha exacta)' },
 ];
 
-type FiltreMaj = '' | 'today' | '7j' | '30j';
+type FiltreMaj = '' | 'today' | '7j' | '30j' | 'avant' | 'depuis';
 
 const FILTRES_MAJ: { value: Exclude<FiltreMaj, ''>; label: string; labelEs: string }[] = [
   { value: 'today', label: 'Aujourd\'hui', labelEs: 'Hoy' },
   { value: '7j', label: '7 derniers jours', labelEs: '7 últimos días' },
   { value: '30j', label: '30 derniers jours', labelEs: '30 últimos días' },
+  { value: 'avant', label: 'Mis à jour avant le…', labelEs: 'Actualizado antes del…' },
+  { value: 'depuis', label: 'Mis à jour depuis le…', labelEs: 'Actualizado desde el…' },
 ];
 
 // Langue lue depuis le profil local (iad-coach-profile-{userKey})
@@ -161,6 +163,13 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(DEFAULTS_FORM);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  // À l'ouverture du formulaire (ajout ou édition), on l'amène dans le
+  // viewport — sinon il apparaît sous les filtres, hors champ.
+  useEffect(() => {
+    if (formOpen) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [formOpen]);
 
   // Filtres
   const [search, setSearch] = useState('');
@@ -168,6 +177,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
   const [filterStatut, setFilterStatut] = useState<ContactStatut | ''>('');
   const [filterType, setFilterType] = useState<ContactTypeProspect | ''>('');
   const [filterMaj, setFilterMaj] = useState<FiltreMaj>('');
+  const [filterMajDate, setFilterMajDate] = useState('');
 
   // Ajout rapide de note (inline sur la carte, sans ouvrir la modale)
   const [quickNoteId, setQuickNoteId] = useState<string | null>(null);
@@ -262,12 +272,24 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
       if (filterType && c.typeProspect !== filterType) return false;
       if (filterMaj) {
         const last = getContactLastUpdate(c);
-        if (!last) return false;
-        if (filterMaj === 'today' ? last !== todayKey : last < cutoffKey) return false;
+        if (filterMaj === 'today') {
+          // « Aujourd'hui » = dernière interaction du jour OU fiche créée
+          // aujourd'hui, même sans aucune interaction depuis.
+          const createdKey = c.createdAt?.slice(0, 10) ?? '';
+          if (last !== todayKey && createdKey !== todayKey) return false;
+        } else if (filterMaj === 'avant' || filterMaj === 'depuis') {
+          // Tant que la date n'est pas choisie, le filtre ne rejette rien.
+          if (filterMajDate) {
+            if (!last) return false;
+            if (filterMaj === 'avant' ? last >= filterMajDate : last < filterMajDate) return false;
+          }
+        } else {
+          if (!last || last < cutoffKey) return false;
+        }
       }
       return true;
     });
-  }, [sortedContacts, search, filterOrigine, filterStatut, filterType, filterMaj]);
+  }, [sortedContacts, search, filterOrigine, filterStatut, filterType, filterMaj, filterMajDate]);
 
   const hasFilters = search.trim() !== '' || filterOrigine !== '' || filterStatut !== '' || filterType !== '' || filterMaj !== '';
 
@@ -281,8 +303,8 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
           </h2>
           <p className="text-gray-500 mt-1">
             {isEs
-              ? `${contacts.length} contacto${contacts.length > 1 ? 's' : ''} en su agenda`
-              : `${contacts.length} contact${contacts.length > 1 ? 's' : ''} dans ton carnet`}
+              ? `${contacts.length} contacto${contacts.length > 1 ? 's' : ''} en mi agenda`
+              : `${contacts.length} contact${contacts.length > 1 ? 's' : ''} dans mon carnet`}
           </p>
         </div>
         <div className="flex gap-2">
@@ -371,6 +393,15 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                 <option value="">{isEs ? 'Actualización: todas' : 'Dernière màj : toutes'}</option>
                 {FILTRES_MAJ.map(f => <option key={f.value} value={f.value}>{isEs ? f.labelEs : f.label}</option>)}
               </select>
+              {(filterMaj === 'avant' || filterMaj === 'depuis') && (
+                <Input
+                  type="date"
+                  value={filterMajDate}
+                  onChange={e => setFilterMajDate(e.target.value)}
+                  aria-label={isEs ? 'Elegir la fecha de referencia' : 'Choisir la date de référence'}
+                  className="text-sm"
+                />
+              )}
             </div>
             {hasFilters && (
               <p className="text-xs text-gray-500">
@@ -385,6 +416,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
 
       {/* Formulaire ajout / édition */}
       {formOpen && (
+        <div ref={formRef} className="scroll-mt-4">
         <Card className="border-red-200 bg-red-50/50">
           <CardContent className="p-6 space-y-4">
             <h3 className="font-semibold text-gray-900">
@@ -545,6 +577,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
             </div>
           </CardContent>
         </Card>
+        </div>
       )}
 
       {/* Liste des fiches */}
@@ -557,7 +590,7 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
             <p className="text-gray-500">{isEs ? 'Ningún contacto coincide con estos filtros.' : 'Aucun contact ne correspond à ces filtres.'}</p>
           ) : (
             <>
-              <p className="text-gray-500">{isEs ? 'Su archivo empieza aquí: añada su primer contacto caliente.' : 'Ton fichier démarre ici : ajoute ton premier contact chaud.'}</p>
+              <p className="text-gray-500">{isEs ? 'Mi archivo empieza aquí: añadir mi primer contacto caliente.' : 'Mon fichier démarre ici : ajouter mon premier contact chaud.'}</p>
               <Button onClick={openAddForm} className="mt-4 bg-red-600 hover:bg-red-700">
                 <Plus className="w-4 h-4 mr-2" /> {isEs ? 'Añadir un contacto' : 'Ajouter un contact'}
               </Button>

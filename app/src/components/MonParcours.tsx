@@ -98,14 +98,14 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
           <h2 className="text-2xl font-bold text-gray-900">{isEs ? 'Mi recorrido' : 'Mon parcours'}</h2>
           <p
             className="text-gray-500 mt-1"
-            title={isEs ? 'Basado en tus balances completados y tus hitos.' : 'Basé sur tes bilans complétés et tes jalons.'}
+            title={isEs ? 'Basado en mis balances completados y mis hitos.' : 'Basé sur mes bilans complétés et mes jalons.'}
           >
             {isEs ? `Programa 6 meses — semana ${semaine}/26` : `Programme 6 mois — semaine ${semaine}/26`}
           </p>
         </div>
         <div
           className="flex items-center gap-2 bg-violet-50 text-violet-700 px-4 py-2 rounded-lg"
-          title={isEs ? 'Tu nivel de carrera' : 'Ton niveau de carrière'}
+          title={isEs ? 'Mi nivel de carrera' : 'Mon niveau de carrière'}
         >
           <span className="font-semibold text-sm">
             {isEs ? 'Nivel' : 'Niveau'} : {niveau.emoji} {isEs ? niveau.labelEs : niveau.label}
@@ -117,7 +117,7 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
       <Card>
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">
-            {isEs ? 'Tus hitos' : 'Tes jalons'}
+            {isEs ? 'Mis hitos' : 'Mes jalons'}
           </h3>
           <div className="relative border-l-2 border-gray-200 ml-2 space-y-4">
             {jalonsAtteints.map(j => (
@@ -144,10 +144,12 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
       <Card>
         <CardContent className="p-4">
           <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            {isEs ? 'Tu constancia (6 meses)' : 'Ta constance (6 mois)'}
+            {isEs ? 'Mi constancia (6 meses)' : 'Ma constance (6 mois)'}
           </h3>
           <div className="overflow-x-auto">
-            <div className="grid grid-rows-7 grid-flow-col gap-1 w-max">
+            {/* Sur mobile, cellules réduites pour que les 26 semaines tiennent
+                en largeur sans glisser (max-sm ≈ 260 px). */}
+            <div className="grid grid-rows-7 grid-flow-col gap-1 max-sm:gap-0.5 w-max">
               {heatmapDays.map(day => (
                 <div
                   key={day.key}
@@ -156,7 +158,7 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
                       ? `${formatDateCourte(day.key)} — ${isEs ? plural(day.actions, 'acción', 'acciones') : plural(day.actions, 'action')}`
                       : `${formatDateCourte(day.key)} — ${isEs ? 'sin balance' : 'pas de bilan'}`
                   }
-                  className={`w-3 h-3 rounded-[3px] ${day.bilan ? 'bg-emerald-500' : 'bg-gray-100'}`}
+                  className={`w-3 h-3 max-sm:w-2 max-sm:h-2 rounded-[3px] ${day.bilan ? 'bg-emerald-500' : 'bg-gray-100'}`}
                   style={day.bilan ? { opacity: heatmapOpacity(day.actions) } : undefined}
                 />
               ))}
@@ -179,8 +181,8 @@ export function MonParcours({ progress, sales, profile }: MonParcoursProps) {
           {mur.length === 0 ? (
             <p className="text-sm text-gray-400">
               {isEs
-                ? 'Tu primera victoria llegará pronto — aparecerá aquí.'
-                : 'Ta première victoire arrivera vite — elle s\'affichera ici.'}
+                ? 'Mi primera victoria llegará pronto — aparecerá aquí.'
+                : 'Ma première victoire arrivera vite — elle s\'affichera ici.'}
             </p>
           ) : (
             <div className="space-y-2 max-h-96 overflow-y-auto pr-1">

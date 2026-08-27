@@ -226,6 +226,10 @@ export function DailyActions({
   // Expandable tips state
   const [expandedTips, setExpandedTips] = useState<Record<string, boolean>>({});
 
+  // Accordéon des tâches du jour : seul l'en-tête (coche, titre, récap) est
+  // visible par défaut — chaque tâche s'ouvre indépendamment des autres.
+  const [openTasks, setOpenTasks] = useState<Record<string, boolean>>({});
+
   // MOD-21 : micro-célébration (burst de confettis) à la coche d'une action
   const [checkCelebration, setCheckCelebration] = useState(false);
 
@@ -607,6 +611,8 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       onUncompleteDay(taskId);
     } else {
       onCompleteDay(taskId);
+      // Une tâche cochée repasse en format compact (accordéon refermé).
+      setOpenTasks(prev => ({ ...prev, [taskId]: false }));
       // MOD-21 : micro-célébration à la coche (confettis discrets + toast de progression)
       const total = goals.dailyActions.length;
       const done = goals.dailyActions.filter(t => completedDays.includes(t.id)).length + 1; // +1 : celle-ci
@@ -664,6 +670,10 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
     setExpandedTips(prev => ({ ...prev, [taskId]: !prev[taskId] }));
   };
 
+  const toggleTaskOpen = (taskId: string) => {
+    setOpenTasks(prev => ({ ...prev, [taskId]: !prev[taskId] }));
+  };
+
   return (
     <div className="space-y-5">
       {/* Tâche « contacts inactifs » (80 jours sans interaction) — carte en tête
@@ -698,34 +708,61 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
       )}
 
       {/* Tâche « anniversaire du jour » — carte en tête tant qu'un contact
-          fête son anniversaire aujourd'hui : message ou appel, sans faute. */}
+          fête son anniversaire aujourd'hui : appel / SMS / report en 1 tap
+          (même logique que les relances). « Fait » date l'interaction du jour. */}
       {anniversaires.length > 0 && (
         <Card className="bg-pink-50 border-pink-300">
-          <CardContent className="p-4">
+          <CardContent className="p-4 space-y-2">
             <div className="flex items-start gap-3">
               <Cake className="w-5 h-5 text-pink-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-pink-800">
-                  {isEs
-                    ? `🎂 Hoy es el cumpleaños de ${anniversaires.map(c => `${c.prenom} ${c.nom}`.trim() || 'contacto').join(', ')}`
-                    : `🎂 C'est l'anniversaire de ${anniversaires.map(c => `${c.prenom} ${c.nom}`.trim() || 'contact').join(', ')}`}
+                  {isEs ? '🎂 Cumpleaños de hoy — sin falta :' : '🎂 Anniversaires du jour — sans faute :'}
                 </p>
-                <p className="text-xs text-pink-600 mt-1">
+                <p className="text-xs text-pink-600 mt-0.5">
                   {isEs
-                    ? 'Envíale un mensaje o llámalo hoy, sin falta.'
-                    : 'Envoie-lui un message ou passe-lui un coup de téléphone aujourd\'hui, sans faute.'}
+                    ? 'Un mensaje o una llamada hoy, y la tarjeta desaparece.'
+                    : 'Un message ou un appel aujourd\'hui, et la carte disparaît.'}
                 </p>
-                {onNavigate && (
-                  <Button
-                    size="sm"
-                    onClick={() => onNavigate('contacts')}
-                    className="mt-2 bg-pink-600 hover:bg-pink-700 text-xs"
-                  >
-                    {isEs ? 'Abrir mis contactos' : 'Ouvrir mes contacts'}
-                  </Button>
-                )}
               </div>
             </div>
+            {anniversaires.map(c => (
+              <div key={c.id} className="flex items-center justify-between gap-3 bg-white/70 rounded-lg px-3 py-2">
+                <p className="text-sm text-gray-800 min-w-0 truncate font-medium">
+                  {`${c.prenom} ${c.nom}`.trim() || (isEs ? 'Sin nombre' : 'Sans nom')}
+                </p>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  {c.telephone && (
+                    <>
+                      <a
+                        href={`tel:${c.telephone.replace(/\s+/g, '')}`}
+                        className="px-2.5 py-1 bg-green-600 hover:bg-green-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        {isEs ? 'Llamar' : 'Appeler'}
+                      </a>
+                      <a
+                        href={`sms:${c.telephone.replace(/\s+/g, '')}`}
+                        className="px-2.5 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        SMS
+                      </a>
+                    </>
+                  )}
+                  <button
+                    onClick={() => contactsState.postponeContact(c.id)}
+                    className="px-2.5 py-1 bg-amber-100 hover:bg-amber-200 text-amber-800 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'Posponer' : 'Reporter'}
+                  </button>
+                  <button
+                    onClick={() => contactsState.updateContact(c.id, { dateDerniereRelance: toLocalDateKey(new Date()) })}
+                    className="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'Hecho' : 'Fait'}
+                  </button>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       )}
@@ -788,7 +825,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-blue-800">
-                {isEs ? '🔔 ¿Un recordatorio a las 18 h para no olvidar tu balance?' : '🔔 Un rappel à 18 h pour ne jamais oublier ton bilan ?'}
+                {isEs ? '🔔 ¿Un recordatorio a las 18 h para no olvidar mi balance?' : '🔔 Un rappel à 18 h pour ne jamais oublier mon bilan ?'}
               </p>
               <div className="flex gap-2 mt-2">
                 <Button size="sm" onClick={handleActivatePush} className="bg-blue-600 hover:bg-blue-700 text-xs">
@@ -819,7 +856,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                 ) : (
                   <>
                     <p className="text-sm font-semibold text-orange-800">
-                      {isEs ? 'Tu balance del día te espera — 3 minutos para cerrar tu jornada' : "Ton bilan du jour t'attend — 3 minutes pour clôturer ta journée"}
+                      {isEs ? 'Mi balance del día me espera — 3 minutos para cerrar mi jornada' : "Mon bilan du jour m'attend — 3 minutes pour clôturer ma journée"}
                     </p>
                     <p className="text-xs text-orange-600 mt-1">
                       {isEs ? 'Anota tus resultados y mantén tu racha 🔥' : 'Note tes résultats et garde ta série 🔥'}
@@ -869,7 +906,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             title={isAdmin || !missedBilanDate
               ? (isEs ? 'Día siguiente' : 'Jour suivant')
               : missedBilanDate === todayStr
-                ? (isEs ? 'Haz primero tu balance para avanzar' : 'Fais d\'abord ton bilan pour avancer')
+                ? (isEs ? 'Hacer primero mi balance para avanzar' : 'Faire d\'abord mon bilan pour avancer')
                 : (isEs ? 'Rellena el balance olvidado para avanzar' : 'Remplis le bilan oublié pour avancer')}
           >
             <ChevronRight className="w-5 h-5 text-gray-600" />
@@ -914,6 +951,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
         )}
         {allTasks.map(task => {
           const isDone = completedDays.includes(task.id);
+          const isOpen = !!openTasks[task.id];
           const isExpanded = expandedTips[task.id];
           const note = notes[task.id] as string | undefined;
           return (
@@ -934,14 +972,35 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                     }
                   </button>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap mb-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${task.catColor}`}>
-                        {task.catIcon} {task.catLabel}
-                      </span>
-                    </div>
-                    <p className={`text-sm font-semibold ${isDone ? 'line-through text-gray-500' : 'text-gray-900'}`}>
-                      {task.title}
-                    </p>
+                    {/* En-tête de l'accordéon — seule partie visible tâche fermée.
+                        La coche reste hors de ce bouton : la cocher n'ouvre pas la tâche. */}
+                    <button
+                      onClick={() => toggleTaskOpen(task.id)}
+                      aria-expanded={isOpen}
+                      className="w-full text-left rounded-lg focus-visible:ring-2 focus-visible:ring-red-500 focus-visible:outline-none"
+                    >
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${task.catColor}`}>
+                          {task.catIcon} {task.catLabel}
+                        </span>
+                        {isOpen
+                          ? <ChevronUp className="w-4 h-4 text-gray-400 ml-auto" />
+                          : <ChevronDown className="w-4 h-4 text-gray-400 ml-auto" />}
+                      </div>
+                      <p className={`text-sm font-semibold ${isDone ? 'line-through text-gray-500' : 'text-gray-900'}`}>
+                        {task.title}
+                      </p>
+                      {/* Récap en une ligne : compteurs et note existante */}
+                      {(task.counterKeys || note) && (
+                        <p className="text-xs text-gray-500 mt-0.5 truncate">
+                          {task.counterKeys && (task.counterKeys as CounterKey[]).map(k => `${counterMeta[k].label} ${k === 'contacts' ? counters[k] : `${counters[k]}/${counterMeta[k].target}`}`).join(' · ')}
+                          {task.counterKeys && note && ' · '}
+                          {note && `✓ ${note.length > 60 ? `${note.slice(0, 60)}…` : note}`}
+                        </p>
+                      )}
+                    </button>
+                    {isOpen && (
+                    <div>
                     {/* Note de résultat persistée — éditable au tap */}
                     {isDone && note && (
                       <button
@@ -1041,6 +1100,8 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                           );
                         })}
                       </div>
+                    )}
+                    </div>
                     )}
                   </div>
                 </div>
