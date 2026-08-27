@@ -28,8 +28,8 @@ export function HistoryView({ dailyResults, profile, sales }: HistoryViewProps) 
           <ClipboardCheck className="w-8 h-8 text-gray-400" />
         </div>
         <h3 className="text-xl font-bold text-gray-900">{isEs ? 'Ningún balance por el momento' : 'Aucun bilan pour le moment'}</h3>
-        <p className="text-gray-500 mt-2">{isEs ? 'Complete su primer balance del día para ver su historial aquí.' : 'Remplis ton premier bilan de journée pour voir ton historique ici.'}</p>
-        <p className="text-sm text-gray-400 mt-1">{isEs ? 'Sus balances y respuestas se guardan en su dispositivo y se sincronizan con su cuenta.' : 'Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.'}</p>
+        <p className="text-gray-500 mt-2">{isEs ? 'Completar mi primer balance del día para ver mi historial aquí.' : 'Remplir mon premier bilan de journée pour voir mon historique ici.'}</p>
+        <p className="text-sm text-gray-400 mt-1">{isEs ? 'Mis balances y respuestas se guardan en mi dispositivo y se sincronizan con mi cuenta.' : 'Mes bilans et réponses sont enregistrés sur mon appareil et synchronisés sur mon compte.'}</p>
       </div>
     );
   }
@@ -38,7 +38,7 @@ export function HistoryView({ dailyResults, profile, sales }: HistoryViewProps) 
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">{isEs ? 'Historial de sus balances' : 'Historique de tes bilans'}</h2>
+          <h2 className="text-2xl font-bold text-gray-900">{isEs ? 'Historial de mis balances' : 'Historique de mes bilans'}</h2>
           <p className="text-gray-500 mt-1">{dailyResults.length} {isEs ? 'balance' : 'bilan'}{dailyResults.length > 1 ? 's' : ''} {isEs ? 'registrado' : 'enregistré'}{dailyResults.length > 1 ? 's' : ''}</p>
         </div>
         <button

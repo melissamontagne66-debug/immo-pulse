@@ -87,7 +87,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
               <TrendingUp className="w-5 h-5 text-red-500" />
               {isEs ? 'Los argumentos que más se repiten entre los compradores' : 'Arguments qui reviennent le plus chez les acheteurs'}
             </h3>
-            <p className="text-xs text-gray-500 mb-4">{isEs ? 'Utilice estas estadísticas en sus citas de seguimiento con los vendedores para justificar ajustes.' : 'Utilise ces stats lors de tes RDV de suivi avec les vendeurs pour justifier des ajustements.'}</p>
+            <p className="text-xs text-gray-500 mb-4">{isEs ? 'Utilizar estas estadísticas en mis citas de seguimiento con los vendedores para justificar ajustes.' : 'Utiliser ces stats lors de mes RDV de suivi avec les vendeurs pour justifier des ajustements.'}</p>
             <div className="space-y-3">
               {stats.topBuyerObjections.map((obj, i) => {
                 const pct = Math.round((obj.count / maxObjCount) * 100);
@@ -169,7 +169,7 @@ export function VisitHistory({ visits, stats, onBack, onDeleteVisit, onDeletePro
         </h3>
 
         {propertyList.length === 0 && (
-          <Card><CardContent className="p-8 text-center text-gray-500">{isEs ? 'Aún no hay ninguna visita registrada. Complete su primer informe de visita.' : 'Aucune visite enregistrée encore. Remplis ton premier compte rendu de visite.'}</CardContent></Card>
+          <Card><CardContent className="p-8 text-center text-gray-500">{isEs ? 'Aún no hay ninguna visita registrada. Completar mi primer informe de visita.' : 'Aucune visite enregistrée encore. Remplir mon premier compte rendu de visite.'}</CardContent></Card>
         )}
 
         <div className="space-y-3">

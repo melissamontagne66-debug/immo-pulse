@@ -153,8 +153,8 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
           <Sun className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h3 className="text-lg font-bold text-gray-900">{isEs ? 'Planifique el día de mañana' : 'Planifie ton lendemain'}</h3>
-          <p className="text-sm text-gray-500">{isEs ? `Seleccione las acciones que desea realizar mañana (Día ${nextDay})` : `Sélectionne les actions que tu veux réaliser demain (Jour ${nextDay})`}</p>
+          <h3 className="text-lg font-bold text-gray-900">{isEs ? 'Planificar el día de mañana' : 'Planifier mon lendemain'}</h3>
+          <p className="text-sm text-gray-500">{isEs ? `Seleccionar las acciones que quiero realizar mañana (Día ${nextDay})` : `Sélectionner les actions que je veux réaliser demain (Jour ${nextDay})`}</p>
         </div>
       </div>
 
@@ -304,7 +304,7 @@ export function NextDayPlanner({ currentDay, onPlan, onSkip }: NextDayPlannerPro
               <Textarea
                 value={skipDetail}
                 onChange={e => setSkipDetail(e.target.value)}
-                placeholder={isEs ? 'Explique su bloqueo si lo desea...' : 'Explique ton blocage si tu veux...'}
+                placeholder={isEs ? 'Explicar mi bloqueo si lo deseo...' : 'Expliquer mon blocage si je veux...'}
               />
             </div>
             <div className="flex gap-3">

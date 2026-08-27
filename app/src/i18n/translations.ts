@@ -7,7 +7,7 @@ export const translations = {
   fr: {
     // Login
     loginTitle: 'Immo Pulse',
-    loginSubtitle: 'Ton coach immobilier au quotidien',
+    loginSubtitle: 'Mon coach immobilier au quotidien',
     loginEmail: 'Email',
     loginPassword: 'Mot de passe',
     loginButton: 'Se connecter',
@@ -22,10 +22,10 @@ export const translations = {
 
     // Onboarding
     onboardingWelcome: 'Bienvenue !',
-    onboardingIdentity: 'Qui es-tu ?',
-    onboardingExpérience: 'Ton parcours',
-    onboardingSector: 'Ton secteur',
-    onboardingGoals: 'Tes objectifs',
+    onboardingIdentity: 'Qui suis-je ?',
+    onboardingExpérience: 'Mon parcours',
+    onboardingSector: 'Mon secteur',
+    onboardingGoals: 'Mes objectifs',
     onboardingConfirm: 'Confirmation',
     onboardingFirstName: 'Prénom',
     onboardingLastName: 'Nom',
@@ -36,7 +36,7 @@ export const translations = {
     onboardingFinish: 'C\'est parti !',
 
     // Langue
-    languageQuestion: 'Quelle langue souhaites-tu utiliser ?',
+    languageQuestion: 'Quelle langue souhais-je utiliser ?',
     languageFr: 'Français',
     languageEs: 'Español',
     languageSelector: 'Langue',
@@ -135,7 +135,7 @@ export const translations = {
   es: {
     // Login
     loginTitle: 'Immo Pulse',
-    loginSubtitle: 'Tu coach inmobiliario diario',
+    loginSubtitle: 'Mi coach inmobiliario diario',
     loginEmail: 'Email',
     loginPassword: 'Contraseña',
     loginButton: 'Iniciar sesión',
@@ -150,10 +150,10 @@ export const translations = {
 
     // Onboarding
     onboardingWelcome: '¡Bienvenido!',
-    onboardingIdentity: '¿Quién eres?',
-    onboardingExpérience: 'Tu trayectoria',
-    onboardingSector: 'Tu sector',
-    onboardingGoals: 'Tus objetivos',
+    onboardingIdentity: '¿Quién soy?',
+    onboardingExpérience: 'Mi trayectoria',
+    onboardingSector: 'Mi sector',
+    onboardingGoals: 'Mis objetivos',
     onboardingConfirm: 'Confirmación',
     onboardingFirstName: 'Nombre',
     onboardingLastName: 'Apellido',
@@ -164,7 +164,7 @@ export const translations = {
     onboardingFinish: '¡Vamos allá!',
 
     // Langue
-    languageQuestion: '¿Qué idioma quieres utilizar?',
+    languageQuestion: '¿Qué idioma quiero utilizar?',
     languageFr: 'Français',
     languageEs: 'Español',
     languageSelector: 'Idioma',

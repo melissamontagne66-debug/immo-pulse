@@ -118,7 +118,7 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
             </div>
             <div>
               <h1 className="font-bold text-gray-900 text-sm leading-tight">Immo Pulse</h1>
-              <p className="text-xs text-gray-500">Ton accompagnement quotidien</p>
+              <p className="text-xs text-gray-500">Mon accompagnement quotidien</p>
             </div>
           </div>
           <button onClick={() => setMobileMenuOpen(false)} className="lg:hidden text-gray-400 hover:text-gray-600">
@@ -319,12 +319,12 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
             {deleteAccountStep === 1 ? (
               <>
                 <h3 className="text-base font-bold text-gray-900">
-                  {profile.language === 'es' ? '¿Eliminar tu cuenta?' : 'Supprimer ton compte ?'}
+                  {profile.language === 'es' ? '¿Eliminar mi cuenta?' : 'Supprimer mon compte ?'}
                 </h3>
                 <p className="text-sm text-gray-600 mt-2">
                   {profile.language === 'es'
-                    ? 'Esta acción elimina definitivamente tu cuenta y todos tus datos: balances, contactos, visitas, ventas. Es irreversible.'
-                    : 'Cette action supprime définitivement ton compte et toutes tes données : bilans, contacts, visites, ventes. Elle est irréversible.'}
+                    ? 'Esta acción elimina definitivamente mi cuenta y todos mis datos: balances, contactos, visitas, ventas. Es irreversible.'
+                    : 'Cette action supprime définitivement mon compte et toutes mes données : bilans, contacts, visites, ventes. Elle est irréversible.'}
                 </p>
                 <div className="flex gap-3 mt-5">
                   <button

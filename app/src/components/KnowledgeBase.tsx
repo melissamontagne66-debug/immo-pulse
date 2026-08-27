@@ -127,7 +127,7 @@ export function KnowledgeBase() {
       {filteredModules.length === 0 && (
         <div className="text-center py-12">
           <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500">Aucun module ne correspond à ta recherche</p>
+          <p className="text-gray-500">Aucun module ne correspond à ma recherche</p>
           <button
             onClick={() => { setSearchQuery(''); setSelectedCategory(null); }}
             className="text-red-600 hover:text-red-700 text-sm font-medium mt-2"

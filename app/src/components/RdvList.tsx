@@ -139,8 +139,8 @@ export function RdvList() {
         {/* Liste des RDV à venir */}
         {aVenir.length === 0 && !formOpen ? (
           <p className="text-sm text-gray-400">{isEs
-            ? 'Ninguna cita programada — añada su próxima cita para tenerla siempre a la vista.'
-            : 'Aucun RDV planifié — ajoute ton prochain rendez-vous pour le garder sous les yeux.'}</p>
+            ? 'Ninguna cita programada — añadir mi próxima cita para tenerla siempre a la vista.'
+            : 'Aucun RDV planifié — ajouter mon prochain rendez-vous pour le garder sous les yeux.'}</p>
         ) : (
           <div className="space-y-1.5">
             {aVenir.map(r => (

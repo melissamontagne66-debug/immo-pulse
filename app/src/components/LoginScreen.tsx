@@ -66,11 +66,11 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
     e.preventDefault();
     clearMessages();
     if (!email.trim() || !password.trim()) {
-      setError(isEs ? 'Introduzca su email y su contraseña.' : 'Renseigne ton email et ton mot de passe.');
+      setError(isEs ? 'Introducir mi email y mi contraseña.' : 'Renseigner mon email et mon mot de passe.');
       return;
     }
     if (!isValidEmail(email)) {
-      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisis une adresse email valide.');
+      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisir une adresse email valide.');
       return;
     }
     setLoading(true);
@@ -89,7 +89,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       return;
     }
     if (!isValidEmail(email)) {
-      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisis une adresse email valide.');
+      setError(isEs ? 'Introduzca una dirección de email válida.' : 'Saisir une adresse email valide.');
       return;
     }
     if (password.length < 6) {
@@ -97,7 +97,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       return;
     }
     if (!cguAccepted) {
-      setError(isEs ? 'Debe aceptar las CGU para crear su cuenta.' : 'Tu dois accepter les CGU pour créer ton compte.');
+      setError(isEs ? 'Debo aceptar las CGU para crear mi cuenta.' : 'Je dois accepter les CGU pour créer mon compte.');
       return;
     }
     if (!onRegister) {
@@ -171,7 +171,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
       const data = await apiResetPassword(resetToken.trim(), newPassword);
       setLoading(false);
       if (data.success) {
-        setInfo(isEs ? 'Su contraseña se ha actualizado. Ya puede iniciar sesión.' : 'Ton mot de passe a été mis à jour. Tu peux te connecter.');
+        setInfo(isEs ? 'Mi contraseña se ha actualizado. Ya puedo iniciar sesión.' : 'Mon mot de passe a été mis à jour. Je peux me connecter.');
         setMode('login');
         setPassword('');
         setResetToken('');
@@ -202,7 +202,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
-          <p className="text-gray-500 mt-1">{isEs ? 'Su acompañamiento diario' : 'Ton accompagnement quotidien'}</p>
+          <p className="text-gray-500 mt-1">{isEs ? 'Mi acompañamiento diario' : 'Mon accompagnement quotidien'}</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-xl border border-gray-100 p-6">
@@ -245,17 +245,17 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
                 <Label className="flex items-center gap-2 text-gray-700">
                   <Mail className="w-4 h-4 text-gray-400" /> Email
                 </Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'mi@email.com' : 'mon@email.com'} className="mt-1" required />
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700">
                   <Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Contraseña' : 'Mot de passe'}
                 </Label>
-                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Su contraseña' : 'Ton mot de passe'} className="mt-1" required />
+                <Input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder={isEs ? 'Mi contraseña' : 'Mon mot de passe'} className="mt-1" required />
               </div>
               <div className="text-right">
                 <button type="button" onClick={() => switchMode('forgot')} className="text-sm text-red-600 hover:text-red-700 font-medium">
-                  {isEs ? '¿Ha olvidado su contraseña?' : 'Mot de passe oublié ?'}
+                  {isEs ? '¿Contraseña olvidada?' : 'Mot de passe oublié ?'}
                 </button>
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
@@ -278,7 +278,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
-                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
+                <Input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder={isEs ? 'mi@email.com' : 'mon@email.com'} className="mt-1" required />
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Contraseña' : 'Mot de passe'}</Label>
@@ -304,8 +304,8 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
               </Button>
               <p className="text-xs text-gray-500 leading-relaxed">
                 {isEs
-                  ? 'Al crear una cuenta, acepta que sus datos de coaching (perfil, balances, resultados) se almacenen para que el servicio funcione. Los contactos que anota (clientes potenciales, vendedores) son de su responsabilidad profesional: infórmeles y elimine sus datos en cuanto dejen de ser útiles. Puede eliminar su cuenta y todos sus datos en cualquier momento desde los ajustes.'
-                  : 'En créant un compte, tu acceptes que tes données de coaching (profil, bilans, résultats) soient stockées pour faire fonctionner le service. Les contacts que tu notes (prospects, vendeurs) relèvent de ta responsabilité professionnelle\u00a0: informe-les et supprime leurs données dès qu\'elles ne sont plus utiles. Tu peux supprimer ton compte et toutes tes données à tout moment depuis les réglages.'}
+                  ? 'Al crear una cuenta, acepto que mis datos de coaching (perfil, balances, resultados) se almacenen para que el servicio funcione. Los contactos que anoto (clientes potenciales, vendedores) son de mi responsabilidad profesional: informarles y eliminar sus datos en cuanto dejen de ser útiles. Puedo eliminar mi cuenta y todos mis datos en cualquier momento desde los ajustes.'
+                  : 'En créant un compte, j\'accepte que mes données de coaching (profil, bilans, résultats) soient stockées pour faire fonctionner le service. Les contacts que je note (prospects, vendeurs) relèvent de ma responsabilité professionnelle\u00a0: les informer et supprimer leurs données dès qu\'elles ne sont plus utiles. Je peux supprimer mon compte et toutes mes données à tout moment depuis les réglages.'}
               </p>
             </form>
           )}
@@ -314,7 +314,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
             <form onSubmit={handleForgotPassword} className="space-y-4" noValidate>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Mail className="w-4 h-4 text-gray-400" /> Email</Label>
-                <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder={isEs ? 'su@email.com' : 'ton@email.com'} className="mt-1" required />
+                <Input type="email" value={resetEmail} onChange={e => setResetEmail(e.target.value)} placeholder={isEs ? 'mi@email.com' : 'mon@email.com'} className="mt-1" required />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
                 {loading ? (isEs ? 'Enviando...' : 'Envoi...') : (isEs ? 'Enviar el enlace de restablecimiento' : 'Envoyer le lien de réinitialisation')}
@@ -341,7 +341,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
               </div>
               <div>
                 <Label className="flex items-center gap-2 text-gray-700"><Lock className="w-4 h-4 text-gray-400" /> {isEs ? 'Confirmar la contraseña' : 'Confirmer le mot de passe'}</Label>
-                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={isEs ? 'Confirme su contraseña' : 'Confirme ton mot de passe'} className="mt-1" />
+                <Input type="password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} placeholder={isEs ? 'Confirmar mi contraseña' : 'Confirmer mon mot de passe'} className="mt-1" />
               </div>
               <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700">
                 {loading ? (isEs ? 'Restableciendo...' : 'Réinitialisation...') : (isEs ? 'Restablecer la contraseña' : 'Réinitialiser le mot de passe')}
@@ -366,7 +366,7 @@ export function LoginScreen({ onLogin, onRegister }: LoginScreenProps) {
         </div>
 
         <div className="text-center text-xs text-gray-400 mt-6 space-y-1.5">
-          <p>🔒 Tes données sont stockées sur ton appareil et synchronisées de façon sécurisée sur ton compte. Tu les retrouves sur n'importe quel appareil.</p>
+          <p>🔒 Mes données sont stockées sur mon appareil et synchronisées de façon sécurisée sur mon compte. Je les retrouve sur n'importe quel appareil.</p>
           <p className="flex items-center justify-center gap-3">
             <button type="button" onClick={() => setShowCgu(true)} className="text-red-500 hover:text-red-600 font-medium underline underline-offset-2">
               CGU

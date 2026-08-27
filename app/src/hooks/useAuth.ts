@@ -155,7 +155,7 @@ export function useAuth() {
     // Check if it's a default account
     if (DEFAULT_USERS[normalizedEmail]) {
       setIsLoading(false);
-      return { success: false, error: 'Ce compte existe déjà. Connecte-toi avec ton email et mot de passe.' };
+      return { success: false, error: 'Ce compte existe déjà. Me connecter avec mon email et mon mot de passe.' };
     }
 
     // Check local accounts
@@ -195,7 +195,7 @@ export function useAuth() {
         return { success: false, error: data.error || 'Impossible de créer le compte.' };
       } catch {
         setIsLoading(false);
-        return { success: false, error: 'Impossible de contacter le serveur. Vérifie ta connexion et réessaie.' };
+        return { success: false, error: 'Impossible de contacter le serveur. Vérifier ma connexion et réessayer.' };
       }
     }
 
@@ -335,7 +335,7 @@ export function useAuth() {
     }
 
     setIsLoading(false);
-    return { success: false, error: 'Aucun compte trouvé avec cet email. Vérifie ton email ou crée un compte.' };
+    return { success: false, error: 'Aucun compte trouvé avec cet email. Vérifier mon email ou créer un compte.' };
   }, []);
 
   const logout = useCallback(() => {

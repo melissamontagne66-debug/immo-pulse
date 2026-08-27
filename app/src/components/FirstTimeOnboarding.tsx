@@ -28,7 +28,7 @@ const getSteps = (isEs: boolean) => [
     icon: Target,
     color: 'text-red-600',
     bg: 'bg-red-50',
-    title: isEs ? 'Cada mañana: su plan' : 'Chaque matin : ton plan',
+    title: isEs ? 'Cada mañana: mi plan' : 'Chaque matin : mon plan',
     description: isEs
       ? 'Abra la app y encuentre sus objetivos y sus acciones del día en « Objetivos » y « Hoy », adaptados a su nivel y a sus resultados.'
       : 'Ouvre l\'app et retrouve tes objectifs et tes actions du jour dans « Objectifs » et « Aujourd\'hui », adaptés à ton niveau et à tes résultats.',
@@ -46,7 +46,7 @@ const getSteps = (isEs: boolean) => [
     icon: Flame,
     color: 'text-orange-600',
     bg: 'bg-orange-50',
-    title: isEs ? 'Cada noche: su balance — el ritual clave' : 'Chaque soir : ton bilan — le rituel clé',
+    title: isEs ? 'Cada noche: mi balance — el ritual clave' : 'Chaque soir : mon bilan — le rituel clé',
     description: isEs
       ? 'Tómese 2 minutos para hacer su balance del día. Es él quien lo cambia todo : permite al algoritmo adaptarse a su evolución, a su ritmo y a sus necesidades, para proponerle nuevas ideas y acciones cada día — cada vez más pertinentes para usted.'
       : 'Prends 2 minutes pour faire ton bilan du jour. C\'est lui qui change tout : il permet à l\'algorithme de s\'adapter à ton évolution, à ton rythme et à tes besoins, pour te proposer de nouvelles idées et actions chaque jour — de plus en plus pertinentes pour toi.',
@@ -55,7 +55,7 @@ const getSteps = (isEs: boolean) => [
     icon: Users,
     color: 'text-purple-600',
     bg: 'bg-purple-50',
-    title: isEs ? 'Sus contactos y sus llamadas de seguimiento' : 'Tes contacts et tes relances',
+    title: isEs ? 'Mis contactos y mis llamadas de seguimiento' : 'Mes contacts et mes relances',
     description: isEs
       ? 'Registre cada prospecto en « Contactos » : la app le dice a quién llamar y cuándo, y le avisa antes de que un contacto se enfríe.'
       : 'Enregistre chaque prospect dans « Contacts » : l\'app te dit qui relancer et quand, et t\'alerte avant qu\'un contact ne refroidisse.',

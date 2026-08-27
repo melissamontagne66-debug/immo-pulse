@@ -45,7 +45,7 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
           <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-4 flex items-center justify-between">
             <div>
               <h2 className="text-lg font-bold text-white">{isEs ? `Objetivos de ${monthLabel}` : `Objectifs de ${monthLabel}`}</h2>
-              <p className="text-red-100 text-sm">{isEs ? 'Ajuste su rumbo: los objetivos son siempre por día' : 'Ajuste ton cap — les objectifs sont toujours par jour'}</p>
+              <p className="text-red-100 text-sm">{isEs ? 'Ajustar mi rumbo: los objetivos son siempre por día' : 'Ajuster mon cap — les objectifs sont toujours par jour'}</p>
             </div>
             <button onClick={onCancel} className="text-white/80 hover:text-white"><X className="w-5 h-5" /></button>
           </div>
@@ -53,7 +53,7 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
           <div className="p-6 space-y-6">
             <div className="bg-blue-50 rounded-xl p-4">
               <p className="text-sm text-blue-700">
-                <strong>{isEs ? 'Su objetivo de facturación:' : 'Ton CA vise :'}</strong> {formatEuro(profile.ca6MonthsTarget)}<br />
+                <strong>{isEs ? 'Mi objetivo de facturación:' : 'Mon CA visé :'}</strong> {formatEuro(profile.ca6MonthsTarget)}<br />
                 {isEs ? `Comisión fija: ${COMMISSION}% · Precio medio: ${formatEuro(profile.averagePrice)}` : `Commission fixe : ${COMMISSION}% · Prix moyen : ${formatEuro(profile.averagePrice)}`}
               </p>
             </div>
@@ -68,7 +68,7 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
 
             {/* Objectifs PAR JOUR — jamais par mois */}
             <div className="bg-red-50 rounded-xl p-4 border border-red-200">
-              <p className="text-xs text-red-600 font-medium uppercase tracking-wide mb-3">{isEs ? 'Sus objetivos HOY' : "Tes objectifs AUJOURD'HUI"}</p>
+              <p className="text-xs text-red-600 font-medium uppercase tracking-wide mb-3">{isEs ? 'Mis objetivos HOY' : "Mes objectifs AUJOURD'HUI"}</p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="flex items-center gap-3 p-3 bg-white rounded-lg">
                   <Phone className="w-5 h-5 text-blue-600" />

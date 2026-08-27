@@ -127,7 +127,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
               <BarChart3 className="w-6 h-6 text-red-600" />
               {isEs ? 'Historial de balances' : 'Historique des bilans'}
             </h2>
-            <p className="text-gray-500 mt-1">{isEs ? 'Resumen de su actividad' : 'Aperçu de ton activité'}</p>
+            <p className="text-gray-500 mt-1">{isEs ? 'Resumen de mi actividad' : 'Aperçu de mon activité'}</p>
           </div>
         </div>
       </div>
@@ -258,7 +258,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
             <CardContent className="p-5">
               <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
                 <BarChart3 className="w-5 h-5 text-blue-500" />
-                {isEs ? 'Reparto de su actividad' : 'Répartition de ton activité'}
+                {isEs ? 'Reparto de mi actividad' : 'Répartition de mon activité'}
               </h3>
               {/* Barres horizontales */}
               <div className="space-y-4">
@@ -411,7 +411,7 @@ export function BilanHistory({ dailyResults, onBack }: BilanHistoryProps) {
         <Card><CardContent className="p-8 text-center text-gray-500">
           <BarChart3 className="w-12 h-12 text-gray-300 mx-auto mb-3" />
           <p>{isEs ? 'Ningún balance para este período.' : 'Aucun bilan pour cette période.'}</p>
-          <p className="text-sm mt-1">{isEs ? '¡Empiece a completar sus balances diarios para ver sus estadísticas!' : 'Commence à remplir tes bilans quotidiens pour voir tes stats !'}</p>
+          <p className="text-sm mt-1">{isEs ? '¡Empezar a completar mis balances diarios para ver mis estadísticas!' : 'Commencer à remplir mes bilans quotidiens pour voir mes stats !'}</p>
         </CardContent></Card>
       )}
     </div>

@@ -77,7 +77,7 @@ export function Chat({ messages, isTyping, onSendMessage, onClearChat, profile, 
       <div className="mb-3 bg-gradient-to-r from-red-500 to-red-600 rounded-xl p-3 text-white flex items-center gap-3 shadow-md">
         <Target className="w-5 h-5 flex-shrink-0" />
         <div className="flex-1">
-          <p className="text-xs font-medium opacity-90">Tes objectifs aujourd'hui {profile.firstName ? `- ${profile.firstName}` : ''}</p>
+          <p className="text-xs font-medium opacity-90">Mes objectifs aujourd'hui {profile.firstName ? `- ${profile.firstName}` : ''}</p>
           <p className="text-sm font-semibold">{dailyTargets.calls} conversations · {dailyTargets.contactsPhysiques} contacts physiques · {dailyTargets.rdvR1} R1 · {dailyTargets.rdvR2} R2</p>
         </div>
         <div className="flex items-center gap-1 bg-white/20 px-3 py-1 rounded-lg"><Phone className="w-4 h-4" /><span className="text-sm font-bold">{dailyTargets.calls}</span></div>
@@ -121,7 +121,7 @@ export function Chat({ messages, isTyping, onSendMessage, onClearChat, profile, 
           </div>
           <form onSubmit={handleSubmit} className="p-4 border-t border-gray-100">
             <div className="flex gap-3">
-              <Input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Pose ta question au Coach..." className="flex-1" disabled={isTyping} />
+              <Input ref={inputRef} value={input} onChange={e => setInput(e.target.value)} placeholder="Poser ma question au Coach..." className="flex-1" disabled={isTyping} />
               <Button type="submit" disabled={!input.trim() || isTyping} className="bg-red-600 hover:bg-red-700"><Send className="w-4 h-4" /></Button>
             </div>
           </form>

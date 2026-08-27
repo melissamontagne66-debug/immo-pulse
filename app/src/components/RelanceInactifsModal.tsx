@@ -129,8 +129,8 @@ export function RelanceInactifsModal({ inactifs, contactsState, isEs = false, on
             {/* Avertissement honnêteté / responsabilité RGPD */}
             <p className="text-[11px] text-gray-400 mt-1 leading-relaxed">
               {isEs
-                ? '⚠️ No marque un intercambio como realizado si no lo fue: podría haber controles. Es su responsabilidad según el RGPD.'
-                : '⚠️ Ne marque un échange comme fait que s\'il a réellement eu lieu : des contrôles sont possibles. C\'est ta responsabilité au regard du RGPD.'}
+                ? '⚠️ No marcar un intercambio como realizado si no lo fue: podría haber controles. Es mi responsabilidad según el RGPD.'
+                : '⚠️ Ne marquer un échange comme fait que s\'il a réellement eu lieu : des contrôles sont possibles. C\'est ma responsabilité au regard du RGPD.'}
             </p>
             <Button
               onClick={handleAddNote}

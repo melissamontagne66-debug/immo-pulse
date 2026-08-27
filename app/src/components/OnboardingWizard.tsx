@@ -161,12 +161,12 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
   };
 
   const stepLabels: Record<Step, { title: string; subtitle: string }> = {
-    language: { title: profile.language === 'es' ? '¿Qué idioma prefieres?' : 'Quelle langue souhaites-tu ?', subtitle: profile.language === 'es' ? 'Puedes cambiarlo más tarde desde el panel de control.' : 'Tu pourras la changer plus tard depuis le tableau de bord.' },
-    identity: { title: profile.language === 'es' ? '¿Quién eres?' : 'Qui es-tu ?', subtitle: profile.language === 'es' ? 'Empecemos por conocernos' : 'Commençons par faire connaissance' },
-    expérience: { title: profile.language === 'es' ? 'Tu trayectoria' : 'Ton parcours', subtitle: profile.language === 'es' ? 'Para personalizar tu acompañamiento' : 'Pour personnaliser ton accompagnement' },
-    sector: { title: profile.language === 'es' ? 'Tu sector' : 'Ton secteur', subtitle: profile.language === 'es' ? '¿Dónde vas a ejercer?' : 'Où vas-tu exercer ?' },
-    goals: { title: profile.language === 'es' ? 'Tus objetivos para los próximos 6 meses' : 'Tes objectifs sur les 6 prochains mois', subtitle: profile.language === 'es' ? 'Un objetivo que te guíe, no una presión' : 'Un cap qui te guide, pas une pression' },
-    confirm: { title: profile.language === 'es' ? '¡Vamos allá!' : "C'est parti !", subtitle: profile.language === 'es' ? 'Aquí están tus objetivos de hoy' : 'Voilà tes objectifs du jour' },
+    language: { title: profile.language === 'es' ? '¿Qué idioma prefiero?' : 'Quelle langue souhais-je ?', subtitle: profile.language === 'es' ? 'Puedo cambiarlo más tarde desde el panel de control.' : 'Je pourrai la changer plus tard depuis le tableau de bord.' },
+    identity: { title: profile.language === 'es' ? '¿Quién soy?' : 'Qui suis-je ?', subtitle: profile.language === 'es' ? 'Empecemos por conocernos' : 'Commençons par faire connaissance' },
+    expérience: { title: profile.language === 'es' ? 'Mi trayectoria' : 'Mon parcours', subtitle: profile.language === 'es' ? 'Para personalizar mi acompañamiento' : 'Pour personnaliser mon accompagnement' },
+    sector: { title: profile.language === 'es' ? 'Mi sector' : 'Mon secteur', subtitle: profile.language === 'es' ? '¿Dónde voy a ejercer?' : 'Où vais-je exercer ?' },
+    goals: { title: profile.language === 'es' ? 'Mis objetivos para los próximos 6 meses' : 'Mes objectifs sur les 6 prochains mois', subtitle: profile.language === 'es' ? 'Un objetivo que me guíe, no una presión' : 'Un cap qui me guide, pas une pression' },
+    confirm: { title: profile.language === 'es' ? '¡Vamos allá!' : "C'est parti !", subtitle: profile.language === 'es' ? 'Aquí están mis objetivos de hoy' : 'Voilà mes objectifs du jour' },
   };
 
   const isEs = profile.language === 'es';
@@ -210,7 +210,7 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
             <Sparkles className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Immo Pulse</h1>
-          <p className="text-gray-500 mt-1">{profile.language === 'es' ? 'Tu acompañamiento personalizado' : 'Ton accompagnement quotidien'}</p>
+          <p className="text-gray-500 mt-1">{profile.language === 'es' ? 'Mi acompañamiento personalizado' : 'Mon accompagnement quotidien'}</p>
         </div>
 
         <div className="flex gap-2 mb-6">
@@ -264,11 +264,11 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
               <div className="space-y-4">
                 <div>
                   <Label className="flex items-center gap-2"><User className="w-4 h-4 text-gray-400" /> {profile.language === 'es' ? 'Nombre' : 'Prénom'}</Label>
-                  <Input value={profile.firstName} onChange={e => update('firstName', e.target.value)} placeholder={profile.language === 'es' ? 'Tu nombre' : 'Ton prénom'} className="mt-1" />
+                  <Input value={profile.firstName} onChange={e => update('firstName', e.target.value)} placeholder={profile.language === 'es' ? 'Mi nombre' : 'Mon prénom'} className="mt-1" />
                 </div>
                 <div>
                   <Label>{profile.language === 'es' ? 'Apellido' : 'Nom'}</Label>
-                  <Input value={profile.lastName} onChange={e => update('lastName', e.target.value)} placeholder={profile.language === 'es' ? 'Tu apellido' : 'Ton nom'} className="mt-1" />
+                  <Input value={profile.lastName} onChange={e => update('lastName', e.target.value)} placeholder={profile.language === 'es' ? 'Mi apellido' : 'Mon nom'} className="mt-1" />
                 </div>
                 <div>
                   <Label className="flex items-center gap-2"><MapPin className="w-4 h-4 text-gray-400" /> {profile.language === 'es' ? 'Ciudad de actividad' : "Ville d'activité"}</Label>
@@ -450,8 +450,8 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                         {/* 5.6 — cadrage honnête de l'estimation */}
                         <p className="text-xs text-blue-500 mt-1">
                           {isEs
-                            ? `Estimación indicativa, fuente: medias de mercado ${new Date().getFullYear()} — a afinar con tus comparables locales.`
-                            : `Estimation indicative, source : moyennes de marché ${new Date().getFullYear()} — à affiner avec tes comparables locaux.`}
+                            ? `Estimación indicativa, fuente: medias de mercado ${new Date().getFullYear()} — a afinar con mis comparables locales.`
+                            : `Estimation indicative, source : moyennes de marché ${new Date().getFullYear()} — à affiner avec mes comparables locaux.`}
                         </p>
                         {estimatedPrice !== null && profile.averagePrice !== estimatedPrice && (
                           <button
@@ -467,9 +467,9 @@ export function OnboardingWizard({ onComplete }: OnboardingWizardProps) {
                 )}
 
                 <div>
-                  <Label className="flex items-center gap-2"><Euro className="w-4 h-4 text-gray-400" /> {isEs ? 'Precio medio de tus bienes (€)' : 'Prix moyen de tes biens (€)'}</Label>
+                  <Label className="flex items-center gap-2"><Euro className="w-4 h-4 text-gray-400" /> {isEs ? 'Precio medio de mis bienes (€)' : 'Prix moyen de mes biens (€)'}</Label>
                   <Input type="number" value={profile.averagePrice || ''} onChange={e => update('averagePrice', Number(e.target.value))} placeholder="Ex: 250000" className="mt-1" />
-                  <p className="text-xs text-gray-400 mt-1.5">{isEs ? 'Puedes quedarte con la estimación de arriba o ajustar según tu experiencia.' : "Tu peux garder l'estimation ci-dessus ou ajuster selon ton expérience."}</p>
+                  <p className="text-xs text-gray-400 mt-1.5">{isEs ? 'Puedo quedarme con la estimación de arriba o ajustar según mi experiencia.' : "Je peux garder l'estimation ci-dessus ou ajuster selon mon expérience."}</p>
                 </div>
               </div>
             )}

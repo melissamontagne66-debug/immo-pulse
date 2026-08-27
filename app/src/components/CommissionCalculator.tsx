@@ -174,7 +174,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
             <Calculator className="w-6 h-6 text-red-600" />
             {isSpain ? 'Calculadora de comisión' : 'Calculateur de commission'}
           </h2>
-          <p className="text-gray-500 mt-1">{isSpain ? 'Simula tu comisión como autónomo en cada venta' : 'Simule ta commission en tant qu\'auto-entrepreneur sur chaque vente'}</p>
+          <p className="text-gray-500 mt-1">{isSpain ? 'Simular mi comisión como autónomo en cada venta' : 'Simuler ma commission en tant qu\'auto-entrepreneur sur chaque vente'}</p>
         </div>
       </div>
 
@@ -337,7 +337,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                     ? 'El impuesto liberatorio es una opción fiscal: en lugar de declarar tus ingresos en el IRPF, pagas un porcentaje fijo sobre tu facturación cada trimestre. Para un agente autónomo en prestación de servicios, suele ser el 2,2 %. Si no sabes qué es, probablemente no has elegido esta opción — déjalo al valor por defecto y habla con tu gestor.'
                     : 'L\'impôt libératoire est une option fiscale : au lieu de déclarer tes revenus au barème de l\'impôt sur le revenu, tu paies un pourcentage fixe sur ton chiffre d\'affaires chaque mois ou trimestre. Pour un agent mandataire en prestations de services, c\'est en général 2,2 %. Si tu ne sais pas ce que c\'est, tu n\'as probablement pas choisi cette option — laisse la valeur par défaut et demande à ton comptable ou à ton réseau.'} />
                 </p>
-                <p className="text-xs text-gray-500">{isSpain ? 'Introduce el % de impuesto liberatorio que se aplica a tu situación' : 'Renseigne le % d\'impôt libératoire qui s\'applique à ta situation'}</p>
+                <p className="text-xs text-gray-500">{isSpain ? 'Introducir el % de impuesto liberatorio que se aplica a mi situación' : 'Renseigner le % d\'impôt libératoire qui s\'applique à ma situation'}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Input
@@ -391,7 +391,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                     ? `Cargas autónomo (~${formatPct(defaultChargesPourcent)}\u00A0%)`
                     : `Charges auto-entrepreneur (~${formatPct(defaultChargesPourcent)}\u00A0%)`}
                 </p>
-                <p className="text-xs text-gray-500">{isSpain ? 'Puedes ajustar el tipo a tu situación' : 'Tu peux ajuster le taux à ta situation'}</p>
+                <p className="text-xs text-gray-500">{isSpain ? 'Puedo ajustar el tipo a mi situación' : 'Je peux ajuster le taux à ma situation'}</p>
               </div>
               <div className="flex items-center gap-2">
                 <Input
@@ -464,7 +464,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                   }`}
                 >
                   {p} %
-                  <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en tu bolsillo' : 'dans ta poche'}</span>
+                  <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en mi bolsillo' : 'dans ma poche'}</span>
                 </button>
               ))}
             </div>
@@ -541,10 +541,10 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                 <span className="font-bold text-purple-700">{formatEuro(commissionHT)}</span>
               </div>
               <div className="flex justify-between items-center py-1 border-b border-gray-100 bg-blue-50">
-                <span className="text-gray-900 font-medium">{isSpain ? `Tu palier de ${pallier}\u00A0%` : `Ton palier de ${pallier}\u00A0%`}</span>
+                <span className="text-gray-900 font-medium">{isSpain ? `Mi palier de ${pallier}\u00A0%` : `Mon palier de ${pallier}\u00A0%`}</span>
                 <span className="font-bold text-blue-700">{formatEuro(netAvecPallier)}</span>
               </div>
-              <p className="text-xs text-gray-500 italic">{isSpain ? '(Este es el importe que tú encajas, sobre el que se aplican cargas e impuestos)' : "(C'est ce montant que tu touches, sur lequel s'appliquent charges et impôts)"}</p>
+              <p className="text-xs text-gray-500 italic">{isSpain ? '(Este es el importe que encajo, sobre el que se aplican cargas e impuestos)' : "(C'est ce montant que je touche, sur lequel s'appliquent charges et impôts)"}</p>
               <div className="flex justify-between items-center py-1 border-b border-gray-100">
                 <span className="text-gray-600">{isSpain ? `Cargas AE (~${formatPct(chargesPourcent)}\u00A0%)` : `Charges AE (~${formatPct(chargesPourcent)}\u00A0%)`}</span>
                 <span className="font-medium text-red-600">-{formatEuro(chargesSociales)}</span>
@@ -561,15 +561,15 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
 
             {/* Net final */}
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 text-center">
-              <p className="text-sm text-blue-700"><strong>NET FINAL</strong>{isSpain ? ' en tu bolsillo :' : ' dans ta poche :'}</p>
+              <p className="text-sm text-blue-700"><strong>NET FINAL</strong>{isSpain ? ' en mi bolsillo :' : ' dans ma poche :'}</p>
               <p className="text-3xl font-bold text-blue-800 mt-1">{formatEuro(netFinal)}</p>
             </div>
 
             {/* Hypothèses de calcul */}
             <p className="text-xs text-gray-400 text-center">
               {isSpain
-                ? `Hipótesis: tipo de cotizaciones ${formatPct(chargesPourcent)}\u00A0%, IVA 20\u00A0%. A verificar según tu situación real.`
-                : `Hypothèses : taux de cotisations ${formatPct(chargesPourcent)}\u00A0% (prestations de services), TVA 20\u00A0%. À vérifier selon ta situation réelle.`}
+                ? `Hipótesis: tipo de cotizaciones ${formatPct(chargesPourcent)}\u00A0%, IVA 20\u00A0%. A verificar según mi situación real.`
+                : `Hypothèses : taux de cotisations ${formatPct(chargesPourcent)}\u00A0% (prestations de services), TVA 20\u00A0%. À vérifier selon ma situation réelle.`}
             </p>
           </div>
 
@@ -592,8 +592,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       {sales.length === 0 && (
         <p className="text-sm text-gray-400 text-center py-4">
           {isSpain
-            ? 'Ninguna venta guardada por el momento — tu primera simulación guardada aparecerá aquí.'
-            : 'Aucune vente enregistrée pour le moment — ta première simulation sauvegardée apparaîtra ici.'}
+            ? 'Ninguna venta guardada por el momento — mi primera simulación guardada aparecerá aquí.'
+            : 'Aucune vente enregistrée pour le moment — ma première simulation sauvegardée apparaîtra ici.'}
         </p>
       )}
       {sales.length > 0 && (
@@ -639,11 +639,11 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       <Dialog open={mandatDialogOpen} onOpenChange={setMandatDialogOpen}>
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{isSpain ? '¿Es también un mandato que has firmado?' : 'Ce bien est-il aussi un mandat que tu as signé ?'}</DialogTitle>
+            <DialogTitle>{isSpain ? '¿Es también un mandato que he firmado?' : 'Ce bien est-il aussi un mandat que j\'ai signé ?'}</DialogTitle>
             <DialogDescription>
               {isSpain
-                ? 'Si firmaste el mandato de este bien, contará 1 mandato en tus objetivos.'
-                : 'Si tu as signé le mandat de ce bien, il comptera 1 mandat dans tes objectifs.'}
+                ? 'Si firmé el mandato de este bien, contará 1 mandato en mis objetivos.'
+                : 'Si j\'ai signé le mandat de ce bien, il comptera 1 mandat dans mes objectifs.'}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter className="gap-2 sm:gap-2">
@@ -669,8 +669,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       {/* Info */}
       <p className="text-xs text-gray-400 text-center">
         {isSpain
-          ? 'Cálculo basado en régimen de autónomo. Cargas sociales estimadas al ~12,8 %. El impuesto liberatorio depende de tu elección personal.'
-          : 'Calcul basé sur le régime auto-entrepreneur. Charges sociales estimées à ~21,2 % (cotisations sociales prestations de services BIC, hors CFP). L\'impôt libératoire dépend de ton choix personnel.'}
+          ? 'Cálculo basado en régimen de autónomo. Cargas sociales estimadas al ~12,8 %. El impuesto liberatorio depende de mi elección personal.'
+          : 'Calcul basé sur le régime auto-entrepreneur. Charges sociales estimées à ~21,2 % (cotisations sociales prestations de services BIC, hors CFP). L\'impôt libératoire dépend de mon choix personnel.'}
       </p>
     </div>
   );

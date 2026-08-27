@@ -94,13 +94,13 @@ export function WeekendView({ userKey, isEs }: WeekendViewProps) {
           <div className="flex items-center gap-2 mb-2">
             <CalendarPlus className="w-5 h-5 text-indigo-600" />
             <p className="text-sm font-semibold text-gray-900">
-              {isEs ? '¿Has trabajado igualmente?' : 'Tu as quand même travaillé ?'}
+              {isEs ? '¿He trabajado igualmente?' : 'J\'ai quand même travaillé ?'}
             </p>
           </div>
           <p className="text-xs text-gray-500 mb-3">
             {isEs
-              ? 'Anota tus R1, R2 o visitas del fin de semana: se sumarán automáticamente a tu balance del lunes.'
-              : 'Note tes R1, R2 ou visites du week-end : ils seront ajoutés automatiquement à ton bilan de lundi.'}
+              ? 'Anotar mis R1, R2 o visitas del fin de semana: se sumarán automáticamente a mi balance del lunes.'
+              : 'Noter mes R1, R2 ou visites du week-end : ils seront ajoutés automatiquement à mon bilan de lundi.'}
           </p>
           <div className="flex flex-wrap gap-2">
             <CounterRow label="R1" value={totals.rdvR1Done} onChange={v => update('rdvR1Done', v)} isEs={isEs} />
@@ -109,7 +109,7 @@ export function WeekendView({ userKey, isEs }: WeekendViewProps) {
           </div>
           {hasReport && (
             <p className="text-xs text-indigo-600 mt-3">
-              ✓ {isEs ? 'Se añadirá a tu balance del lunes' : 'Sera ajouté à ton bilan de lundi'}
+              ✓ {isEs ? 'Se añadirá a mi balance del lunes' : 'Sera ajouté à mon bilan de lundi'}
             </p>
           )}
         </CardContent>

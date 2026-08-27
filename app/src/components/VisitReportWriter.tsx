@@ -382,7 +382,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
             <Home className="w-6 h-6 text-red-600" />
             Compte rendu de visite
           </h2>
-          <p className="text-gray-500 mt-1">Garde une trace du retour de chaque visite pour tes RDV de suivi</p>
+          <p className="text-gray-500 mt-1">Garder une trace du retour de chaque visite pour mes RDV de suivi</p>
         </div>
         <Button variant="outline" onClick={() => setViewMode('history')} className="flex items-center gap-2">
           <BarChart3 className="w-4 h-4" /> Historique ({visits.length})
@@ -519,7 +519,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
       {/* Notes */}
       <div>
         <Label className="text-sm font-medium text-gray-700">Notes privées (pas dans le message)</Label>
-        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Pour ton suivi interne uniquement..." className="mt-1" rows={2} />
+        <Textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Pour mon suivi interne uniquement..." className="mt-1" rows={2} />
       </div>
 
       {/* Génération de message type */}
@@ -530,7 +530,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
             <h3 className="font-semibold text-blue-800">Message type pour le vendeur</h3>
           </div>
           <p className="text-sm text-blue-600 mb-3">
-            Génère un message récapitulatif prêt à envoyer à ton vendeur. Il reprend le statut de l&apos;acquéreur, les points de retour, les points faibles soulevés et la prochaine étape.
+            Générer un message récapitulatif prêt à envoyer à mon vendeur. Il reprend le statut de l&apos;acquéreur, les points de retour, les points faibles soulevés et la prochaine étape.
           </p>
           <Button
             onClick={generateMessage}
@@ -550,7 +550,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
                 <pre className="text-sm text-gray-700 whitespace-pre-wrap font-sans">{generatedMessage}</pre>
               </div>
               <p className="text-xs text-blue-600">
-                ✏️ Message reformulé pour rester diplomatique — relis avant d&apos;envoyer. Tes notes brutes restent privées et ne partent jamais au vendeur.
+                ✏️ Message reformulé pour rester diplomatique — à relire avant d&apos;envoyer. Mes notes brutes restent privées et ne partent jamais au vendeur.
               </p>
               <Button
                 onClick={copyToClipboard}
@@ -594,7 +594,7 @@ Bien cordialement,${signatureLines.length ? `\n${signatureLines.join('\n')}` : '
             {savedRecap.address} — Vendeur : {savedRecap.seller} — Statut : {savedRecap.statusLabel}
           </p>
           <p className="text-xs text-green-600">
-            Tu pourras le consulter dans l&apos;historique pour tes RDV de suivi.
+            Je pourrai le consulter dans l&apos;historique pour mes RDV de suivi.
           </p>
         </div>
       )}

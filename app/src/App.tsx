@@ -205,7 +205,7 @@ function App() {
 
   // ===== CHARGEMENT CLOUD =====
   // State (et non ref) : la fin du chargement DOIT déclencher un re-render,
-  // sinon l'écran "Chargement de ton compte..." reste affiché indéfiniment
+  // sinon l'écran "Chargement de mon compte..." reste affiché indéfiniment
   // pour un compte neuf (cloud vide → aucun setState → page figée jusqu'à F5).
   const [hasLoadedCloud, setHasLoadedCloud] = useState(false);
   const previousUser = useRef<string | null>(null);
@@ -274,7 +274,7 @@ function App() {
           && !cloudProfile;
 
         if (cloudEmpty && hasLocalData) {
-          toast.info('Synchronisation de tes données vers le cloud...', { duration: 3000 });
+          toast.info('Synchronisation de mes données vers le cloud...', { duration: 3000 });
           await apiSyncSave({
             profile: hasProfile ? profile : null,
             progress,
@@ -365,8 +365,8 @@ function App() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="rounded-3xl bg-white p-8 shadow-xl border border-gray-100 text-center max-w-md">
-          <h2 className="text-xl font-semibold text-gray-900">Chargement de ton compte...</h2>
-          <p className="text-sm text-gray-500 mt-3">Reste connecté, on récupère tes dernières données et ton dernier bilan.</p>
+          <h2 className="text-xl font-semibold text-gray-900">Chargement de mon compte...</h2>
+          <p className="text-sm text-gray-500 mt-3">Reste connecté, on récupère mes dernières données et mon dernier bilan.</p>
         </div>
       </div>
     );
@@ -632,9 +632,9 @@ function App() {
                 <h2 className="text-lg font-bold text-white">
                   {checkupDate && checkupDate !== toLocalDateKey(new Date())
                     ? `Bilan oublié — rattrapage du ${new Date(checkupDate + 'T12:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' })}`
-                    : `Bilan de ta journée — Jour ${progress.currentDay}`}
+                    : `Bilan de ma journée — Jour ${progress.currentDay}`}
                 </h2>
-                <p className="text-red-100 text-sm">Fais le point sur tes résultats réels</p>
+                <p className="text-red-100 text-sm">Faire le point sur mes résultats réels</p>
               </div>
               <button onClick={requestCloseCheckup} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>
@@ -667,7 +667,7 @@ function App() {
               <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-md">
                 <h3 className="text-base font-bold text-gray-900">Fermer le bilan ?</h3>
                 <p className="text-sm text-gray-600 mt-2">
-                  Ta vérification du jour est en cours. Si tu fermes sans valider, elle restera sauvegardée en brouillon — tu pourras la reprendre.
+                  Ma vérification du jour est en cours. Si je ferme sans valider, elle restera sauvegardée en brouillon — je pourrai la reprendre.
                 </p>
                 <div className="flex gap-3 mt-5">
                   <button
@@ -698,8 +698,8 @@ function App() {
           <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden my-auto">
             <div className="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-4 flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-white">Planifie ton lendemain</h2>
-                <p className="text-amber-100 text-sm">Sélectionne les actions pour demain</p>
+                <h2 className="text-lg font-bold text-white">Planifier mon lendemain</h2>
+                <p className="text-amber-100 text-sm">Sélectionner les actions pour demain</p>
               </div>
               <button onClick={() => setModalView('none')} className="text-white/80 hover:text-white text-2xl leading-none">&times;</button>
             </div>

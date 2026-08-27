@@ -407,7 +407,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <strong>Vérification des actions — Jour {currentDay}</strong>
           </p>
           <p className="text-xs text-amber-600 mt-1">
-            Avant de faire ton bilan, vérifions les actions du jour. Celles déjà cochées dans « Aujourd'hui » sont pré-marquées ✅ — tu peux modifier chaque réponse.
+            Avant de faire mon bilan, vérifions les actions du jour. Celles déjà cochées dans « Aujourd'hui » sont pré-marquées ✅ — je peux modifier chaque réponse.
           </p>
           <p className="text-xs font-semibold text-amber-700 mt-2">
             {verifiedCount}/{dailyActions.length} {plural(verifiedCount, 'action vérifiée', 'actions vérifiées')}
@@ -558,7 +558,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         {/* Welcome message */}
         <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
           <p className="text-sm text-amber-800">
-            <strong>Bilan de ta journée — Jour {currentDay}</strong> — C'est ce que font les meilleurs chaque soir. Tes bilans et réponses sont enregistrés sur ton appareil et synchronisés sur ton compte.
+            <strong>Bilan de ma journée — Jour {currentDay}</strong> — C'est ce que font les meilleurs chaque soir. Mes bilans et réponses sont enregistrés sur mon appareil et synchronisés sur mon compte.
           </p>
         </div>
 
@@ -567,8 +567,8 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
             <p className="text-sm text-blue-800">
               🕐 {isEs
-                ? `Balance olvidado : estás rellenando el del ${new Date(bilanDate + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}. Después podrás pasar al día siguiente.`
-                : `Bilan oublié : tu remplis celui du ${new Date(bilanDate + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}. Ensuite tu pourras passer au jour suivant.`}
+                ? `Balance olvidado : estoy rellenando el del ${new Date(bilanDate + 'T12:00').toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}. Después podré pasar al día siguiente.`
+                : `Bilan oublié : je remplis celui du ${new Date(bilanDate + 'T12:00').toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}. Ensuite je pourrai passer au jour suivant.`}
             </p>
           </div>
         )}
@@ -577,7 +577,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         {weekendApplied && (weekendApplied.rdvR1Done + weekendApplied.rdvR2Done + weekendApplied.visitesDone > 0) && (
           <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
             <p className="text-sm text-indigo-800">
-              🌿 {isEs ? 'Tus RDV del fin de semana ya están incluidos' : 'Tes RDV du week-end sont déjà inclus'}
+              🌿 {isEs ? 'Mis RDV del fin de semana ya están incluidos' : 'Mes RDV du week-end sont déjà inclus'}
               {' '}({[
                 weekendApplied.rdvR1Done > 0 ? `${weekendApplied.rdvR1Done} R1` : '',
                 weekendApplied.rdvR2Done > 0 ? `${weekendApplied.rdvR2Done} R2` : '',
@@ -596,7 +596,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                 onClick={() => setRecapOpen(o => !o)}
                 className="w-full flex items-center justify-between text-left"
               >
-                <p className="text-sm font-semibold text-gray-800">Ta journée en un coup d'œil</p>
+                <p className="text-sm font-semibold text-gray-800">Ma journée en un coup d'œil</p>
                 {recapOpen ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
               </button>
               {recapOpen && (
@@ -708,7 +708,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-2">
               <Clock className="w-4 h-4 text-blue-600" />
-              <p className="text-sm font-semibold text-blue-800">Tes créneaux de terrain recommandés</p>
+              <p className="text-sm font-semibold text-blue-800">Mes créneaux de terrain recommandés</p>
             </div>
             <p className="text-sm text-blue-700"><strong>11 h – 13 h 30</strong> et <strong>17 h – 19 h</strong>, chaque jour ouvré, au choix — Meilleurs taux de réponse.</p>
           </CardContent>
@@ -716,7 +716,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
 
         {/* Terrain time */}
         <div>
-          <Label className="text-sm font-semibold text-gray-900 mb-2 block">Quand es-tu allé au contact aujourd'hui ?</Label>
+          <Label className="text-sm font-semibold text-gray-900 mb-2 block">Quand suis-je allé au contact aujourd'hui ?</Label>
           <div className="grid grid-cols-2 gap-2">
             {prospectionOptions.map(opt => (
               <button key={opt.id} onClick={() => update('prospectionTime', opt.id)}
@@ -733,7 +733,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Database className="w-4 h-4 text-teal-600" />
-              <p className="text-sm font-semibold text-teal-800">As-tu mis à jour ton CRM aujourd'hui ?</p>
+              <p className="text-sm font-semibold text-teal-800">Ai-je mis à jour mon CRM aujourd'hui ?</p>
             </div>
             <p className="text-xs text-teal-600 mb-3">
               Relance tes contacts, notes tes nouveaux prospects, mets à jour tes suivis. L'argent est dans le fichier !
@@ -856,10 +856,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <Card className="bg-red-50 border-red-300">
             <CardContent className="p-4">
               <p className="text-sm font-semibold text-red-800 mb-1">
-                🔴 Tracfin obligatoire {results.mandatsSigned > 0 ? 'pour ton mandat' : 'pour ton offre'}
+                🔴 Tracfin obligatoire {results.mandatsSigned > 0 ? 'pour mon mandat' : 'pour mon offre'}
               </p>
               <p className="text-xs text-red-600 mb-3">
-                Il sera ajouté à tes tâches de demain et te sera rappelé chaque jour tant qu'il n'est pas fait.
+                Il sera ajouté à mes tâches de demain et me sera rappelé chaque jour tant qu'il n'est pas fait.
               </p>
               <button
                 type="button"
@@ -877,7 +877,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                 disabled={tracfinRdvAjoute}
                 className="px-3 py-2 bg-red-600 hover:bg-red-700 disabled:bg-green-600 text-white rounded-lg text-xs font-medium transition-colors"
               >
-                {tracfinRdvAjoute ? '✓ Ajouté à ton agenda pour demain 9 h' : '📅 Ajouter 30 min à mon agenda demain'}
+                {tracfinRdvAjoute ? '✓ Ajouté à mon agenda pour demain 9 h' : '📅 Ajouter 30 min à mon agenda demain'}
               </button>
             </CardContent>
           </Card>
@@ -891,7 +891,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                 🔴 Tracfin en attente depuis le {tracfinPending.since}
               </p>
               <p className="text-xs text-red-600 mb-3">
-                As-tu fait le tracfin {tracfinPending.type === 'mandat' ? 'de ton mandat' : 'de ton offre'} ?
+                Ai-je fait le tracfin {tracfinPending.type === 'mandat' ? 'de mon mandat' : 'de mon offre'} ?
               </p>
               <div className="flex gap-2 flex-wrap">
                 <button
@@ -918,7 +918,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
 
         {/* Wins */}
         <div>
-          <Label className="flex items-center gap-2 text-sm font-medium"><Trophy className="w-4 h-4 text-yellow-500" /> Tes victoires du jour</Label>
+          <Label className="flex items-center gap-2 text-sm font-medium"><Trophy className="w-4 h-4 text-yellow-500" /> Mes victoires du jour</Label>
           <Textarea value={results.wins} onChange={e => update('wins', e.target.value)} placeholder="Même les petites victoires comptent : un RDV fixé, un contact sympa, une technique maîtrisée..." className="mt-1" />
         </div>
 
@@ -944,7 +944,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         {/* Notes */}
         <div>
           <Label className="text-sm font-medium text-gray-700">Notes du jour (optionnel)</Label>
-          <Textarea value={results.notes} onChange={e => update('notes', e.target.value)} placeholder="Ce qui a marché, ce qui n'a pas marché, tes réflexions..." className="mt-1" />
+          <Textarea value={results.notes} onChange={e => update('notes', e.target.value)} placeholder="Ce qui a marché, ce qui n'a pas marché, mes réflexions..." className="mt-1" />
         </div>
 
         {/* Question primo liste — fin de chaque mois */}
@@ -953,10 +953,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Users className="w-4 h-4 text-rose-600" />
-                <p className="text-sm font-semibold text-rose-800">Bilan mensuel — Ta primo liste</p>
+                <p className="text-sm font-semibold text-rose-800">Bilan mensuel — Ma primo liste</p>
               </div>
               <p className="text-xs text-rose-600 mb-3">
-                As-tu appelé tous les gens de ta primo liste ce mois-ci ? (amis, famille, connaissances de ton répertoire téléphone + réseaux sociaux)
+                Ai-je appelé tous les gens de ma primo liste ce mois-ci ? (amis, famille, connaissances de mon répertoire téléphone + réseaux sociaux)
               </p>
               <div className="flex gap-2">
                 {[
@@ -993,7 +993,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
               {results.primoListeChecked === false && (
                 <div className="mt-3 pt-3 border-t border-rose-200">
                   <p className="text-xs text-rose-700 font-medium mb-2">
-                    Est-ce qu'il reste du monde à contacter dans ta primo liste ?
+                    Est-ce qu'il reste du monde à contacter dans ma primo liste ?
                   </p>
                   <div className="flex gap-2">
                     {[
@@ -1052,7 +1052,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <p className="text-gray-500 text-sm mt-1">Passons à la planification de demain.</p>
           {/* MOD-23 : teasing du défi de demain */}
           <p className="text-sm text-gray-600 mt-2">
-            {isEs ? `Mañana, tu reto: ${defiDemain.titre} 🚪` : `Demain, ton défi : ${defiDemain.titre} 🚪`}
+            {isEs ? `Mañana, mi reto: ${defiDemain.titre} 🚪` : `Demain, mon défi : ${defiDemain.titre} 🚪`}
           </p>
         </div>
 
@@ -1066,10 +1066,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <HeartHandshake className="w-4 h-4 text-violet-600" />
-                <p className="text-sm font-semibold text-violet-800">Partage tes victoires avec ton parrain</p>
+                <p className="text-sm font-semibold text-violet-800">Partager mes victoires avec mon parrain</p>
               </div>
               <p className="text-xs text-violet-600 mb-3">
-                Tu as indiqué avoir un parrain ou une personne qui t'accompagne. Laisse ses coordonnées pour lui envoyer tes victoires en un clic — c'est facultatif, et on ne te le redemandera plus.
+                J'ai indiqué avoir un parrain ou une personne qui m'accompagne. Laisser ses coordonnées pour lui envoyer mes victoires en un clic — c'est facultatif, et on ne me le redemandera plus.
               </p>
               <div className="space-y-2">
                 <div>
@@ -1119,7 +1119,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Trophy className="w-4 h-4 text-yellow-600" />
-                <p className="text-sm font-semibold text-yellow-800">Ta victoire du jour</p>
+                <p className="text-sm font-semibold text-yellow-800">Ma victoire du jour</p>
               </div>
               <p className="text-sm text-gray-700 italic mb-3">« {results.wins.trim()} »</p>
               <ShareVictoryButtons victoire={results.wins} profile={profile} />
@@ -1183,7 +1183,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-3">
               <Lightbulb className="w-5 h-5 text-blue-600" />
-              <p className="text-sm font-semibold text-blue-800">Prépare ta journée de demain — Jour {currentDay + 1}</p>
+              <p className="text-sm font-semibold text-blue-800">Préparer ma journée de demain — Jour {currentDay + 1}</p>
             </div>
             <p className="text-sm text-blue-700 mb-3">
               Regarde les actions prévues pour demain et finis d'organiser ton planning maintenant, pendant que ta journée est encore fraîche en tête.
@@ -1192,7 +1192,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
                 mais repliée pour ne pas surcharger la préparation du planning */}
             {prioritesDemain.length > 0 && (
               <>
-                <p className="text-xs font-semibold text-blue-800 mb-1.5">🎯 {isEs ? 'Tus 3 prioridades para mañana :' : 'Tes 3 priorités pour demain :'}</p>
+                <p className="text-xs font-semibold text-blue-800 mb-1.5">🎯 {isEs ? 'Mis 3 prioridades para mañana :' : 'Mes 3 priorités pour demain :'}</p>
                 <div className="space-y-1.5 mb-3">
                   {prioritesDemain.map(p => (
                     <div key={p.id} className="flex items-center gap-2 text-sm bg-white/70 rounded-lg px-3 py-2 border border-blue-200">
@@ -1231,7 +1231,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             <div className="flex items-start gap-3">
               <CalendarPlus className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="text-left">
-                <p className="text-sm font-semibold text-amber-800">Note dans ton agenda</p>
+                <p className="text-sm font-semibold text-amber-800">Noter dans mon agenda</p>
                 <p className="text-sm text-amber-700 mt-1">
                   Pour ne rien oublier demain, note tes engagements dans ton agenda maintenant.
                 </p>

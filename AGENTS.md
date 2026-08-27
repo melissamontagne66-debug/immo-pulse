@@ -52,6 +52,9 @@ utilisé pour modifier ce projet. Merci de le lire avant toute modification.
 - **Onglet actif** : clé localStorage namespacée par compte
   (`immo-pulse-active-tab-{email}`) — une clé globale ferait hériter un
   nouveau compte de l'écran du compte précédent.
+- **Push** : la chaîne FCM est entièrement câblée (front, worker, cron 18 h)
+  mais inerte tant que Firebase n'est pas configuré — marche à suivre dans
+  `FIREBASE.md`. Les emails de relance sont le filet de sécurité.
 
 ## Règle n°1 — Ne jamais résoudre un conflit de merge à l'aveugle
 

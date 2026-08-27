@@ -125,7 +125,7 @@ export function InstallAppPrompt() {
           <Download className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-gray-900">
-              {isEs ? '📲 Añade Immo Pulse a tu pantalla de inicio' : '📲 Ajoute Immo Pulse à ton écran d\'accueil'}
+              {isEs ? '📲 Añadir Immo Pulse a mi pantalla de inicio' : '📲 Ajouter Immo Pulse à mon écran d\'accueil'}
             </p>
             <p className="text-xs text-gray-600 mt-1">
               {isEs

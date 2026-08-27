@@ -38,9 +38,9 @@ export function DailyCoach({ currentDay, completedDays, streak, profile, dailyTa
         <div>
           <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <MessageCircle className="w-5 h-5 text-red-600" />
-            Messages de ton coach
+            Messages de mon coach
           </h3>
-          <p className="text-sm text-gray-500">Ton coach personnel pour aujourd'hui</p>
+          <p className="text-sm text-gray-500">Mon coach personnel pour aujourd'hui</p>
         </div>
         <Button
           variant="ghost"

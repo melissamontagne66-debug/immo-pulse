@@ -189,7 +189,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
           <button
             onClick={() => onNavigate('parcours')}
             className="flex items-center gap-2 bg-violet-50 text-violet-700 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-violet-100 transition-colors"
-            title={isEs ? 'Ver tu recorrido' : 'Voir ton parcours'}
+            title={isEs ? 'Ver mi recorrido' : 'Voir mon parcours'}
           >
             {niveau.emoji} {isEs ? niveau.labelEs : niveau.label}
           </button>
@@ -284,7 +284,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
       </Card>
 
       {/* CA du mois — honoraires encaissés sur les ventes enregistrées */}
-      <Card className="bg-green-50 border-green-200" title="CA = honoraires d'agence encaissés sur tes ventes du mois.">
+      <Card className="bg-green-50 border-green-200" title="CA = honoraires d'agence encaissés sur mes ventes du mois.">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -306,7 +306,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
 
       {/* Objectifs du jour — petites cartes */}
       <div>
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Tes objectifs aujourd'hui</h3>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Mes objectifs aujourd'hui</h3>
         {consolidation && convoRef && convoAllegee && (
           <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 mb-3">
             {isEs
@@ -369,7 +369,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md"
       >
         <Sunrise className="w-5 h-5" />
-        Ton action du jour
+        Mon action du jour
         <ArrowRight className="w-4 h-4" />
       </button>
 
