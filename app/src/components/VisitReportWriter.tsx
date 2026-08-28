@@ -271,7 +271,7 @@ Statut de l'acquéreur\u00A0: ${statusLabel}
 Points de retour\u00A0:
 ${vigilanceLines.map(l => `• ${l}`).join('\n')}
 
-Les points faibles qui ont été soulevés sont\u00A0:
+Le ou les points de questionnement relevés sont\u00A0:
 ${splitLines(weakPoints).length > 0 ? splitLines(weakPoints).map(l => `• ${l}`).join('\n') : '• Aucun'}
 
 La suite\u00A0: ${nextStep}
