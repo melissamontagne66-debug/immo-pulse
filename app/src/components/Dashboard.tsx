@@ -168,8 +168,9 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header — wrapping sur mobile : les badges (objectif, niveau, série)
+          passent à la ligne au lieu de déborder hors écran */}
+      <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h2 className="text-2xl font-bold text-gray-900">
             {profile.firstName ? `Bienvenue ${profile.firstName} !` : 'Objectifs du jour'}
@@ -178,13 +179,14 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
             Jour {currentDay}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <button
             onClick={onSetMonthlyGoal}
             className="flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-red-100 transition-colors"
           >
             <Target className="w-4 h-4" />
-            Objectif du mois : {formatEuro(Math.round(profile.ca6MonthsTarget / 6))} ({formatEuro(profile.ca6MonthsTarget)} sur 6 mois)
+            <span className="max-sm:hidden">Objectif du mois : {formatEuro(Math.round(profile.ca6MonthsTarget / 6))} ({formatEuro(profile.ca6MonthsTarget)} sur 6 mois)</span>
+            <span className="hidden max-sm:inline">Objectif : {formatEuro(Math.round(profile.ca6MonthsTarget / 6))}/mois</span>
           </button>
           <button
             onClick={() => onNavigate('parcours')}
