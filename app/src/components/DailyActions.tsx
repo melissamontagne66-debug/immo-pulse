@@ -27,6 +27,10 @@ import { shouldPromptForPush, snoozePushPrompt, subscribeToPush, isPushDenied } 
 import { useContacts, getContactsInactifs, getContactsAnniversaireDuJour } from '@/hooks/useContacts';
 import { RelanceInactifsModal } from '@/components/RelanceInactifsModal';
 
+// Vidéo de formation Google Business Profile (onglet Formations — compte
+// formation requis). Le CTA des tâches GMB ouvre ce lien dans un nouvel onglet.
+const GMB_FORMATION_VIDEO_URL = 'https://simple-methode-immo.systeme.io/school/course/formation/lecture/9570844';
+
 interface DailyActionsProps {
   currentDay: number;
   completedDays: string[];
@@ -1021,6 +1025,18 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
                       </button>
                     )}
                     <p className="text-xs text-gray-600 mt-1 leading-relaxed"><MarkdownText text={task.description} /></p>
+                    {/* CTA vidéo de formation GMB — nouvel onglet (le texte de la
+                        tâche recommande la vidéo, le bouton y mène directement) */}
+                    {(task.type === 'gmb' || task.type === 'gmb-hebdo') && (
+                      <a
+                        href={GMB_FORMATION_VIDEO_URL}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 mt-2 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        ▶️ {isEs ? 'Ver el vídeo de formación' : 'Regarder la vidéo de formation'}
+                      </a>
+                    )}
                     {task.script && (
                       <div className="mt-2 bg-white/60 rounded-lg p-2.5 border border-gray-200">
                         <p className="text-xs text-gray-500 italic"><MarkdownText text={task.script} /></p>
