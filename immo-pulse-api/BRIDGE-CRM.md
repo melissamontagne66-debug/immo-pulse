@@ -59,13 +59,18 @@ GET /api/bridge/prospects?since=YYYY-MM-DD&offset=N
   "birthdate": "17/05/1990",
   "email": "marie@example.com",
   "address": "24 rue de la République, 69006 Lyon",
-  "notes": "Texte libre — une ligne « date: note » par interaction"
+  "notes": "Texte libre — une ligne « date: note » par interaction",
+  "created_at": "2026-08-12 09:41:03",
+  "updated_at": "2026-08-25 18:02:11"
 }
 ```
 
 - `phone` est normalisé au format international FR (+33…).
 - `birthdate` au format `JJ/MM/AAAA` ; omis si inconnu/invalide.
 - `email`, `address`, `notes` omis quand vides.
+- `created_at` / `updated_at` toujours présents (horodatage UTC de la base,
+  `YYYY-MM-DD HH:MM:SS`) — `updated_at` suit chaque modification et sert
+  aussi de référence pour `?since=`.
 - Legacy : si `firstname` est vide, tout le nom est dans `lastname`.
 - `civility` et `job` ne sont pas fournis (pas de donnée côté app) — à
   tolérer côté CRM.

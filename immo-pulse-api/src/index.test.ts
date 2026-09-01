@@ -18,6 +18,8 @@ import {
   formatBirthdateFR,
   parseSinceParam,
   parseOffsetParam,
+  toIsoUtc,
+  buildExpiredSessionCookie,
   formatAddressLine,
   SESSION_MAX_AGE_SECONDS,
   type Env,
@@ -316,6 +318,33 @@ describe('parseOffsetParam', () => {
 
   it('caps the offset to bound query cost', () => {
     expect(parseOffsetParam('999999')).toBe(10000);
+  });
+});
+
+describe('toIsoUtc', () => {
+  it('converts a SQLite datetime to ISO 8601 UTC', () => {
+    expect(toIsoUtc('2026-08-20 10:32:00')).toBe('2026-08-20T10:32:00Z');
+    expect(toIsoUtc('2026-08-20T10:32:00')).toBe('2026-08-20T10:32:00Z');
+  });
+
+  it('defaults missing seconds', () => {
+    expect(toIsoUtc('2026-08-20 10:32')).toBe('2026-08-20T10:32:00Z');
+  });
+
+  it('returns null for absent or malformed input', () => {
+    expect(toIsoUtc(null)).toBeNull();
+    expect(toIsoUtc('')).toBeNull();
+    expect(toIsoUtc('20/08/2026')).toBeNull();
+  });
+});
+
+describe('buildExpiredSessionCookie', () => {
+  it('expires the session cookie immediately (logout)', () => {
+    const c = buildExpiredSessionCookie();
+    expect(c).toContain('session=');
+    expect(c).toContain('Max-Age=0');
+    expect(c).toContain('HttpOnly');
+    expect(c).toContain('SameSite=None');
   });
 });
 

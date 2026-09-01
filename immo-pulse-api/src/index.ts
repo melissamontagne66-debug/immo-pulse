@@ -54,6 +54,23 @@ export function buildSessionCookie(token: string): string {
   return `session=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${SESSION_MAX_AGE_SECONDS}`;
 }
 
+// Expiration immédiate — réponse de POST /api/auth/logout (le cookie HttpOnly
+// ne peut être supprimé que par le serveur).
+export function buildExpiredSessionCookie(): string {
+  return 'session=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0';
+}
+
+// Horodatage SQLite ('YYYY-MM-DD HH:MM:SS', UTC) → ISO 8601 ('…T…Z').
+// L'extension Bridge CRM préfère de l'ISO strict pour ses badges ; les dates
+// invalides ou absentes passent en null (jamais de chaîne bancale).
+export function toIsoUtc(raw: unknown): string | null {
+  if (typeof raw !== 'string' || !raw.trim()) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})[T ](\d{2}):(\d{2})(?::(\d{2}))?/.exec(raw.trim());
+  if (!m) return null;
+  const [, y, mo, d, h, mi, s] = m;
+  return `${y}-${mo}-${d}T${h}:${mi}:${s ?? '00'}Z`;
+}
+
 export function getCookieValue(cookieHeader: string | null, name: string): string | null {
   if (!cookieHeader) return null;
   for (const part of cookieHeader.split(';')) {
@@ -644,6 +661,12 @@ export default {
         }, 200, { ...cors, 'Set-Cookie': buildSessionCookie(token) });
       }
 
+      // ===== AUTH: Logout (extension Bridge CRM) =====
+      // Le cookie session est HttpOnly : seul le serveur peut le supprimer.
+      // Idempotent — 200 même sans session, l'objectif est juste d'expirer le cookie.
+      if (path === '/api/auth/logout' && request.method === 'POST') {
+        return json({ success: true }, 200, { ...cors, 'Set-Cookie': buildExpiredSessionCookie() });
+      }
       // ===== AUTH: Reset password =====
       if (path === '/api/auth/reset-password' && request.method === 'POST') {
         const body = await request.json() as any;
@@ -947,6 +970,11 @@ export default {
             firstname: (r.first_name as string) || '',
             lastname: String(r.name),
             phone: normalizePhoneFR((r.phone as string) || ''),
+            // Horodatages ISO 8601 (déjà en base au format SQLite) — demande
+            // du dev de l'extension : fiabilise ses badges « nouveau / mise à
+            // jour » sur tous les postes.
+            created_at: toIsoUtc(r.created_at),
+            updated_at: toIsoUtc(r.updated_at ?? r.created_at),
           };
           // civility/job : pas de donnée en base, champs omis (tolérés par le spec).
           const birthdate = formatBirthdateFR((r.birthdate as string) || '');
