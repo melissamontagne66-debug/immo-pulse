@@ -2,10 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { formatEuro, clampNumber, toLocalDateKey } from '@/lib/utils';
 import { Euro, Calculator, TrendingUp, User, Percent, Minus, Equal, Trash2, Save, AlertCircle, HandCoins } from 'lucide-react';
 import { useSales } from '@/hooks/useSales';
@@ -96,11 +94,14 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
 
   // Ventes enregistrées (hook MOD-12 : localStorage immo-pulse-sales-{userKey})
   const { sales, addSale, removeSale } = useSales(userKey ?? '');
-  const [mandatDialogOpen, setMandatDialogOpen] = useState(false);
+  // « Mandat signé » rattaché à la vente — cochée par défaut (compte 1 mandat
+  // dans les objectifs). Remplace l'ancienne question modale à l'enregistrement.
+  const [countsAsMandat, setCountsAsMandat] = useState(true);
   const [celebration, setCelebration] = useState<{ net: number } | null>(null);
 
   const [nomVente, setNomVente] = useState('');
   const [pallier, setPallier] = useState(75);
+  const [pallierCustomInput, setPallierCustomInput] = useState('');
 
   // Taux de commission (manuel ou auto)
   const tauxCommissionAuto = getCommissionRate(prixVente);
@@ -127,14 +128,10 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
     : Math.round(commissionHT * (apporteurPct / 100));
   const netFinal = netAvecPallier - chargesSociales - impotLiberatoire - apporteurMontant - fraisNotaire;
 
-  // Clic sur « Enregistrer » : on demande d'abord si le bien est aussi un mandat signé
-  const saveSimulation = () => {
+  // Enregistrement direct — plus de question modale : la case « mandat »
+  // du formulaire (cochée par défaut) fait foi.
+  const saveSale = () => {
     if (!nomVente.trim()) return;
-    setMandatDialogOpen(true);
-  };
-
-  // Confirmation de la vente après la question mandat (défaut : Oui)
-  const confirmSale = (countsAsMandat: boolean) => {
     addSale({
       id: makeSaleId(),
       name: nomVente.trim(),
@@ -145,7 +142,6 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
       date: toLocalDateKey(new Date()),
       countsAsMandat,
     });
-    setMandatDialogOpen(false);
     setNomVente('');
     setCelebration({ net: netFinal });
     // Reset des champs propres au bien pour permettre un nouvel enregistrement
@@ -213,7 +209,7 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
               <div className="text-xs text-gray-500">{isSpain ? 'Introduce el precio previsto de venta' : 'Saisis le prix de vente prévu'}</div>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 mb-4">
+          <div className="mb-4 max-w-xs">
             <div>
               <Label className="text-sm text-gray-700">{isSpain ? 'Precio exacto' : 'Prix exact'}</Label>
               <Input
@@ -254,16 +250,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
               />
               {prixVenteError && <p className="text-xs text-red-600 mt-1">{prixVenteError}</p>}
             </div>
-            <div>
-              <Label className="text-sm text-gray-700">{isSpain ? 'Selector rápido' : 'Curseur rapide'}</Label>
-              <Slider value={[prixVente]} onValueChange={v => {
-                setPrixVente(v[0]);
-                setPrixVenteInput(formatEuro(v[0]));
-                setPrixVenteError(null);
-              }} min={30000} max={2000000} step={5000} />
-              <div className="flex justify-between text-xs text-gray-400 mt-1"><span>{formatEuro(30000, { compact: true })}</span><span>{formatEuro(400000, { compact: true })}</span><span>{formatEuro(800000, { compact: true })}</span><span>{formatEuro(2000000, { compact: true })}</span></div>
-            </div>
-          </div>          </div>
+          </div>
+          </div>
           {/* Taux de commission : auto + modifiable */}
           <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-3">
             <div className="flex items-center gap-3">
@@ -456,9 +444,9 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
               {PALLIERS.map(p => (
                 <button
                   key={p}
-                  onClick={() => setPallier(p)}
+                  onClick={() => { setPallier(p); setPallierCustomInput(''); }}
                   className={`p-3 rounded-lg border text-sm font-semibold transition-all ${
-                    pallier === p
+                    pallier === p && !pallierCustomInput
                       ? 'border-blue-500 bg-blue-50 text-blue-700'
                       : 'border-gray-200 hover:border-gray-300 text-gray-600'
                   }`}
@@ -467,6 +455,34 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                   <span className="block text-xs font-normal mt-0.5 text-gray-400">{isSpain ? 'en mi bolsillo' : 'dans ma poche'}</span>
                 </button>
               ))}
+            </div>
+            {/* % personnalisé — pour les réseaux dont les paliers diffèrent.
+                Une valeur saisie écrase le palier choisi ; vider le champ
+                redonne la main aux boutons. */}
+            <div className="flex items-center gap-2 mt-2">
+              <Label className="text-xs text-gray-500 whitespace-nowrap">
+                {isSpain ? 'Otro % (otra red) :' : 'Autre % (autre réseau) :'}
+              </Label>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                step={0.5}
+                value={pallierCustomInput}
+                onChange={e => {
+                  const raw = e.target.value;
+                  setPallierCustomInput(raw);
+                  const v = parseFloat(raw.replace(',', '.'));
+                  if (!isNaN(v) && v >= 1 && v <= 100) setPallier(v);
+                }}
+                placeholder={isSpain ? 'Ej.: 72.5' : 'Ex : 72.5'}
+                className="w-28"
+              />
+              {pallierCustomInput && (
+                <span className="text-xs font-medium text-blue-600">
+                  {isSpain ? `Aplicado : ${formatPct(pallier)} %` : `Appliqué : ${formatPct(pallier)} %`}
+                </span>
+              )}
             </div>
           </div>
 
@@ -574,16 +590,29 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
           </div>
 
           {/* Sauvegarder */}
-          <div className="flex gap-3">
-            <Input
-              value={nomVente}
-              onChange={e => setNomVente(e.target.value)}
-              placeholder={isSpain ? 'Nombre de la venta (ej: Casa Barcelona)' : 'Nom de la vente (ex: Maison Perpignan)'}
-              className="flex-1"
-            />
-            <Button onClick={saveSimulation} disabled={!nomVente.trim()} className="bg-red-600 hover:bg-red-700">
-              <Save className="w-4 h-4 mr-2" /> {isSpain ? 'Guardar' : 'Enregistrer'}
-            </Button>
+          <div className="space-y-2">
+            <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={countsAsMandat}
+                onChange={e => setCountsAsMandat(e.target.checked)}
+                className="accent-red-600"
+              />
+              {isSpain
+                ? 'También es un mandato que firmé (cuenta 1 mandato en mis objetivos)'
+                : 'C\'est aussi un mandat que j\'ai signé (compte 1 mandat dans mes objectifs)'}
+            </label>
+            <div className="flex gap-3">
+              <Input
+                value={nomVente}
+                onChange={e => setNomVente(e.target.value)}
+                placeholder={isSpain ? 'Nombre de la venta (ej: Casa Barcelona)' : 'Nom de la vente (ex: Maison Perpignan)'}
+                className="flex-1"
+              />
+              <Button onClick={saveSale} disabled={!nomVente.trim()} className="bg-red-600 hover:bg-red-700">
+                <Save className="w-4 h-4 mr-2" /> {isSpain ? 'Guardar' : 'Enregistrer'}
+              </Button>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -635,29 +664,15 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
         </div>
       )}
 
-      {/* Question mandat à l'enregistrement */}
-      <Dialog open={mandatDialogOpen} onOpenChange={setMandatDialogOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{isSpain ? '¿Es también un mandato que he firmado?' : 'Ce bien est-il aussi un mandat que j\'ai signé ?'}</DialogTitle>
-            <DialogDescription>
-              {isSpain
-                ? 'Si firmé el mandato de este bien, contará 1 mandato en mis objetivos.'
-                : 'Si j\'ai signé le mandat de ce bien, il comptera 1 mandat dans mes objectifs.'}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => confirmSale(false)}>
-              {isSpain ? 'No, simple reventa' : 'Non, simple revente'}
-            </Button>
-            <Button autoFocus onClick={() => confirmSale(true)} className="bg-red-600 hover:bg-red-700">
-              {isSpain ? 'Sí, contar 1 mandato' : 'Oui, compter 1 mandat'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Célébration à l'enregistrement */}
+      <SaleCelebration
+        show={celebration !== null}
+        firstName={firstName ?? readFirstName(userKey)}
+        net={celebration?.net ?? 0}
+        isSpain={isSpain}
+        onClose={() => setCelebration(null)}
+      />
+
       <SaleCelebration
         show={celebration !== null}
         firstName={firstName ?? readFirstName(userKey)}
