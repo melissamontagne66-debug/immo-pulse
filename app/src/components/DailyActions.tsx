@@ -587,6 +587,14 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             title: isEs ? '📱 Contenido redes sociales — Idea del día' : '📱 Réseaux sociaux — Idée du jour',
             description: getSocialContent(currentDay, isEs),
           };
+        case 'video':
+          return {
+            ...def,
+            title: isEs ? '🎬 Ver los vídeos de formación' : '🎬 Regarder les vidéos de formation',
+            description: isEs
+              ? 'Bloquea 2 h hoy para avanzar en tus vídeos de formación (pestaña Formaciones). Es la prioridad absoluta : mientras no estén terminados, nos quedamos en la base terreno + lista primo.\n\nAl hacer el balance de la noche, confirma cuando los hayas visto todos — se desbloquearán las plataformas inmo y los R1/R2 diarios.'
+              : 'Bloque 2 h aujourd\'hui pour avancer sur tes vidéos de formation (onglet Formations). C\'est la priorité absolue : tant qu\'elles ne sont pas terminées, on reste sur le socle terrain + primo liste.\n\nAu bilan du soir, confirme quand tu les as toutes vues — les plateformes immo et les R1/R2 quotidiens se débloqueront.',
+          };
         default:
           return def;
       }
@@ -1158,6 +1166,11 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
               </div>
               <p className="text-xs text-teal-700">
                 {isEs ? 'Anota todos tus contactos del día: nombres, direcciones, números, notas de seguimiento. Reintenta tus contactos de los días anteriores. ¡El dinero está en el archivo!' : "Note tous tes contacts du jour : noms, adresses, numéros, notes de suivi. Relance tes contacts des jours précédents. L'argent est dans le fichier !"}
+              </p>
+              <p className="text-xs text-teal-600 mt-1.5 font-medium">
+                {isEs
+                  ? '💡 Con la extensión Bridge, está hecho en unos segundos cada final de jornada.'
+                  : '💡 Avec l\'extension Bridge, c\'est fait en quelques secondes chaque fin de journée.'}
               </p>
             </div>
           </div>
