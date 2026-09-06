@@ -79,6 +79,11 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   const [prixVenteError, setPrixVenteError] = useState<string | null>(null);
   const [tauxCommissionManual, setTauxCommissionManual] = useState<number | null>(null);
   const [tauxCommissionInput, setTauxCommissionInput] = useState('');
+  // La commission peut aussi être saisie directement en € (honoraires TTC) —
+  // le % affiché est alors déduit du prix de vente.
+  const [tauxMode, setTauxMode] = useState<'pct' | 'euro'>('pct');
+  const [commissionEuroManual, setCommissionEuroManual] = useState<number | null>(null);
+  const [commissionEuroInput, setCommissionEuroInput] = useState('');
   const [commissionError, setCommissionError] = useState<string | null>(null);
   const [apporteurMode, setApporteurMode] = useState<'euro' | 'pct'>('euro');
   const [apporteurEuro, setApporteurEuro] = useState(0);
@@ -108,12 +113,16 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
   const tauxCommission = tauxCommissionManual !== null ? tauxCommissionManual : tauxCommissionAuto;
 
   // Calculs dans l'ordre correct :
-  // 1. Commission TTC = Prix × Taux%
+  // 1. Commission TTC = Prix × Taux% — ou montant € saisi directement
   // 2. Commission HT = TTC / 1.20 (on retire la TVA) sauf franchise de TVA
   // 3. Net avec pallier = HT × (pallier/100) → CE QUE LE CONSEILLER ENCASSE
   // 4. Sur ce montant : Charges AE + Impôt libératoire
   // 5. Net final = Net pallier - Charges - Impôt - apporteur - frais
-  const commissionTTC = Math.round(prixVente * (tauxCommission / 100));
+  const commissionTTC = commissionEuroManual !== null
+    ? commissionEuroManual
+    : Math.round(prixVente * (tauxCommission / 100));
+  // % équivalent (affiché quand la commission est saisie en €)
+  const tauxEffectif = prixVente > 0 ? (commissionTTC / prixVente) * 100 : 0;
   const commissionHT = isTVAFranchise
     ? commissionTTC
     : Math.round(commissionTTC / (1 + TVA_RATE));
@@ -151,6 +160,8 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
     setPrixVenteError(null);
     setTauxCommissionManual(null);
     setTauxCommissionInput('');
+    setCommissionEuroManual(null);
+    setCommissionEuroInput('');
     setCommissionError(null);
     setApporteurEuro(0);
     setApporteurPct(0);
@@ -159,6 +170,29 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
     if (isCloudEnabled()) {
       if (sales.length === 0) apiMilestone('first_vente').catch(() => { /* silencieux */ });
       if (countsAsMandat && !sales.some(s => s.countsAsMandat)) apiMilestone('first_mandat').catch(() => { /* silencieux */ });
+    }
+  };
+
+  // Bascule % ↔ € : la valeur saisie est convertie dans l'autre unité pour
+  // ne pas changer le résultat au moment du basculement.
+  const switchTauxMode = (mode: 'pct' | 'euro') => {
+    if (mode === tauxMode) return;
+    setTauxMode(mode);
+    setCommissionError(null);
+    if (mode === 'euro') {
+      setCommissionEuroManual(commissionTTC);
+      setCommissionEuroInput(String(commissionTTC));
+      setTauxCommissionManual(null);
+      setTauxCommissionInput('');
+    } else if (commissionEuroManual !== null && prixVente > 0) {
+      const pct = Math.round(tauxEffectif * 10) / 10;
+      setTauxCommissionManual(pct);
+      setTauxCommissionInput(String(pct));
+      setCommissionEuroManual(null);
+      setCommissionEuroInput('');
+    } else {
+      setCommissionEuroManual(null);
+      setCommissionEuroInput('');
     }
   };
 
@@ -252,15 +286,30 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
             </div>
           </div>
           </div>
-          {/* Taux de commission : auto + modifiable */}
+          {/* Taux de commission : auto + modifiable (% ou €) */}
           <div className="bg-white rounded-lg p-3 border border-gray-200 space-y-3">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <Percent className="w-5 h-5 text-purple-600 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{isSpain ? '% de comisión sobre la venta' : '% de commission sur la vente'}</p>
-                <p className="text-xs text-gray-500">{isSpain ? 'Grilla decreciente sugerida — puedes modificarla a mano' : 'Grille dégressive suggérée — tu peux la modifier à la main'}</p>
+              <div className="flex-1 min-w-40">
+                <p className="text-sm font-medium text-gray-900">{isSpain ? 'Comisión sobre la venta (% o €)' : 'Commission sur la vente (% ou €)'}</p>
+                <p className="text-xs text-gray-500">{isSpain ? 'Grilla decreciente sugerida — puedes modificarla a mano, en % o en €' : 'Grille dégressive suggérée — tu peux la modifier à la main, en % ou en €'}</p>
               </div>
               <div className="flex items-center gap-2">
+                {/* Choix d'unité : % du prix de vente ou montant € direct */}
+                <div className="flex gap-1">
+                  {(['pct', 'euro'] as const).map(mode => (
+                    <button
+                      key={mode}
+                      type="button"
+                      onClick={() => switchTauxMode(mode)}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-all ${tauxMode === mode ? 'bg-purple-100 text-purple-700 border border-purple-300' : 'text-gray-400 hover:text-gray-600 border border-gray-200'}`}
+                    >
+                      {mode === 'pct' ? '%' : '€'}
+                    </button>
+                  ))}
+                </div>
+                {tauxMode === 'pct' ? (
+                  <>
                 <Input
                   type="number"
                   aria-label={isSpain ? 'Tipo de comisión (%)' : 'Taux de commission (%)'}
@@ -301,12 +350,59 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
                   max={10}
                 />
                 <span className="text-sm font-semibold text-purple-700">%</span>
+                  </>
+                ) : (
+                  <>
+                <Input
+                  type="number"
+                  aria-label={isSpain ? 'Comisión (€)' : 'Commission (€)'}
+                  value={commissionEuroInput}
+                  onChange={e => {
+                    const raw = e.target.value;
+                    setCommissionEuroInput(raw);
+                    if (raw === '') {
+                      setCommissionEuroManual(null);
+                      setCommissionError(null);
+                      return;
+                    }
+                    const val = parseFloat(raw.replace(',', '.'));
+                    if (isNaN(val)) return;
+                    if (val < 0 || val > 1000000) {
+                      // Hors borne → valeur rejetée, le champ reprend la dernière valeur valide
+                      setCommissionError(isSpain
+                        ? 'El importe de la comisión debe estar comprendido entre 0 y 1 000 000 €.'
+                        : 'Le montant de la commission doit être compris entre 0 et 1 000 000 €.');
+                      setCommissionEuroInput(String(commissionEuroManual ?? ''));
+                      return;
+                    }
+                    setCommissionError(null);
+                    setCommissionEuroManual(Math.round(val));
+                  }}
+                  onBlur={() => {
+                    setCommissionEuroInput(commissionEuroManual !== null ? String(commissionEuroManual) : '');
+                    setCommissionError(null);
+                  }}
+                  className="w-28 text-center font-bold text-purple-700"
+                  step={100}
+                  min={0}
+                  max={1000000}
+                />
+                <span className="text-sm font-semibold text-purple-700">€</span>
+                  </>
+                )}
               </div>
             </div>
+            {tauxMode === 'euro' && commissionEuroManual !== null && prixVente > 0 && (
+              <p className="text-xs text-purple-600">
+                {isSpain
+                  ? `= ${formatPct(Math.round(tauxEffectif * 100) / 100)} % del precio de venta`
+                  : `= ${formatPct(Math.round(tauxEffectif * 100) / 100)} % du prix de vente`}
+              </p>
+            )}
             {commissionError && <p className="text-xs text-red-600">{commissionError}</p>}
-            {tauxCommissionManual !== null && (
+            {(tauxCommissionManual !== null || commissionEuroManual !== null) && (
               <button
-                onClick={() => { setTauxCommissionManual(null); setCommissionError(null); }}
+                onClick={() => { setTauxCommissionManual(null); setCommissionEuroManual(null); setCommissionEuroInput(''); setCommissionError(null); }}
                 className="text-xs text-purple-600 hover:text-purple-800 underline"
               >
                 {isSpain ? 'Restablecer automático' : 'Rétablir le taux automatique'}
