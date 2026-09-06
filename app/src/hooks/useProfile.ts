@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import type { UserProfile, MonthlyGoal } from '@/types/profile';
-import { defaultProfile, calculateTargetsFromCA6Months, getDailyTargets } from '@/types/profile';
+import { defaultProfile, calculateTargetsFromMonthlyCA, getDailyTargets } from '@/types/profile';
 
 const STORAGE_PREFIX = 'iad-coach-profile';
 
@@ -42,14 +42,15 @@ export function useProfile(userKey: string) {
     // Cloud data always wins over local
     setProfileState(prev => {
       const merged = { ...defaultProfile, ...(prev || {}), ...cloudProfile };
-      // Recalculate targets
+      // Recalculate targets — à partir du CA du mois du goal (qui peut avoir
+      // été ajusté à la main), pas du CA 6 mois, sinon l'ajustement manuel
+      // serait écrasé à chaque chargement cloud.
       try {
-        const targets = calculateTargetsFromCA6Months(
-          merged.ca6MonthsTarget,
+        const targets = calculateTargetsFromMonthlyCA(
+          merged.currentMonthGoal?.caTarget ?? merged.ca6MonthsTarget,
           merged.commissionsPct,
           merged.averagePrice,
-          merged.expérienceLevel,
-          merged.currentMonthGoal?.month || 1
+          merged.expérienceLevel
         );
         merged.currentMonthGoal = { ...merged.currentMonthGoal, ...targets };
       } catch { /* ignore */ }
@@ -59,12 +60,11 @@ export function useProfile(userKey: string) {
   }, []);
 
   const setProfile = useCallback((p: UserProfile) => {
-    const targets = calculateTargetsFromCA6Months(
-      p.ca6MonthsTarget,
+    const targets = calculateTargetsFromMonthlyCA(
+      p.currentMonthGoal.caTarget,
       p.commissionsPct,
       p.averagePrice,
-      p.expérienceLevel,
-      p.currentMonthGoal.month
+      p.expérienceLevel
     );
     const updatedGoal: MonthlyGoal = {
       ...p.currentMonthGoal,
@@ -84,12 +84,11 @@ export function useProfile(userKey: string) {
   const updateMonthlyGoal = useCallback((goal: MonthlyGoal) => {
     setProfileState(prev => {
       if (!prev) return prev;
-      const targets = calculateTargetsFromCA6Months(
-        prev.ca6MonthsTarget,
+      const targets = calculateTargetsFromMonthlyCA(
+        goal.caTarget,
         goal.commissionsPct,
         prev.averagePrice,
-        prev.expérienceLevel,
-        goal.month
+        prev.expérienceLevel
       );
       const updatedGoal: MonthlyGoal = { ...goal, ...targets, averagePrice: prev.averagePrice };
       const updated = {

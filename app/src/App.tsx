@@ -169,7 +169,7 @@ function App() {
   } = useProgress(userKey);
 
   const { messages, isTyping, sendMessage, clearChat } = useChat(userKey);
-  const { profile, hasProfile, setProfile, updateProfile, dailyTargets, loadFromCloud: loadProfileFromCloud } = useProfile(userKey);
+  const { profile, hasProfile, setProfile, updateProfile, updateMonthlyGoal, dailyTargets, loadFromCloud: loadProfileFromCloud } = useProfile(userKey);
 
   // MOD-31 : jalons de carrière — célébration plein écran à la 1ère occurrence
   const { newJalon, dismissJalon } = useJalons(progress, sales, currentUser?.email);
@@ -442,7 +442,7 @@ function App() {
       <div className="min-h-screen">
         <MonthlyGoalSetter
           profile={profile}
-          onSave={(goal) => { setProfile({ ...profile, currentMonthGoal: goal }); setShowGoalSetter(false); }}
+          onSave={(goal) => { updateMonthlyGoal(goal); setShowGoalSetter(false); }}
           onCancel={() => setShowGoalSetter(false)}
         />
         <Toaster position="bottom-center" richColors />

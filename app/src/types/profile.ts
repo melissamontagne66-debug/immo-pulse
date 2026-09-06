@@ -118,6 +118,18 @@ export function calculateTargetsFromCA6Months(
   }
 
   const ventesTarget = Math.max(1, Math.ceil(tôtalVentes6M * monthWeight));
+  return deriveTargetsFromVentes(ventesTarget, expérienceLevel);
+}
+
+// Chaîne commune : ventes → mandats → R2 → R1 → appels, visites
+function deriveTargetsFromVentes(ventesTarget: number, expérienceLevel: string): {
+  ventesTarget: number;
+  mandatsTarget: number;
+  rdvR2Target: number;
+  rdvR1Target: number;
+  appelsTarget: number;
+  visitesTarget: number;
+} {
   // Mandats par mois selon le niveau d'expérience
   let mandatsTarget: number;
   if (expérienceLevel === 'débutant' || expérienceLevel === 'quelques-semaines') {
@@ -133,6 +145,27 @@ export function calculateTargetsFromCA6Months(
   const visitesTarget = Math.ceil(ventesTarget * 5);
 
   return { ventesTarget, mandatsTarget, rdvR2Target, rdvR1Target, appelsTarget, visitesTarget };
+}
+
+// Objectifs dérivés d'un CA MENSUEL saisi à la main (MonthlyGoalSetter) :
+// le CA ajusté du mois fait foi, pas le CA 6 mois du profil — sinon
+// l'ajustement manuel ne se répercute jamais sur les objectifs affichés.
+export function calculateTargetsFromMonthlyCA(
+  caMonth: number,
+  commissionsPct: number,
+  averagePrice: number,
+  expérienceLevel: string
+): {
+  ventesTarget: number;
+  mandatsTarget: number;
+  rdvR2Target: number;
+  rdvR1Target: number;
+  appelsTarget: number;
+  visitesTarget: number;
+} {
+  const avgCommission = averagePrice * (commissionsPct / 100);
+  const ventesTarget = Math.max(1, Math.ceil(caMonth / avgCommission));
+  return deriveTargetsFromVentes(ventesTarget, expérienceLevel);
 }
 
 // Calcul des objectifs journaliers (toujours par jour, jamais par mois en affichage)

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
 import type { UserProfile, MonthlyGoal } from '@/types/profile';
-import { calculateTargetsFromCA6Months } from '@/types/profile';
+import { calculateTargetsFromMonthlyCA } from '@/types/profile';
 import { formatEuro } from '@/lib/utils';
 import { TrendingUp, Phone, DoorOpen, Calendar, Sparkles, X } from 'lucide-react';
 
@@ -15,6 +15,7 @@ interface MonthlyGoalSetterProps {
 
 export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSetterProps) {
   const [caTarget, setCaTarget] = useState(profile.currentMonthGoal.caTarget);
+  const [caInput, setCaInput] = useState(String(profile.currentMonthGoal.caTarget));
   const isEs = profile.language === 'es';
   const COMMISSION = 5;
 
@@ -24,7 +25,9 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
   const currentMonth = new Date().getMonth();
   const monthLabel = monthNames[currentMonth];
 
-  const targets = calculateTargetsFromCA6Months(profile.ca6MonthsTarget, COMMISSION, profile.averagePrice, profile.expérienceLevel, profile.currentMonthGoal.month);
+  // Objectifs dérivés du CA du mois tel qu'ajusté à la main — sinon la
+  // saisie manuelle n'aurait aucun effet sur les objectifs affichés.
+  const targets = calculateTargetsFromMonthlyCA(caTarget, COMMISSION, profile.averagePrice, profile.expérienceLevel);
 
   const handleSave = () => {
     const goal: MonthlyGoal = {
@@ -60,10 +63,25 @@ export function MonthlyGoalSetter({ profile, onSave, onCancel }: MonthlyGoalSett
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-red-500" /> {isEs ? `Facturación ajustada para ${monthLabel} (€)` : `CA ajusté pour ${monthLabel} (€)`}</Label>
+                <Label htmlFor="ca-ajuste-input" className="flex items-center gap-2"><TrendingUp className="w-4 h-4 text-red-500" /> {isEs ? `Facturación ajustada para ${monthLabel} (€)` : `CA ajusté pour ${monthLabel} (€)`}</Label>
                 <span className="text-lg font-bold text-red-600">{formatEuro(caTarget)}</span>
               </div>
-              <Slider value={[caTarget]} onValueChange={v => setCaTarget(v[0])} min={5000} max={100000} step={1000} />
+              <Input
+                id="ca-ajuste-input"
+                type="number"
+                inputMode="numeric"
+                min={1000}
+                max={500000}
+                step={500}
+                value={caInput}
+                onChange={e => {
+                  const raw = e.target.value;
+                  setCaInput(raw);
+                  const v = parseFloat(raw.replace(',', '.'));
+                  if (!isNaN(v) && v >= 1000 && v <= 500000) setCaTarget(v);
+                }}
+                onBlur={() => setCaInput(String(caTarget))}
+              />
             </div>
 
             {/* Objectifs PAR JOUR — jamais par mois */}
