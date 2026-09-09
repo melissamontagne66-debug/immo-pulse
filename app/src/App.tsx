@@ -186,10 +186,11 @@ function App() {
     applyStreakOpenCheck(prev => {
       const { streak, event } = checkStreakOnOpen(prev.streak, todayKey);
       if (event) {
-        // Toast différé pour laisser l'UI se monter
+        // Toast différé pour laisser l'UI se monter. toast.info (fond coloré —
+        // le toast par défaut s'affichait sur fond transparent) + bouton de
+        // fermeture pour pouvoir le masquer avant la fin du délai.
         setTimeout(() => {
-          if (event.type === 'freeze-used') toast.info(event.message, { duration: 8000 });
-          else toast(event.message, { duration: 8000 });
+          toast.info(event.message, { duration: 8000, closeButton: true });
         }, 800);
       }
       return { ...prev, streak };

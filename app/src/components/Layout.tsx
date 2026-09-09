@@ -6,6 +6,7 @@ import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bel
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
+import { PrivacyPolicyModal } from '@/components/PrivacyPolicyModal';
 
 // Extension Chrome Bridge CRM — zip hébergé par l'app en attendant la
 // publication sur le Chrome Web Store (le lien déclenche le téléchargement ;
@@ -42,6 +43,7 @@ const getTabs = (lang: 'fr' | 'es') => [
 export function Layout({ children, activeTab, onTabChange, currentDay, niveauLabel, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
   const tabs = getTabs(profile.language);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
 
   // MOD-29 : état du rappel push (réglage sidebar)
   const pushAvailable = isPushConfigured();
@@ -95,14 +97,8 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
         />
       )}
 
-      {/* Floating hamburger button — visible on all pages, all scroll positions */}
-      <button
-        onClick={() => setMobileMenuOpen(true)}
-        className="fixed bottom-6 right-6 z-[60] lg:hidden w-14 h-14 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all flex items-center justify-center"
-        aria-label="Ouvrir le menu"
-      >
-        <Menu className="w-6 h-6" />
-      </button>
+      {/* Le bouton hamburger est dans l'en-tête mobile en haut — l'emplacement
+          attendu (un bouton flottant en bas à droite gênait la saisie). */}
 
       {/* Sidebar - hidden on mobile, shown on desktop */}
       <aside className={cn(
@@ -256,6 +252,12 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
             <p className="text-[11px] text-gray-400 leading-relaxed">
               {profile.language === 'es' ? CGU_REMINDER_ES : CGU_REMINDER_FR}
             </p>
+            <button
+              onClick={() => setShowPrivacy(true)}
+              className="text-[11px] text-gray-400 hover:text-gray-600 underline underline-offset-2 transition-colors"
+            >
+              {profile.language === 'es' ? 'Política de privacidad' : 'Politique de confidentialité'}
+            </button>
             {/* Raccourci vers l'extension Chrome Bridge CRM (récupération des
                 prospects dans le CRM du réseau) */}
             <a
@@ -376,8 +378,15 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
 
       {/* Main content */}
       <main className="flex-1 overflow-y-auto min-w-0">
-        {/* Mobile header — sans le bouton hamburger (il est flottant maintenant) */}
+        {/* Mobile header — avec le bouton hamburger (emplacement habituel en haut) */}
         <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+          <button
+            onClick={() => setMobileMenuOpen(true)}
+            aria-label="Ouvrir le menu"
+            className="text-gray-600 hover:text-gray-900 -ml-1 p-1"
+          >
+            <Menu className="w-6 h-6" />
+          </button>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">I</div>
             <span className="font-bold text-gray-900 text-sm">Immo Pulse</span>
@@ -395,6 +404,8 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
           {children}
         </div>
       </main>
+
+      {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
     </div>
   );
 }
