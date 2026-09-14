@@ -279,9 +279,14 @@ export function DailyActions({
   prevWorkday.setDate(prevWorkday.getDate() - (currentDow === 1 ? 3 : currentDow === 0 ? 2 : 1));
   const prevWorkdayStr = toLocalDateKey(prevWorkday);
   const hasPrevWorkdayBilan = dailyResults.some(r => r.date === prevWorkdayStr);
+  // Pas de bilan exigible pour un jour antérieur au démarrage du compte —
+  // sinon, juste après son tout premier bilan, la flèche « jour suivant »
+  // réclamait un rattrapage pour un jour où le conseiller n'avait pas
+  // encore commencé, et restait bloquée.
+  const prevWorkdayBeforeStart = prevWorkdayStr < profile.startDate;
   const isFirstEverDay = currentDay === 1 && dailyResults.length === 0;
   const missedBilanDate: string | null =
-    !isFirstEverDay && !hasPrevWorkdayBilan
+    !isFirstEverDay && !hasPrevWorkdayBilan && !prevWorkdayBeforeStart
       ? prevWorkdayStr
       : !isWeekendDay && currentHour >= 17 && !todayCheckupDone
         ? todayStr
