@@ -128,8 +128,8 @@ function downloadVcf(contact: Contact) {
   if (contact.adresse || contact.ville) {
     lines.push(`ADR:;;${escapeVcf(contact.adresse)};${escapeVcf(contact.ville)};;${escapeVcf(contact.codePostal)};`);
   }
-  const noteParts = [contact.contexte, ...(contact.notes ?? []).map(n => `${n.date} : ${n.texte}`)].filter(Boolean);
-  if (noteParts.length > 0) lines.push(`NOTE:${escapeVcf(noteParts.join(' — '))}`);
+  // Pas de NOTE : les notes de suivi restent dans l'app, elles n'ont pas
+  // vocation à finir dans le répertoire du téléphone.
   lines.push('END:VCARD');
   const blob = new Blob([lines.join('\r\n')], { type: 'text/vcard;charset=utf-8' });
   const url = URL.createObjectURL(blob);

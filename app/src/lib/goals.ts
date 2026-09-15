@@ -292,7 +292,7 @@ export function getGoals(profile: UserProfile, day: number = 1, dailyResults: Da
       { key: 'visites', target: allege(t.visites), label: isEs ? 'Visitas' : 'Visites' },
       // Pige : cible fixe quotidienne (hors calcul CA) — messages envoyés
       // aux propriétaires depuis les plateformes immo.
-      { key: 'piges', target: 10, label: isEs ? 'Mensajes de pige' : 'Messages de pige' },
+      { key: 'piges', target: 5, label: isEs ? 'Mensajes de pige' : 'Messages de pige' },
     ],
     dailyTargets: {
       calls: t.calls,
