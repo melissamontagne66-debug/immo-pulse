@@ -159,7 +159,7 @@ export function getDailyActionsForDay(
       label: isEs ? 'Contactar bienes en plataformas' : 'Contacter les nouveaux biens sur les plateformes', icon: '💻',
       catLabel: isEs ? 'Plataformas' : 'Plateformes',
       catColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
-      askResult: false,
+      askResult: false, counterKeys: ['piges' as CounterKey],
     },
     {
       id: `prospection-jour-${day}`, type: 'prospection',
@@ -290,6 +290,9 @@ export function getGoals(profile: UserProfile, day: number = 1, dailyResults: Da
       { key: 'r1', target: allege(t.rdvR1), label: isEs ? 'R1 · Cita descubrimiento' : 'R1 · RDV découverte' },
       { key: 'r2', target: allege(t.rdvR2), label: isEs ? 'R2 · Cita firma' : 'R2 · RDV signature' },
       { key: 'visites', target: allege(t.visites), label: isEs ? 'Visitas' : 'Visites' },
+      // Pige : cible fixe quotidienne (hors calcul CA) — messages envoyés
+      // aux propriétaires depuis les plateformes immo.
+      { key: 'piges', target: 10, label: isEs ? 'Mensajes de pige' : 'Messages de pige' },
     ],
     dailyTargets: {
       calls: t.calls,

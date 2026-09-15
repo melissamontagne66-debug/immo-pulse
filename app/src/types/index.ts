@@ -33,6 +33,8 @@ export interface DailyResults {
   visitesDone: number;
   offresWritten: number;
   compromisSigned: number;
+  // Messages de pige envoyés aux propriétaires (plateformes immo)
+  pigesSent: number;
   prospectionTime: string;
   notes: string;
   // Debrief du soir intégré

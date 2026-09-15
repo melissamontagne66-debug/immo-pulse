@@ -7,7 +7,7 @@ import { toLocalDateKey } from '@/lib/utils';
 // ⚠️ Cette clé n'est pas encore incluse dans la sync cloud (App.tsx pousse
 // seulement profile/progress/visits).
 
-export type CounterKey = 'conversations' | 'contacts' | 'r1' | 'r2' | 'visites';
+export type CounterKey = 'conversations' | 'contacts' | 'r1' | 'r2' | 'visites' | 'piges';
 
 export interface DailyCounters {
   conversations: number;
@@ -15,6 +15,7 @@ export interface DailyCounters {
   r1: number;
   r2: number;
   visites: number;
+  piges: number;
 }
 
 const COUNTERS_PREFIX = 'iad-coach-counters';
@@ -22,7 +23,7 @@ const COUNTERS_EVENT = 'iad-coach-counters-changed';
 const NOTES_PREFIX = 'iad-coach-action-notes';
 const NOTES_EVENT = 'iad-coach-action-notes-changed';
 
-const emptyCounters: DailyCounters = { conversations: 0, contacts: 0, r1: 0, r2: 0, visites: 0 };
+const emptyCounters: DailyCounters = { conversations: 0, contacts: 0, r1: 0, r2: 0, visites: 0, piges: 0 };
 
 // Retrouve la clé utilisateur (email) depuis la session, comme getUserKey() dans App.tsx.
 // Permet d'utiliser ces hooks sans changer les props passées par App.tsx.

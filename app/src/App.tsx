@@ -300,8 +300,11 @@ function App() {
 
   // ===== SAUVEGARDE CLOUD =====
   const isSyncing = useRef(false);
+  // Validation de l'enregistrement du bilan : 'pending' tant que la sync
+  // n'a pas confirmé, pour que le conseiller ne ferme pas l'app trop vite.
+  const [bilanSyncState, setBilanSyncState] = useState<'idle' | 'pending' | 'done' | 'error'>('idle');
 
-  const flushSync = useCallback(async () => {
+  const flushSync = useCallback(async (options?: { keepalive?: boolean }) => {
     if (!isCloudEnabled() || !currentUser) return;
     if (isSyncing.current) return;
     isSyncing.current = true;
@@ -314,9 +317,11 @@ function App() {
         progress,
         visits,
         sales,
-      });
+      }, options);
+      setBilanSyncState(prev => (prev === 'pending' ? 'done' : prev));
     } catch {
       // Silencieux — si le réseau est down, les données restent en localStorage
+      setBilanSyncState(prev => (prev === 'pending' ? 'error' : prev));
     } finally {
       isSyncing.current = false;
     }
@@ -333,6 +338,16 @@ function App() {
     const timeout = setTimeout(() => { flushSync(); }, 500);
     return () => clearTimeout(timeout);
   }, [progress, profile, visits, currentUser, hasProfile, flushSync]);
+
+  // Ferme le trou de la fermeture d'onglet : un bilan enregistré puis l'app
+  // fermée dans la demi-seconde du debounce n'était jamais envoyée à D1.
+  // keepalive permet à la requête de survivre au déchargement de la page.
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) return;
+    const onPageHide = () => { flushSync({ keepalive: true }); };
+    window.addEventListener('pagehide', onPageHide);
+    return () => window.removeEventListener('pagehide', onPageHide);
+  }, [isAuthenticated, currentUser, flushSync]);
   // ===== FIN SAUVEGARDE CLOUD =====
 
   // Flush pending changes before logging out, so a fast logout can't cancel
@@ -375,6 +390,10 @@ function App() {
 
   const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
     const registration = addDailyResults(results);
+    // La clôture du bilan affiche l'état de la sync : le conseiller attend
+    // la confirmation avant de fermer l'app (trou historique de la fermeture
+    // dans la fenêtre du debounce).
+    setBilanSyncState(isCloudEnabled() ? 'pending' : 'done');
     // MOD-27 : évalue le protocole anti-décrochage (humeur / difficultés du bilan).
     // Volontairement silencieux ici — la réponse bienveillante s'affiche sur le
     // dashboard, jamais de mention du « protocole » à l'utilisateur.
@@ -439,7 +458,7 @@ function App() {
     addDailyResults({
       date,
       callsMade: 0, contactsApproached: 0, rdvR1Fixed: 0, rdvR1Done: 0, rdvR2Done: 0,
-      mandatsSigned: 0, visitesDone: 0, offresWritten: 0, compromisSigned: 0,
+      mandatsSigned: 0, visitesDone: 0, offresWritten: 0, compromisSigned: 0, pigesSent: 0,
       prospectionTime: '', notes: 'Journée déclarée non travaillée', wins: '',
       challenges: '', mood: 3, coachQuestion: '', coachAnswer: '',
     });
@@ -670,6 +689,7 @@ function App() {
                 onRequestClose={requestCloseCheckup}
                 onDirtyChange={setCheckupDirty}
                 onUpdateProfile={updateProfile}
+                bilanSyncState={bilanSyncState}
                 onPlanNextDay={(tasks) => planNextDay({
                   date: toLocalDateKey(new Date(Date.now() + 24 * 60 * 60 * 1000)),
                   actions: tasks,

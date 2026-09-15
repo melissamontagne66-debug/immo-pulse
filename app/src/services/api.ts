@@ -112,7 +112,7 @@ export async function apiSyncSave(payload: {
   progress: unknown;
   visits: unknown[];
   sales?: unknown[];
-}) {
+}, options?: { keepalive?: boolean }) {
   if (IS_PLACEHOLDER) {
     throw new Error('API not configured');
   }
@@ -120,6 +120,10 @@ export async function apiSyncSave(payload: {
     method: 'POST',
     headers: headers(),
     body: JSON.stringify(payload),
+    // keepalive : la requête survit au déchargement de la page (pagehide).
+    // Limite navigateur ~64 Ko de body — au-delà la requête échoue et les
+    // données restent en localStorage, comme avant.
+    keepalive: options?.keepalive ?? false,
   });
   return await res.json();
 }

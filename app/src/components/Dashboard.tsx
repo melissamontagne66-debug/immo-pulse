@@ -13,7 +13,7 @@ import type { LucideIcon } from 'lucide-react';
 import { formatEuro, toLocalDateKey, parseLocalDateKey } from '@/lib/utils';
 import { RdvInfoTooltip } from '@/components/RdvInfoTooltip';
 import { InstallAppPrompt } from '@/components/InstallAppPrompt';
-import { Phone, Calendar, FileCheck, Home, DoorOpen } from 'lucide-react';
+import { Phone, Calendar, FileCheck, Home, DoorOpen, Send } from 'lucide-react';
 import { getDefiForDay } from '@/data/defis';
 import { DefiCard } from '@/components/DefiCard';
 import { ConseilDuJour } from '@/components/ConseilDuJour';
@@ -129,6 +129,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
     r1: { icon: Calendar, color: 'text-green-600', bg: 'bg-green-50', border: 'border-green-200' },
     r2: { icon: Calendar, color: 'text-indigo-600', bg: 'bg-indigo-50', border: 'border-indigo-200' },
     visites: { icon: Home, color: 'text-teal-600', bg: 'bg-teal-50', border: 'border-teal-200' },
+    piges: { icon: Send, color: 'text-cyan-600', bg: 'bg-cyan-50', border: 'border-cyan-200' },
   };
   const dailyObjectives = goals.dailyGoals.map(g => ({ key: g.key, label: g.label, value: g.target, ...objectiveStyle[g.key] }));
 
@@ -371,7 +372,7 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
               : `Mode consolidation : ${convoAllegee.target} conversations au lieu de ${convoRef.target} — on consolide, on ne lâche rien.`}
           </p>
         )}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
           {dailyObjectives.map(obj => {
             const count = counters[obj.key];
             // Contacts physiques : compteur libre, sans cible — le conseiller

@@ -20,7 +20,7 @@ import {
   TrendingUp, Clock, Star, Trophy, AlertTriangle,
   CalendarPlus, ArrowRight, PlayCircle, CheckCircle, XCircle,
   Database, ClipboardCheck, Lightbulb, ChevronDown, ChevronUp,
-  HeartHandshake
+  HeartHandshake, Send
 } from 'lucide-react';
 
 const CHECKUP_DRAFT_PREFIX = 'iad-coach-checkup-draft';
@@ -104,12 +104,15 @@ interface DailyCheckupProps {
   // Rattrapage : date cible imposée quand le bilan est ouvert pour un jour
   // passé (bilan oublié — ouverture via la flèche « jour suivant » bloquée).
   bilanDate?: string;
+  // État de la sync cloud du bilan — affiché au step 2 pour que le
+  // conseiller attende la confirmation avant de fermer l'app.
+  bilanSyncState?: 'idle' | 'pending' | 'done' | 'error';
 }
 
 // Liste des actions du jour à vérifier — source unique partagée avec l'écran
 // « Aujourd'hui » : getDailyActionsForDay dans src/lib/goals.ts (MOD-19).
 
-export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile, onPlanNextDay, bilanDate }: DailyCheckupProps) {
+export function DailyCheckup({ userKey, profile, currentDay, completedDays, dailyResults, onSave, onClose, onRequestClose, onDirtyChange, onUpdateProfile, onPlanNextDay, bilanDate, bilanSyncState = 'idle' }: DailyCheckupProps) {
   const draft = useMemo(() => loadDraft(userKey, currentDay), [userKey, currentDay]);
 
   // Compteurs d'objectifs du jour (partagés avec Dashboard / Aujourd'hui)
@@ -222,6 +225,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
     mandatsSigned: 0,
     visitesDone: counters.visites,
     offresWritten: 0,
+    pigesSent: counters.piges,
     prospectionTime: '',
     comptesRendusFaits: undefined as boolean | undefined,
     notes: notesPrefill,
@@ -255,6 +259,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
         rdvR1Done: 0,
         rdvR2Done: 0,
         visitesDone: 0,
+        pigesSent: 0,
         notes: '',
       });
     }
@@ -342,6 +347,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
       r1: results.rdvR1Done || 0,
       r2: results.rdvR2Done || 0,
       visites: results.visitesDone || 0,
+      piges: results.pigesSent || 0,
     });
 
     // Prepare next day tasks based on what was reported
@@ -799,6 +805,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
             { field: 'mandatsSigned' as const, label: 'Mandats', icon: FileCheck, color: 'text-purple-600' },
             { field: 'visitesDone' as const, label: 'Visites', icon: Home, color: 'text-teal-600' },
             { field: 'offresWritten' as const, label: 'Offres', icon: TrendingUp, color: 'text-orange-600' },
+            { field: 'pigesSent' as const, label: isEs ? 'Mensajes de pige' : 'Messages de pige', icon: Send, color: 'text-cyan-600' },
 
           ].map(item => (
             <Card key={item.field}><CardContent className="p-3">
@@ -1240,12 +1247,43 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
           </CardContent>
         </Card>
 
+        {/* Validation de l'enregistrement : tant que la sync n'a pas confirmé,
+            le bouton de clôture est bloqué pour éviter de fermer l'app avant
+            que le bilan ne soit envoyé au cloud. */}
+        {bilanSyncState === 'pending' && (
+          <p className="text-center text-sm text-blue-700 bg-blue-50 rounded-lg p-3 border border-blue-200">
+            {isEs
+              ? '⏳ Sincronizando tu balance en tu cuenta… no cierres la app todavía.'
+              : '⏳ Synchronisation de ton bilan sur ton compte… ne ferme pas encore l\'app.'}
+          </p>
+        )}
+        {bilanSyncState === 'done' && (
+          <p className="text-center text-sm text-green-700 bg-green-50 rounded-lg p-3 border border-green-200">
+            {isEs
+              ? '✅ Balance registrado y sincronizado — puedes cerrar la app con seguridad.'
+              : '✅ Bilan enregistré et synchronisé — tu peux fermer l\'app en toute sécurité.'}
+          </p>
+        )}
+        {bilanSyncState === 'error' && (
+          <p className="text-center text-sm text-amber-700 bg-amber-50 rounded-lg p-3 border border-amber-200">
+            {isEs
+              ? '⚠️ Sin conexión — tu balance está registrado en este dispositivo y se sincronizará a la próxima apertura.'
+              : '⚠️ Pas de connexion — ton bilan est enregistré sur cet appareil et sera synchronisé à la prochaine ouverture.'}
+          </p>
+        )}
+
         <div className="flex gap-3">
           <Button onClick={() => setStep(1)} variant="outline" className="flex-1">
             ← Modifier le bilan
           </Button>
-          <Button onClick={onClose} className="flex-1 bg-red-600 hover:bg-red-700">
-            <CheckCircle className="w-4 h-4 mr-2" /> C'est bon, je continue
+          <Button
+            onClick={onClose}
+            disabled={bilanSyncState === 'pending'}
+            className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-60"
+          >
+            {bilanSyncState === 'pending'
+              ? (isEs ? 'Sincronización…' : 'Synchronisation…')
+              : (<><CheckCircle className="w-4 h-4 mr-2" /> {isEs ? 'Vale, sigo' : 'C\'est bon, je continue'}</>)}
           </Button>
         </div>
       </div>

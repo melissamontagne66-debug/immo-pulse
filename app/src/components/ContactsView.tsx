@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Users, Plus, Phone, Pencil, Trash2, ShieldAlert, CalendarClock, Download, Search, StickyNote, Mail, MapPin, Cake, MessageSquarePlus } from 'lucide-react';
+import { Users, Plus, Phone, Pencil, Trash2, ShieldAlert, CalendarClock, Download, Search, StickyNote, Mail, MapPin, Cake, MessageSquarePlus, UserPlus } from 'lucide-react';
 import { useContacts, getContactLastUpdate, type Contact, type ContactStatut, type ContactOrigine, type ContactTypeProspect, type ContactOccupancy, type DelaiRelance } from '@/hooks/useContacts';
 import { Textarea } from '@/components/ui/textarea';
 import { toLocalDateKey } from '@/lib/utils';
@@ -108,6 +108,34 @@ function exportCsv(contacts: Contact[]) {
   const a = document.createElement('a');
   a.href = url;
   a.download = `prospects-immo-pulse-${toLocalDateKey(new Date())}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Export vCard (.vcf) : sur téléphone, ouvrir le fichier propose
+// directement « Ajouter aux contacts » du répertoire.
+function downloadVcf(contact: Contact) {
+  const fullName = [contact.prenom, contact.nom].filter(Boolean).join(' ');
+  const escapeVcf = (v: string) => v.replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\n/g, '\\n');
+  const lines = [
+    'BEGIN:VCARD',
+    'VERSION:3.0',
+    `N:${escapeVcf(contact.nom)};${escapeVcf(contact.prenom)};;;`,
+    `FN:${escapeVcf(fullName)}`,
+  ];
+  if (contact.telephone) lines.push(`TEL;TYPE=CELL:${contact.telephone.replace(/\s/g, '')}`);
+  if (contact.email) lines.push(`EMAIL:${escapeVcf(contact.email)}`);
+  if (contact.adresse || contact.ville) {
+    lines.push(`ADR:;;${escapeVcf(contact.adresse)};${escapeVcf(contact.ville)};;${escapeVcf(contact.codePostal)};`);
+  }
+  const noteParts = [contact.contexte, ...(contact.notes ?? []).map(n => `${n.date} : ${n.texte}`)].filter(Boolean);
+  if (noteParts.length > 0) lines.push(`NOTE:${escapeVcf(noteParts.join(' — '))}`);
+  lines.push('END:VCARD');
+  const blob = new Blob([lines.join('\r\n')], { type: 'text/vcard;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${(fullName || 'contact').replace(/[^\wÀ-ÿ -]/g, '').trim().replace(/\s+/g, '-')}.vcf`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -665,6 +693,14 @@ export function ContactsView({ userKey, state }: ContactsViewProps) {
                         </span>
                       ) : (
                         <>
+                          <button
+                            onClick={() => downloadVcf(contact)}
+                            className="text-gray-400 hover:text-teal-600 p-2"
+                            aria-label={isEs ? 'Añadir a mis contactos del teléfono' : 'Ajouter au répertoire de mon téléphone'}
+                            title={isEs ? 'Añadir a mis contactos del teléfono (.vcf)' : 'Ajouter au répertoire de mon téléphone (.vcf)'}
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </button>
                           <button
                             onClick={() => { setQuickNoteId(contact.id); setQuickNoteText(''); }}
                             className="text-gray-400 hover:text-green-600 p-2"
