@@ -432,6 +432,20 @@ function App() {
     }
   };
 
+  // Bilan oublié : le conseiller peut déclarer qu'il n'a pas travaillé ce
+  // jour-là — un bilan à zéro est enregistré (la série n'est pas cassée) et
+  // la flèche « jour suivant » se débloque.
+  const handleDeclareNoWork = (date: string) => {
+    addDailyResults({
+      date,
+      callsMade: 0, contactsApproached: 0, rdvR1Fixed: 0, rdvR1Done: 0, rdvR2Done: 0,
+      mandatsSigned: 0, visitesDone: 0, offresWritten: 0, compromisSigned: 0,
+      prospectionTime: '', notes: 'Journée déclarée non travaillée', wins: '',
+      challenges: '', mood: 3, coachQuestion: '', coachAnswer: '',
+    });
+    toast.success('Journée déclarée non travaillée — on repart aujourd\'hui 💪', { duration: 4000 });
+  };
+
   const handlePlanNextDay = (plan: NextDayPlan) => {
     planNextDay(plan);
     setModalView('none');
@@ -493,6 +507,8 @@ function App() {
             currentWeek={currentWeek}
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
+            onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
+            onDeclareNoWork={handleDeclareNoWork}
             sales={sales}
             contactsState={contactsState}
           />
@@ -572,6 +588,8 @@ function App() {
             currentWeek={currentWeek}
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
+            onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
+            onDeclareNoWork={handleDeclareNoWork}
             sales={sales}
             contactsState={contactsState}
           />

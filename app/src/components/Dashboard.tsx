@@ -33,11 +33,15 @@ interface DashboardProps {
   currentWeek: WeekPlan;
   onNavigate: (tab: string) => void;
   onSetMonthlyGoal: () => void;
+  /** Bilan oublié : ouvre le rattrapage daté (même flux que la flèche « jour suivant »). */
+  onOpenMissedCheckup?: (date: string) => void;
+  /** Bilan oublié : déclare une journée non travaillée (bilan à zéro). */
+  onDeclareNoWork?: (date: string) => void;
   sales: Sale[];
   contactsState: ReturnType<typeof useContacts>;
 }
 
-export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, sales, contactsState }: DashboardProps) {
+export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, onOpenMissedCheckup, onDeclareNoWork, sales, contactsState }: DashboardProps) {
   const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak.count);
   const alertes = insights.filter(i => i.type === 'alerte');
   const isEs = profile.language === 'es';
@@ -57,6 +61,20 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   // Lecture pure dans useState (StrictMode-safe), écriture dans useEffect.
   const [joursAbsence] = useState(() => getJoursDepuisDerniereOuverture(progress.streak.lastBilanDate));
   useEffect(() => { touchLastOpen(); }, []);
+
+  // Bilan du précédent jour ouvré manquant → carte proposant le rattrapage
+  // ou la déclaration « je n'ai pas travaillé » (débloque la flèche
+  // « jour suivant », qui applique la même règle dans « Aujourd'hui »).
+  const missedPrevBilanDate = (() => {
+    const now = new Date();
+    const dow = now.getDay(); // 0 = dimanche
+    const prev = new Date(now);
+    prev.setDate(prev.getDate() - (dow === 1 ? 3 : dow === 0 ? 2 : 1));
+    const key = toLocalDateKey(prev);
+    if (key < profile.startDate) return null; // pas de bilan exigible avant le démarrage
+    if (currentDay === 1 && dailyResults.length === 0) return null; // tout premier jour
+    return dailyResults.some(r => r.date === key) ? null : key;
+  })();
 
   // MOD-31 — niveau de carrière (header).
   const niveau = getNiveau(progress, sales);
@@ -260,6 +278,43 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
             >
               {isEs ? 'Mi acción de hoy' : 'Mon action du jour'}
             </button>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Bilan du précédent jour ouvré oublié — rattrapage ou « pas travaillé » */}
+      {missedPrevBilanDate && (
+        <Card className="bg-amber-50 border-amber-300">
+          <CardContent className="p-4">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-semibold text-amber-800">
+                  {isEs
+                    ? `No hiciste tu balance del ${parseLocalDateKey(missedPrevBilanDate).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}.`
+                    : `Tu n'as pas fait ton bilan du ${parseLocalDateKey(missedPrevBilanDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.`}
+                </p>
+                <p className="text-xs text-amber-700 mt-1">
+                  {isEs
+                    ? 'Rellénalo ahora, o indica que no trabajaste ese día — podrás pasar al día siguiente.'
+                    : 'Remplis-le maintenant, ou indique que tu n\'avais pas travaillé ce jour-là — tu pourras ensuite passer au jour suivant.'}
+                </p>
+                <div className="flex gap-2 mt-3 flex-wrap">
+                  <button
+                    onClick={() => onOpenMissedCheckup?.(missedPrevBilanDate)}
+                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'Rellenar el balance' : 'Remplir le bilan'}
+                  </button>
+                  <button
+                    onClick={() => onDeclareNoWork?.(missedPrevBilanDate)}
+                    className="px-3 py-2 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-medium transition-colors"
+                  >
+                    {isEs ? 'No trabajé ese día' : 'Je n\'ai pas travaillé'}
+                  </button>
+                </div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
