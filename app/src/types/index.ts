@@ -84,6 +84,13 @@ export interface UserProgress {
   // quel appareil — le front les lit/écrit dans leurs clés localStorage.
   rdvs?: { id: string; titre: string; dateHeure: string; lieu: string }[];
   actionNotes?: Record<string, string>;
+  // États transitoires du jour — synchronisés pour être retrouvés sur
+  // n'importe quel appareil ; le cloud ne remplit que si l'appareil n'a
+  // rien en local (un comptage ou un brouillon en cours n'est pas écrasé).
+  countersToday?: { date: string; values: Record<string, number> };
+  checkupDraft?: { day: number; data: unknown } | null;
+  weekendPending?: { date: string; rdvR1Done: number; rdvR2Done: number; visitesDone: number } | null;
+  tracfinPending?: { type: 'mandat' | 'offre'; since: string } | null;
 }
 
 export interface KnowledgeModule {

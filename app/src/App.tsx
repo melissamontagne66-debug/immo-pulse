@@ -278,6 +278,35 @@ function App() {
             localStorage.setItem(notesKey, JSON.stringify({ ...cloudNotes, ...localNotes }));
             window.dispatchEvent(new CustomEvent('iad-coach-action-notes-changed'));
           }
+
+          // États transitoires du jour (compteurs, brouillon de bilan, report
+          // week-end, tracfin) : le cloud ne remplit que si l'appareil n'a
+          // rien en local — un comptage ou un brouillon en cours sur cet
+          // appareil n'est jamais écrasé.
+          const todayKey = toLocalDateKey(new Date());
+          const cloudCounters = data.progress.countersToday;
+          if (cloudCounters && cloudCounters.date === todayKey) {
+            const countersKey = `iad-coach-counters-${userKey}-${todayKey}`;
+            if (!localStorage.getItem(countersKey)) {
+              localStorage.setItem(countersKey, JSON.stringify(cloudCounters.values));
+              window.dispatchEvent(new CustomEvent('iad-coach-counters-changed'));
+            }
+          }
+          const cloudDraft = data.progress.checkupDraft;
+          if (cloudDraft && typeof cloudDraft.day === 'number' && cloudDraft.data) {
+            const draftKey = `iad-coach-checkup-draft-${userKey}-${cloudDraft.day}`;
+            if (!localStorage.getItem(draftKey)) localStorage.setItem(draftKey, JSON.stringify(cloudDraft.data));
+          }
+          const cloudWeekend = data.progress.weekendPending;
+          if (cloudWeekend && typeof cloudWeekend.date === 'string') {
+            const weekendKey = `iad-coach-weekend-pending-${userKey}`;
+            if (!localStorage.getItem(weekendKey)) localStorage.setItem(weekendKey, JSON.stringify(cloudWeekend));
+          }
+          const cloudTracfin = data.progress.tracfinPending;
+          if (cloudTracfin && typeof cloudTracfin.since === 'string') {
+            const tracfinKey = `iad-coach-tracfin-pending-${userKey}`;
+            if (!localStorage.getItem(tracfinKey)) localStorage.setItem(tracfinKey, JSON.stringify(cloudTracfin));
+          }
         } else {
           if (data.dailyResults && data.dailyResults.length > 0) {
             loadProgressFromCloud({
@@ -353,6 +382,16 @@ function App() {
           ...progress,
           rdvs: readStorageJson<NonNullable<typeof progress.rdvs>>(`iad-coach-rdv-${userKey}`, progress.rdvs ?? []),
           actionNotes: readStorageJson<NonNullable<typeof progress.actionNotes>>(`iad-coach-action-notes-${userKey}`, progress.actionNotes ?? {}),
+          countersToday: {
+            date: toLocalDateKey(new Date()),
+            values: readStorageJson<Record<string, number>>(`iad-coach-counters-${userKey}-${toLocalDateKey(new Date())}`, {}),
+          },
+          checkupDraft: (() => {
+            const draft = readStorageJson<unknown>(`iad-coach-checkup-draft-${userKey}-${progress.currentDay}`, null);
+            return draft ? { day: progress.currentDay, data: draft } : null;
+          })(),
+          weekendPending: readStorageJson<NonNullable<typeof progress.weekendPending> | null>(`iad-coach-weekend-pending-${userKey}`, null),
+          tracfinPending: readStorageJson<NonNullable<typeof progress.tracfinPending> | null>(`iad-coach-tracfin-pending-${userKey}`, null),
         },
         visits,
         sales,
