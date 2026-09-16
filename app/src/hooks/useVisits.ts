@@ -1,5 +1,19 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import type { VisitReport, VisitStats, VisitStatus } from '@/types';
+import { apiSaveVisit, apiDeleteVisit, isCloudEnabled } from '@/services/api';
+
+// Sync cloud par visite (même pattern que useContacts) : sans ça, un compte
+// rendu saisi sur mobile restait coincé sur l'appareil — le bulk /api/sync
+// l'envoyait mais le serveur l'ignorait, et /api/visits n'était jamais appelé.
+function pushVisitToCloud(visit: VisitReport) {
+  if (!isCloudEnabled()) return;
+  apiSaveVisit(visit).catch(() => { /* silencieux : local déjà à jour */ });
+}
+
+function deleteVisitFromCloud(id: string) {
+  if (!isCloudEnabled()) return;
+  apiDeleteVisit(id).catch(() => { /* silencieux : local déjà à jour */ });
+}
 
 const STORAGE_PREFIX = 'immo-pulse-visits';
 
@@ -84,12 +98,15 @@ export function useVisits(userKey: string) {
       saveVisits(loadedKey.current, updated);
       return updated;
     });
+    pushVisitToCloud(visit);
   }, []);
 
   const updateVisit = useCallback((id: string, updates: Partial<VisitReport>) => {
     setVisits(prev => {
       const updated = prev.map(v => v.id === id ? { ...v, ...updates } : v);
       saveVisits(loadedKey.current, updated);
+      const visit = updated.find(v => v.id === id);
+      if (visit) pushVisitToCloud(visit);
       return updated;
     });
   }, []);
@@ -100,6 +117,7 @@ export function useVisits(userKey: string) {
       saveVisits(loadedKey.current, updated);
       return updated;
     });
+    deleteVisitFromCloud(id);
   }, []);
 
   const deleteProperty = useCallback((address: string) => {
@@ -107,6 +125,9 @@ export function useVisits(userKey: string) {
       // Garde sur propertyAddress : les données cloud peuvent ne pas l'avoir.
       const updated = prev.filter(v => (v.propertyAddress || '').toLowerCase().trim() !== address.toLowerCase().trim());
       saveVisits(loadedKey.current, updated);
+      prev
+        .filter(v => (v.propertyAddress || '').toLowerCase().trim() === address.toLowerCase().trim())
+        .forEach(v => deleteVisitFromCloud(v.id));
       return updated;
     });
   }, []);

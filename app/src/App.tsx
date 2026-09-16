@@ -41,6 +41,16 @@ import './App.css';
 
 type ModalView = 'none' | 'checkup' | 'planner';
 
+// Lecture localStorage tolérante — pour embarquer le mini-agenda RDV et les
+// notes d'actions dans le blob de progression synchronisé.
+function readStorageJson<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(key);
+    if (raw) return JSON.parse(raw) as T;
+  } catch { /* ignore */ }
+  return fallback;
+}
+
 function App() {
   const { currentUser, isAuthenticated, login, logout, getUserKey, register } = useAuth();
   const userKey = getUserKey();
@@ -246,6 +256,28 @@ function App() {
         }
         if (data.progress) {
           loadProgressFromCloud(data.progress);
+
+          // Mini-agenda RDV + notes d'actions : transportés dans le blob de
+          // progression, réinjectés dans leurs clés localStorage (les hooks
+          // écoutent l'événement et se rafraîchissent). Union par id / clé —
+          // jamais d'écrasement « cloud wins », comme les bilans.
+          const cloudRdvs = Array.isArray(data.progress.rdvs) ? data.progress.rdvs as { id: string }[] : [];
+          if (cloudRdvs.length > 0) {
+            const rdvKey = `iad-coach-rdv-${userKey}`;
+            const localRdvs = readStorageJson<{ id: string }[]>(rdvKey, []);
+            const cloudIds = new Set(cloudRdvs.map(r => r.id));
+            localStorage.setItem(rdvKey, JSON.stringify([...cloudRdvs, ...localRdvs.filter(r => !cloudIds.has(r.id))]));
+            window.dispatchEvent(new CustomEvent('iad-coach-rdv-changed'));
+          }
+          const cloudNotes = data.progress.actionNotes && typeof data.progress.actionNotes === 'object'
+            ? data.progress.actionNotes as Record<string, string>
+            : null;
+          if (cloudNotes) {
+            const notesKey = `iad-coach-action-notes-${userKey}`;
+            const localNotes = readStorageJson<Record<string, string>>(notesKey, {});
+            localStorage.setItem(notesKey, JSON.stringify({ ...cloudNotes, ...localNotes }));
+            window.dispatchEvent(new CustomEvent('iad-coach-action-notes-changed'));
+          }
         } else {
           if (data.dailyResults && data.dailyResults.length > 0) {
             loadProgressFromCloud({
@@ -314,7 +346,14 @@ function App() {
         // n'est pas terminé — sinon le prochain chargement croirait
         // qu'un profil existe et ferait sauter l'onboarding wizard.
         profile: hasProfile ? profile : null,
-        progress,
+        // Le blob de progression transporte aussi le mini-agenda RDV et les
+        // notes d'actions (lus frais depuis leurs clés localStorage) —
+        // retrouvables sur n'importe quel appareil au prochain chargement.
+        progress: {
+          ...progress,
+          rdvs: readStorageJson<NonNullable<typeof progress.rdvs>>(`iad-coach-rdv-${userKey}`, progress.rdvs ?? []),
+          actionNotes: readStorageJson<NonNullable<typeof progress.actionNotes>>(`iad-coach-action-notes-${userKey}`, progress.actionNotes ?? {}),
+        },
         visits,
         sales,
       }, options);
@@ -325,7 +364,7 @@ function App() {
     } finally {
       isSyncing.current = false;
     }
-  }, [progress, profile, visits, sales, currentUser, hasProfile]);
+  }, [progress, profile, visits, sales, currentUser, hasProfile, userKey]);
 
   useEffect(() => {
     if (!isCloudEnabled() || !currentUser) return;

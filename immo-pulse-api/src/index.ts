@@ -752,6 +752,27 @@ export default {
           ).bind(userId, JSON.stringify(body.sales)).run();
         }
 
+        // Comptes rendus de visite : le front les envoie dans le bulk sync
+        // depuis toujours, mais ils n'étaient jamais persistés ici — seul
+        // /api/visits (unitaire) écrivait. Upsert par id : rattrape les visites
+        // créées hors-ligne ou avant la sync unitaire côté app.
+        if (Array.isArray(body.visits)) {
+          for (const v of body.visits) {
+            if (!v || !v.id || !v.date) continue;
+            await env.DB.prepare(
+              `INSERT OR REPLACE INTO visit_reports
+                (id, user_id, date, property_address, seller_name, buyer_name, status,
+                 price_feedback, location_feedback, work_feedback, general_feedback,
+                 weak_points, strong_points, generated_message)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ).bind(
+              v.id, userId, v.date, v.propertyAddress || '', v.sellerName || '', v.buyerName || '', v.status || 'intéressé',
+              v.priceFeedback || '', v.locationFeedback || '', v.workFeedback || '', v.generalFeedback || '',
+              v.weakPoints || '', v.strongPoints || '', v.generatedMessage || ''
+            ).run();
+          }
+        }
+
         return json({ success: true, message: 'Données sauvegardées.' }, 200, cors);
       }
 

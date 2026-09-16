@@ -79,6 +79,11 @@ export interface UserProgress {
   totalVisites: number;
   totalOffres: number;
   totalVentes: number;
+  // Mini-agenda RDV + notes d'actions : transportés dans le blob de
+  // progression (pas de table dédiée) pour être retrouvés sur n'importe
+  // quel appareil — le front les lit/écrit dans leurs clés localStorage.
+  rdvs?: { id: string; titre: string; dateHeure: string; lieu: string }[];
+  actionNotes?: Record<string, string>;
 }
 
 export interface KnowledgeModule {
