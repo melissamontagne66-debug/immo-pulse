@@ -35,13 +35,13 @@ interface DashboardProps {
   onSetMonthlyGoal: () => void;
   /** Bilan oublié : ouvre le rattrapage daté (même flux que la flèche « jour suivant »). */
   onOpenMissedCheckup?: (date: string) => void;
-  /** Bilan oublié : déclare une journée non travaillée (bilan à zéro). */
-  onDeclareNoWork?: (date: string) => void;
+  /** Plusieurs jours de retard : déclare les N derniers jours ouvrés non travaillés. */
+  onDeclareNoWorkPeriod?: (days: number) => void;
   sales: Sale[];
   contactsState: ReturnType<typeof useContacts>;
 }
 
-export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, onOpenMissedCheckup, onDeclareNoWork, sales, contactsState }: DashboardProps) {
+export function Dashboard({ progress, currentDay, profile, dailyResults, onNavigate, onSetMonthlyGoal, onOpenMissedCheckup, onDeclareNoWorkPeriod, sales, contactsState }: DashboardProps) {
   const { insights } = useSmartDashboard(dailyResults, profile, currentDay, progress.streak.count);
   const alertes = insights.filter(i => i.type === 'alerte');
   const isEs = profile.language === 'es';
@@ -62,19 +62,25 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
   const [joursAbsence] = useState(() => getJoursDepuisDerniereOuverture(progress.streak.lastBilanDate));
   useEffect(() => { touchLastOpen(); }, []);
 
-  // Bilan du précédent jour ouvré manquant → carte proposant le rattrapage
-  // ou la déclaration « je n'ai pas travaillé » (débloque la flèche
-  // « jour suivant », qui applique la même règle dans « Aujourd'hui »).
-  const missedPrevBilanDate = (() => {
-    const now = new Date();
-    const dow = now.getDay(); // 0 = dimanche
-    const prev = new Date(now);
-    prev.setDate(prev.getDate() - (dow === 1 ? 3 : dow === 0 ? 2 : 1));
-    const key = toLocalDateKey(prev);
-    if (key < profile.startDate) return null; // pas de bilan exigible avant le démarrage
-    if (currentDay === 1 && dailyResults.length === 0) return null; // tout premier jour
-    return dailyResults.some(r => r.date === key) ? null : key;
+  // Jours ouvrés sans bilan depuis le démarrage du compte (hors aujourd'hui,
+  // 30 jours en arrière max) — du plus récent au plus ancien. Le conseiller
+  // peut rattraper le plus récent ou déclarer une période non travaillée.
+  const missedWorkdays = (() => {
+    const filled = new Set(dailyResults.map(r => r.date));
+    const dates: string[] = [];
+    const cursor = new Date();
+    cursor.setDate(cursor.getDate() - 1);
+    for (let i = 0; i < 30; i++) {
+      const key = toLocalDateKey(cursor);
+      if (key < profile.startDate) break; // pas de bilan exigible avant le démarrage
+      const dow = cursor.getDay();
+      if (dow !== 0 && dow !== 6 && !filled.has(key)) dates.push(key);
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    return dates;
   })();
+  const [noWorkOpen, setNoWorkOpen] = useState(false);
+  const [noWorkCount, setNoWorkCount] = useState(1);
 
   // MOD-31 — niveau de carrière (header).
   const niveau = getNiveau(progress, sales);
@@ -283,37 +289,80 @@ export function Dashboard({ progress, currentDay, profile, dailyResults, onNavig
         </Card>
       )}
 
-      {/* Bilan du précédent jour ouvré oublié — rattrapage ou « pas travaillé » */}
-      {missedPrevBilanDate && (
+      {/* Bilan(s) oublié(s) — rattrapage du plus récent ou déclaration d'une
+          période non travaillée (le trou reste visible dans l'historique) */}
+      {missedWorkdays.length > 0 && (
         <Card className="bg-amber-50 border-amber-300">
           <CardContent className="p-4">
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-amber-800">
-                  {isEs
-                    ? `No hiciste tu balance del ${parseLocalDateKey(missedPrevBilanDate).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}.`
-                    : `Tu n'as pas fait ton bilan du ${parseLocalDateKey(missedPrevBilanDate).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.`}
+                  {missedWorkdays.length === 1
+                    ? (isEs
+                      ? `No hiciste tu balance del ${parseLocalDateKey(missedWorkdays[0]).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}.`
+                      : `Tu n'as pas fait ton bilan du ${parseLocalDateKey(missedWorkdays[0]).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.`)
+                    : (isEs
+                      ? `Tienes ${missedWorkdays.length} balances de retraso — el último : ${parseLocalDateKey(missedWorkdays[0]).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })}.`
+                      : `Tu as ${missedWorkdays.length} bilans de retard — le dernier : ${parseLocalDateKey(missedWorkdays[0]).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.`)}
                 </p>
                 <p className="text-xs text-amber-700 mt-1">
                   {isEs
-                    ? 'Rellénalo ahora, o indica que no trabajaste ese día — podrás pasar al día siguiente.'
-                    : 'Remplis-le maintenant, ou indique que tu n\'avais pas travaillé ce jour-là — tu pourras ensuite passer au jour suivant.'}
+                    ? 'Rellena el más reciente, o indica cuántos días no trabajaste para retomar directamente hoy.'
+                    : 'Remplis le plus récent, ou indique combien de jours tu n\'as pas travaillé pour reprendre directement aujourd\'hui.'}
                 </p>
-                <div className="flex gap-2 mt-3 flex-wrap">
-                  <button
-                    onClick={() => onOpenMissedCheckup?.(missedPrevBilanDate)}
-                    className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
-                  >
-                    {isEs ? 'Rellenar el balance' : 'Remplir le bilan'}
-                  </button>
-                  <button
-                    onClick={() => onDeclareNoWork?.(missedPrevBilanDate)}
-                    className="px-3 py-2 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-medium transition-colors"
-                  >
-                    {isEs ? 'No trabajé ese día' : 'Je n\'ai pas travaillé'}
-                  </button>
-                </div>
+                {!noWorkOpen ? (
+                  <div className="flex gap-2 mt-3 flex-wrap">
+                    <button
+                      onClick={() => onOpenMissedCheckup?.(missedWorkdays[0])}
+                      className="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                    >
+                      {isEs ? 'Rellenar el balance' : 'Remplir le bilan'}
+                    </button>
+                    <button
+                      onClick={() => { setNoWorkCount(missedWorkdays.length); setNoWorkOpen(true); }}
+                      className="px-3 py-2 bg-white hover:bg-amber-100 text-amber-800 border border-amber-300 rounded-lg text-xs font-medium transition-colors"
+                    >
+                      {isEs ? 'No trabajé' : 'Je n\'ai pas travaillé'}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="mt-3 bg-white/70 rounded-lg p-3 border border-amber-200">
+                    <label className="text-xs font-medium text-amber-800 block mb-1.5">
+                      {isEs ? '¿Cuántos días no trabajaste ?' : 'Combien de jours non travaillés ?'}
+                    </label>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input
+                        type="number"
+                        min={1}
+                        max={missedWorkdays.length}
+                        value={noWorkCount}
+                        onChange={e => setNoWorkCount(Math.max(1, Math.min(missedWorkdays.length, Number(e.target.value) || 1)))}
+                        className="w-20 px-2 py-1.5 border border-amber-300 rounded-lg text-sm text-center"
+                      />
+                      <span className="text-xs text-amber-700">
+                        {isEs ? `sobre ${missedWorkdays.length} día(s) sin balance` : `sur ${missedWorkdays.length} jour${missedWorkdays.length > 1 ? 's' : ''} sans bilan`}
+                      </span>
+                      <button
+                        onClick={() => { onDeclareNoWorkPeriod?.(noWorkCount); setNoWorkOpen(false); }}
+                        className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-xs font-medium transition-colors"
+                      >
+                        {isEs ? 'Validar' : 'Valider'}
+                      </button>
+                      <button
+                        onClick={() => setNoWorkOpen(false)}
+                        className="px-3 py-1.5 text-amber-700 hover:text-amber-900 text-xs underline"
+                      >
+                        {isEs ? 'Cancelar' : 'Annuler'}
+                      </button>
+                    </div>
+                    <p className="text-[11px] text-amber-600 mt-2">
+                      {isEs
+                        ? 'Estos días quedan marcados como « no trabajados » en tu historial.'
+                        : 'Ces jours restent marqués « non travaillés » dans ton historique.'}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </CardContent>

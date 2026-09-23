@@ -156,7 +156,10 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const verificationComplete = countersUsed && dailyActions.every(a => actionHasStatus(a.id));
 
   // Step management: 0 = action verification, 1 = main checkup, 2 = post-checkup planning
-  const [step, setStepState] = useState<number>(() => draft?.step ?? (verificationComplete ? 1 : 0));
+  // En rattrapage (bilan d'un jour passé), on saute la vérification des actions :
+  // elle porte sur les actions d'AUJOURD'HUI, sans rapport avec le bilan à
+  // remplir — et son bouton « vérifier les N actions » bloquait l'accès au formulaire.
+  const [step, setStepState] = useState<number>(() => bilanDate ? 1 : (draft?.step ?? (verificationComplete ? 1 : 0)));
   // Scroll en haut à chaque changement de step (le contenu du modal scrolle)
   const setStep = (s: number) => {
     setStepState(s);
@@ -285,8 +288,11 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
   const [parrainPrenom, setParrainPrenom] = useState('');
   const [parrainContact, setParrainContact] = useState('');
 
-  // Persist draft while the user is filling the checkup
+  // Persist draft while the user is filling the checkup.
+  // Jamais en rattrapage : le brouillon est rangé sous la clé du JOUR courant —
+  // y écrire les données du rattrapage polluerait le brouillon d'aujourd'hui.
   useEffect(() => {
+    if (bilanDate) return;
     saveDraft(userKey, currentDay, {
       step,
       actionVerifications,
@@ -294,7 +300,7 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
       results,
       nextDayTasks,
     });
-  }, [userKey, currentDay, step, actionVerifications, hadVisitsToday, results, nextDayTasks]);
+  }, [bilanDate, userKey, currentDay, step, actionVerifications, hadVisitsToday, results, nextDayTasks]);
 
   // Check if we should ask about network vidéos (first 6 months + not yet watched)
   const monthsSinceStart = getMonthsSinceStart(profile.startDate);
@@ -336,7 +342,8 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
       onUpdateProfile({ watchedNetworkVideos: true });
     }
     onSave(results as Parameters<typeof onSave>[0]);
-    clearDraft(userKey, currentDay);
+    // En rattrapage, on ne touche pas au brouillon du jour courant.
+    if (!bilanDate) clearDraft(userKey, currentDay);
     // Le report du week-end est consommé : les RDV sont dans le bilan validé.
     if (weekendApplied) clearWeekendPending(userKey);
 

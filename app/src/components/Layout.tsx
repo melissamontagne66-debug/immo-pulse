@@ -2,11 +2,12 @@ import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { cn, formatEuro } from '@/lib/utils';
 import type { UserProfile } from '@/types/profile';
-import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell, Puzzle } from 'lucide-react';
+import { Flame, Target, ExternalLink, LogOut, User, Menu, X, ClipboardCheck, Bell, Puzzle, CircleHelp } from 'lucide-react';
 import { isPushConfigured, isPushDenied, loadPushState, setPushReminderEnabled } from '@/lib/push';
 import { apiDeleteAccount, isCloudEnabled } from '@/services/api';
 import { CGU_REMINDER_FR, CGU_REMINDER_ES } from '@/data/cgu';
 import { PrivacyPolicyModal } from '@/components/PrivacyPolicyModal';
+import { HelpCenter } from '@/components/HelpCenter';
 
 // Extension Chrome Bridge CRM — zip hébergé par l'app en attendant la
 // publication sur le Chrome Web Store (le lien déclenche le téléchargement ;
@@ -25,6 +26,8 @@ interface LayoutProps {
   onSetMonthlyGoal: () => void;
   onLogout: () => void;
   onOpenCheckup?: () => void;
+  /** Rejoue le tour de démarrage (centre d'aide). */
+  onReplayTour?: () => void;
   userEmail?: string;
   hasNotification?: boolean;
   onLanguageChange?: (lang: 'fr' | 'es') => void;
@@ -40,10 +43,11 @@ const getTabs = (lang: 'fr' | 'es') => [
   { id: 'history', label: lang === 'es' ? 'Historial' : 'Historique', icon: '📊' },
 ];
 
-export function Layout({ children, activeTab, onTabChange, currentDay, niveauLabel, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
+export function Layout({ children, activeTab, onTabChange, currentDay, niveauLabel, streak, profile, onSetMonthlyGoal, onLogout, onOpenCheckup, onReplayTour, userEmail, hasNotification, onLanguageChange }: LayoutProps) {
   const tabs = getTabs(profile.language);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   // MOD-29 : état du rappel push (réglage sidebar)
   const pushAvailable = isPushConfigured();
@@ -184,6 +188,15 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
           ))}
 
           <div className="pt-4 border-t border-gray-100 mt-4">
+            {/* Centre d'aide — accessible à tout moment, explique et pointe
+                chaque fonctionnalité */}
+            <button
+              onClick={() => { setShowHelp(true); setMobileMenuOpen(false); }}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-semibold bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 transition-all mb-3"
+            >
+              <CircleHelp className="w-5 h-5 flex-shrink-0" />
+              <span>{profile.language === 'es' ? 'Ayuda — cómo usar la app' : 'Aide — comment utiliser l\'app'}</span>
+            </button>
             <p className="px-4 text-xs text-gray-400 uppercase tracking-wide mb-2">Ressources</p>
             <a
               href="https://methode-immo-simple.pages.dev/"
@@ -397,6 +410,14 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               <Flame className="w-3 h-3" />
               <span>{streak}</span>
             </div>
+            {/* Aide accessible en un tap, y compris hors menu */}
+            <button
+              onClick={() => setShowHelp(true)}
+              aria-label={profile.language === 'es' ? 'Ayuda' : 'Aide'}
+              className="text-gray-400 hover:text-blue-600 p-1"
+            >
+              <CircleHelp className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
@@ -406,6 +427,15 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
       </main>
 
       {showPrivacy && <PrivacyPolicyModal onClose={() => setShowPrivacy(false)} />}
+      {showHelp && (
+        <HelpCenter
+          isEs={profile.language === 'es'}
+          onNavigate={onTabChange}
+          onOpenCheckup={onOpenCheckup}
+          onReplayTour={onReplayTour}
+          onClose={() => setShowHelp(false)}
+        />
+      )}
     </div>
   );
 }

@@ -99,9 +99,10 @@ export function CommissionCalculator({ userKey, country = 'france', averagePrice
 
   // Ventes enregistrées (hook MOD-12 : localStorage immo-pulse-sales-{userKey})
   const { sales, addSale, removeSale } = useSales(userKey ?? '');
-  // « Mandat signé » rattaché à la vente — cochée par défaut (compte 1 mandat
-  // dans les objectifs). Remplace l'ancienne question modale à l'enregistrement.
-  const [countsAsMandat, setCountsAsMandat] = useState(true);
+  // « Mandat signé » rattaché à la vente — DÉCOCHÉE par défaut (demande
+  // cliente) : le conseiller la coche quand la vente compte aussi comme
+  // mandat dans ses objectifs.
+  const [countsAsMandat, setCountsAsMandat] = useState(false);
   const [celebration, setCelebration] = useState<{ net: number } | null>(null);
 
   const [nomVente, setNomVente] = useState('');

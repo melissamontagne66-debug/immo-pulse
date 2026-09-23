@@ -529,18 +529,46 @@ function App() {
     }
   };
 
-  // Bilan oublié : le conseiller peut déclarer qu'il n'a pas travaillé ce
-  // jour-là — un bilan à zéro est enregistré (la série n'est pas cassée) et
-  // la flèche « jour suivant » se débloque.
-  const handleDeclareNoWork = (date: string) => {
-    addDailyResults({
-      date,
-      callsMade: 0, contactsApproached: 0, rdvR1Fixed: 0, rdvR1Done: 0, rdvR2Done: 0,
-      mandatsSigned: 0, visitesDone: 0, offresWritten: 0, compromisSigned: 0, pigesSent: 0,
-      prospectionTime: '', notes: 'Journée déclarée non travaillée', wins: '',
-      challenges: '', mood: 3, coachQuestion: '', coachAnswer: '',
-    });
-    toast.success('Journée déclarée non travaillée — on repart aujourd\'hui 💪', { duration: 4000 });
+  // Bilan « journée non travaillée » : à zéro, avec une note — le trou
+  // reste visible dans l'historique (tableau de constance).
+  const noWorkBilan = (date: string): DailyResults => ({
+    date,
+    callsMade: 0, contactsApproached: 0, rdvR1Fixed: 0, rdvR1Done: 0, rdvR2Done: 0,
+    mandatsSigned: 0, visitesDone: 0, offresWritten: 0, compromisSigned: 0, pigesSent: 0,
+    prospectionTime: '', notes: 'Journée déclarée non travaillée', wins: '',
+    challenges: '', mood: 3, coachQuestion: '', coachAnswer: '',
+  });
+
+  // Plusieurs jours de retard : déclare les N derniers jours ouvrés sans
+  // bilan comme non travaillés — le conseiller reprend à « Aujourd'hui »
+  // sans chaîner les rattrapages un par un.
+  const handleDeclareNoWorkPeriod = (days: number) => {
+    const filled = new Set(progress.dailyResults.map(r => r.date));
+    const cursor = new Date();
+    cursor.setDate(cursor.getDate() - 1);
+    let remaining = days;
+    let declared = 0;
+    // Cap de sécurité : jamais plus d'un an en arrière.
+    for (let i = 0; i < 370 && remaining > 0; i++) {
+      const key = toLocalDateKey(cursor);
+      if (key < profile.startDate) break;
+      const dow = cursor.getDay();
+      if (dow !== 0 && dow !== 6 && !filled.has(key)) {
+        addDailyResults(noWorkBilan(key));
+        filled.add(key);
+        remaining--;
+        declared++;
+      }
+      cursor.setDate(cursor.getDate() - 1);
+    }
+    if (declared > 0) {
+      toast.success(
+        declared > 1
+          ? `${declared} journées déclarées non travaillées — on repart aujourd'hui 💪`
+          : 'Journée déclarée non travaillée — on repart aujourd\'hui 💪',
+        { duration: 4000 }
+      );
+    }
   };
 
   const handlePlanNextDay = (plan: NextDayPlan) => {
@@ -605,7 +633,7 @@ function App() {
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
             onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
-            onDeclareNoWork={handleDeclareNoWork}
+            onDeclareNoWorkPeriod={handleDeclareNoWorkPeriod}
             sales={sales}
             contactsState={contactsState}
           />
@@ -686,7 +714,7 @@ function App() {
             onNavigate={setActiveTab}
             onSetMonthlyGoal={() => setShowGoalSetter(true)}
             onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
-            onDeclareNoWork={handleDeclareNoWork}
+            onDeclareNoWorkPeriod={handleDeclareNoWorkPeriod}
             sales={sales}
             contactsState={contactsState}
           />
@@ -706,6 +734,7 @@ function App() {
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
         onLogout={handleLogout}
         onOpenCheckup={() => setModalView('checkup')}
+        onReplayTour={() => setShowFirstTimeOnboarding(true)}
         userEmail={currentUser?.email}
         hasNotification={true}
         onLanguageChange={(lang) => updateProfile({ language: lang })}
@@ -725,8 +754,10 @@ function App() {
         />
       )}
 
-      {/* MOD-31 : célébration plein écran d'un nouveau jalon de carrière */}
-      {newJalon && (
+      {/* MOD-31 : célébration plein écran d'un nouveau jalon de carrière —
+          jamais superposée à celle du bilan : elle attend que celle-ci
+          soit fermée (newJalon persiste jusqu'à dismissJalon). */}
+      {newJalon && !bilanCelebration && (
         <Celebration
           show={true}
           message={`🎉 ${newJalon.titre} !`}
