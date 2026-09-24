@@ -106,6 +106,8 @@ function App() {
   // Rattrapage : date ciblée quand le bilan est ouvert via la flèche
   // « jour suivant » bloquée (bilan oublié). null = bilan du jour.
   const [checkupDate, setCheckupDate] = useState<string | null>(null);
+  // Bilan du jour validé → avance au jour suivant à la fermeture du modal.
+  const justSavedTodayBilan = useRef(false);
 
   const requestCloseCheckup = () => {
     if (checkupDirty) {
@@ -466,8 +468,22 @@ function App() {
     );
   }
 
+  // Un seul bilan par jour (1 bilan / 24 h) : si celui d'aujourd'hui est déjà
+  // rempli, on ne rouvre pas le formulaire. La date de rattrapage est
+  // réinitialisée pour que le bilan s'enregistre bien à la date du jour.
+  const openTodayCheckup = () => {
+    setCheckupDate(null);
+    const today = toLocalDateKey(new Date());
+    if (progress.dailyResults.some(r => r.date === today)) {
+      toast.info('Ton bilan du jour est déjà rempli — à demain ! 💪', { duration: 4000 });
+      return;
+    }
+    setModalView('checkup');
+  };
+
   const handleSaveCheckup = (results: DailyResults & { wins: string; challenges: string; mood: number; watchedNetworkVideosToday?: boolean; crmUpdated?: boolean }) => {
     const registration = addDailyResults(results);
+    if (!checkupDate) justSavedTodayBilan.current = true;
     // La clôture du bilan affiche l'état de la sync : le conseiller attend
     // la confirmation avant de fermer l'app (trou historique de la fermeture
     // dans la fenêtre du debounce).
@@ -522,6 +538,11 @@ function App() {
 
   const handleCloseCheckup = () => {
     setModalView('none');
+    if (justSavedTodayBilan.current) {
+      justSavedTodayBilan.current = false;
+      // Bilan du jour validé : on passe au jour suivant (1 bilan / 24 h).
+      setCurrentDay(progress.currentDay + 1);
+    }
     if (pendingRedirectToReport) {
       setPendingRedirectToReport(false);
       setActiveTab('report');
@@ -651,7 +672,7 @@ function App() {
             onUncompleteDay={uncompleteDay}
             onAddDebrief={addDebrief}
             onDayChange={setCurrentDay}
-            onOpenCheckup={() => setModalView('checkup')}
+            onOpenCheckup={openTodayCheckup}
             onOpenMissedCheckup={(date) => { setCheckupDate(date); setModalView('checkup'); }}
             onNavigate={setActiveTab}
             userEmail={currentUser?.email}
@@ -733,7 +754,7 @@ function App() {
         profile={profile}
         onSetMonthlyGoal={() => setShowGoalSetter(true)}
         onLogout={handleLogout}
-        onOpenCheckup={() => setModalView('checkup')}
+        onOpenCheckup={openTodayCheckup}
         onReplayTour={() => setShowFirstTimeOnboarding(true)}
         userEmail={currentUser?.email}
         hasNotification={true}

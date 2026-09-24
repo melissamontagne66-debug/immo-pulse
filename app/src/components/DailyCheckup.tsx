@@ -217,7 +217,13 @@ export function DailyCheckup({ userKey, profile, currentDay, completedDays, dail
 
   const [results, setResults] = useState(() => {
     // En rattrapage, pas de brouillon : il appartiendrait au bilan du jour.
-    const base = (bilanDate ? null : draft?.results) ?? {
+    const draftResults = bilanDate ? null : draft?.results;
+    const base = draftResults
+      // Un brouillon est toujours celui d'aujourd'hui : la date est imposée.
+      // Des versions antérieures y enregistraient la date d'un rattrapage —
+      // le bilan du jour se retrouvait sauvegardé à une date passée.
+      ? { ...draftResults, date: toLocalDateKey(new Date()) }
+      : {
       date: toLocalDateKey(new Date()),
     // Pré-remplissage depuis les compteurs du jour (modifiables — le bilan fait foi)
     callsMade: counters.conversations,
