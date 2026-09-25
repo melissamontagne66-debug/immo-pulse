@@ -475,7 +475,7 @@ function App() {
     setCheckupDate(null);
     const today = toLocalDateKey(new Date());
     if (progress.dailyResults.some(r => r.date === today)) {
-      toast.info('Ton bilan du jour est déjà rempli — à demain ! 💪', { duration: 4000 });
+      toast.info('Le bilan du jour est déjà rempli — le prochain sera à faire demain. 💪', { duration: 4000 });
       return;
     }
     setModalView('checkup');
