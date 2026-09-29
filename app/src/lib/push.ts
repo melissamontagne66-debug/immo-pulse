@@ -18,7 +18,7 @@ interface PushState {
   remindAfter: string | null;
   /** Token FCM courant, si souscrit. */
   fcmToken: string | null;
-  /** Préférence utilisateur : rappel du bilan à 18 h (défaut true si permission donnée). */
+  /** Préférence utilisateur : rappel du bilan à 20 h (défaut true si permission donnée). */
   reminderEnabled: boolean;
 }
 
@@ -160,7 +160,7 @@ export async function subscribeToPush(userKey: string): Promise<boolean> {
   }
 }
 
-/** Active/désactive le rappel du bilan à 18 h (réglages). */
+/** Active/désactive le rappel du bilan à 20 h (réglages). */
 export async function setPushReminderEnabled(userKey: string, enabled: boolean): Promise<void> {
   const state = loadPushState(userKey);
   if (!enabled && state.fcmToken && isCloudEnabled()) {

@@ -1120,12 +1120,12 @@ export default {
     }
   },
 
-  // Cron : 7h UTC = relances email du matin, 16h UTC = rappels push du soir.
+  // Cron : 7h UTC = relances email du matin, 18h UTC = rappels push du soir.
   async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
     ctx.waitUntil((async () => {
       const hourUTC = new Date(event.scheduledTime).getUTCHours();
       if (hourUTC === 7) await runMorningRelances(env);
-      if (hourUTC === 16) await runEveningReminders(env);
+      if (hourUTC === 18) await runEveningReminders(env);
     })());
   }
 };

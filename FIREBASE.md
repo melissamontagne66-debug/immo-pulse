@@ -1,7 +1,7 @@
 # Activer les notifications push (Firebase Cloud Messaging)
 
 Guide pas à pas pour brancher les notifications push d'Immo Pulse (rappel du
-bilan à 18 h, etc.). Tout le code est déjà en place — il ne manque que la
+bilan à 20 h, etc.). Tout le code est déjà en place — il ne manque que la
 configuration d'un compte Firebase (gratuit, aucune carte demandée).
 
 Temps estimé : 20 minutes.
@@ -77,9 +77,9 @@ ou pousse un commit).
 ## 6. Vérifier que ça marche
 
 1. Ouvre l'app (jour ≥ 2), onglet « Aujourd'hui » → la carte « 🔔 Un rappel à
-   18 h… » apparaît → « Activer les rappels » → accepte la permission.
-2. Ou règle « Rappel du bilan à 18 h » dans la barre latérale.
-3. Le soir à 18 h, si le bilan du jour n'est pas rempli, la notification
+   20 h… » apparaît → « Activer les rappels » → accepte la permission.
+2. Ou règle « Rappel du bilan à 20 h » dans la barre latérale.
+3. Le soir à 20 h, si le bilan du jour n'est pas rempli, la notification
    « 📝 Ton bilan t'attend » arrive — même app fermée (PWA installée sur
    l'écran d'accueil, Android ; iPhone ≥ iOS 16.4).
 

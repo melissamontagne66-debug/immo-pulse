@@ -654,7 +654,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
     setShowPushPrompt(false);
     const ok = await subscribeToPush(userEmail ?? '');
     if (ok) {
-      toast.success('🔔 Rappels activés ! On te préviendra à 18 h si ton bilan n\'est pas fait.');
+      toast.success('🔔 Rappels activés ! On te préviendra à 20 h si ton bilan n\'est pas fait.');
     } else if (!isPushDenied()) {
       toast.info('Pas de souci — tu peux activer les rappels plus tard depuis les réglages.');
     }
@@ -842,7 +842,7 @@ Rappelle-toi : chaque appel entrant = question systématique sur le panneau d'or
             <Bell className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-blue-800">
-                {isEs ? '🔔 ¿Un recordatorio a las 18 h para no olvidar mi balance?' : '🔔 Un rappel à 18 h pour ne jamais oublier mon bilan ?'}
+                {isEs ? '🔔 ¿Un recordatorio a las 20 h para no olvidar mi balance?' : '🔔 Un rappel à 20 h pour ne jamais oublier mon bilan ?'}
               </p>
               <div className="flex gap-2 mt-2">
                 <Button size="sm" onClick={handleActivatePush} className="bg-blue-600 hover:bg-blue-700 text-xs">

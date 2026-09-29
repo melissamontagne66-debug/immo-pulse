@@ -233,13 +233,13 @@ export function Layout({ children, activeTab, onTabChange, currentDay, niveauLab
               <Flame className="w-3 h-3 text-orange-500" />
               <span>Série : <strong className="text-gray-700">{streak} jours</strong></span>
             </div>
-            {/* MOD-29 : réglage du rappel push du bilan à 18 h.
+            {/* MOD-29 : réglage du rappel push du bilan à 20 h.
                 Visible seulement si FCM est configuré pour ce build. */}
             {pushAvailable && (
               <label className="flex items-center justify-between gap-2 text-xs text-gray-500 cursor-pointer select-none">
                 <span className="flex items-center gap-2">
                   <Bell className="w-3 h-3 text-blue-500" />
-                  {profile.language === 'es' ? 'Recordatorio del balance (18 h)' : 'Rappel du bilan à 18 h'}
+                  {profile.language === 'es' ? 'Recordatorio del balance (20 h)' : 'Rappel du bilan à 20 h'}
                 </span>
                 <input
                   type="checkbox"

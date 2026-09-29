@@ -33,8 +33,8 @@ FRONTEND_URL = "http://127.0.0.1:4173,http://localhost:4173,https://immo-pulse.p
 # Notifications push FCM HTTP v1 : JSON complet du compte de service Google.
 # wrangler secret put FCM_SERVICE_ACCOUNT
 
-# Cron : 7h UTC ≈ 9h Paris (été) ; 16h UTC ≈ 18h Paris (été).
+# Cron : 7h UTC ≈ 9h Paris (été) ; 18h UTC ≈ 20h Paris (été).
 # Cloudflare ne gère pas les fuseaux horaires : en hiver (UTC+1) les déclenchements
-# arrivent ~1 h plus tôt en heure de Paris (8h et 17h).
+# arrivent ~1 h plus tôt en heure de Paris (8h et 19h).
 [triggers]
-crons = ["0 7 * * *", "0 16 * * *"]
+crons = ["0 7 * * *", "0 18 * * *"]
